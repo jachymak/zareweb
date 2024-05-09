@@ -33,3 +33,5 @@ npm install firebase
 npm install @vuepic/vue-datepicker
 
 npm install vue-router@4
+
+($ npm i --save-dev @types/node)
