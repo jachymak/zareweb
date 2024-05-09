@@ -5,14 +5,27 @@ const router = createRouter({
     history: createWebHistory(),
     routes: [
         { path: "/", component: () => import("@/views/Home.vue") },
-        { path: "/login", component: () => import("@/views/Login.vue") },
+        {
+            path: "/login",
+            component: () => import("@/views/Login.vue"),
+            meta: {
+                requiresNoAuth: true
+            }
+        },
         {
             path: "/member",
             component: () => import("@/views/Member.vue"),
             meta: {
                 requiresAuth: true
             }
-        }
+        },
+        {
+            path: "/event/:id",
+            component: () => import("@/views/Event.vue"),
+            meta: {
+                requiresAuth: true
+            }
+        },
     ]
 });
 
@@ -35,7 +48,17 @@ router.beforeEach(async (to, from, next) => {
             console.log("You dont have access");
             next("/");
         }
-    } else {
+    }
+
+    else if (to.matched.some((record) => record.meta.requiresNoAuth)) {
+        if (await getCurrentUser()) {
+            next("/member");
+        } else {
+            next();
+        }
+    }
+
+    else {
         next();
     }
 });

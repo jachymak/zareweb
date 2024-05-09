@@ -5,6 +5,7 @@ import { doc, setDoc } from "firebase/firestore";
 import {
   getAuth,
   createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithPopup } from "firebase/auth"
 import db from "@/firebase/firebase.js";
@@ -76,17 +77,46 @@ const login = () => {
 </script>
 
 <template>
-  <h1>Login</h1>
-  <p><input type="text" placeholder="email" v-model="email"/></p>
-  <p><input type="text" placeholder="password" v-model="password"/></p>
-  <p v-if="errorMsg">{{ errorMsg }}</p>
-  <p><button @click="login">log in!</button></p>
+  <section class="vh-100">
+    <div class="container py-5 h-100">
+      <div class="row d-flex justify-content-center align-items-center h-100">
+        <div class="col-12 col-md-8 col-lg-6 col-xl-5">
+          <div class="card shadow-2-strong" style="border-radius: 1rem;">
+            <div class="card-body p-5 text-center">
 
-  <h1>Register</h1>
+              <h3 class="mb-5">Přihlášení pro členy</h3>
+
+              <div class="form-outline mb-4">
+                <input v-model="email" type="email" id="typeEmailX-2" class="form-control form-control-lg" placeholder="Email"/>
+              </div>
+
+              <div class="form-outline mb-4">
+                <input v-model="password" type="password" id="typePasswordX-2" class="form-control form-control-lg" placeholder="Heslo"/>
+              </div>
+
+             <p v-if="errorMsg">{{ errorMsg }}</p>  <!-- TODO error handling with focus -->
+
+              <button class="btn btn-primary btn-lg btn-block" type="submit" @click="login">Přihlásit se</button>
+
+              <hr class="my-4">
+
+              <button class="btn btn-lg btn-block btn-primary" style="background-color: #dd4b39;"
+                      type="submit" @click="signInWithGoogle">Přihlásit se přes Google</button>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+<!--  https://mdbootstrap.com/docs/standard/extended/login/#! -->
+
+  <!--<h1>Register</h1>
   <p><input type="text" placeholder="email" v-model="email"/></p>
   <p><input type="text" placeholder="password" v-model="password"/></p>
-  <p><button @click="register">Register!</button></p>
-  <p><button @click="signInWithGoogle">With Google</button></p>
+  <p><button @click="register">Register!</button></p>-->
+
 </template>
 
 <style scoped>

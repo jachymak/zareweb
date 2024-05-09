@@ -38,27 +38,23 @@ const handleSignOut = () => {
     router.push("/");
   })
 };
+
+const currentEventId = ref('');
+
+const handleEventInfoClicked = (id) => {
+  currentEventId.value = id
+}
+
 </script>
 
 <template>
-  <h1>Member!</h1>
   <button @click="handleSignOut" v-if="isLoggedIn">Odhlásit se</button>
   {{ currentUserData }}
 
   <div class="container-fluid mt-5 px-5 mb-5">
     <div class="row">
       <div class="col-12 col-md-6">
-        <event-info event-id="2024-05-24-a-sportovni-vyprava" />
-      </div>
-      <div class="col-12 col-md-6 ps-5">
-        <event-items-card event-id="2024-05-24-a-sportovni-vyprava"></event-items-card>
-      </div>
-    </div>
-
-
-    <div class="row">
-      <div class="col-12 col-md-6">
-        <vyprava-form />
+<!--        <vyprava-form />-->
       </div>
       <div class="col-12 col-md-6">
         <vypravnik @eventInfoClicked="handleEventInfoClicked" />
@@ -66,7 +62,7 @@ const handleSignOut = () => {
     </div>
     <div class="row">
       <div class="col">
-        <event-info-form :id="currentEventId" />
+<!--        <event-info-form :id="currentEventId" />-->
       </div>
       <div class="col"></div>
     </div>

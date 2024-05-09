@@ -3,6 +3,9 @@ import Badge from "@/components/Badge.vue";
 import { computed } from 'vue';
 import db from "@/firebase/firebase.js"
 import { doc, deleteDoc } from "firebase/firestore";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
 
 const props = defineProps({
   data: {
@@ -11,10 +14,8 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['eventInfoClicked']);
-
 const onEventInfoClicked = () => {
-  emit('eventInfoClicked', props.data.id);
+  if (props.data.infoPublished) router.push("/event/" + props.data.id);
 }
 
 const handleDelete = async (id) => {
