@@ -6,6 +6,8 @@
     createUserWithEmailAndPassword,
     GoogleAuthProvider,
     signInWithPopup } from "firebase/auth"
+  import { doc, setDoc } from "firebase/firestore";
+  import db from "@/firebase/firebase.js";
 
   const router = useRouter();
 
@@ -14,8 +16,17 @@
 
   const register = () => {
     createUserWithEmailAndPassword(getAuth(), email.value, password.value)
-        .then((data) => {
-          console.log(data);
+        .then(async (user) => {
+
+          // add user to firestore
+          const userData = {
+            email: user.user.email,
+            name: user.user.displayName,
+            verifiedMember: false,
+            leader: false
+          }
+          await setDoc(doc(db, "users", user.user.uid), userData);
+
           router.push('/member');
         })
         .catch((error) => {
