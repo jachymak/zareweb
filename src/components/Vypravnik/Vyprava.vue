@@ -1,6 +1,6 @@
 <script setup>
 import Badge from "@/components/Badge.vue";
-import {computed, defineProps} from 'vue';
+import { computed } from 'vue';
 import db from "@/firebase/firebase.js"
 import { doc, deleteDoc } from "firebase/firestore";
 

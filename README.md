@@ -29,4 +29,7 @@ npm run build
 ```
 
 npm install firebase
+
 npm install @vuepic/vue-datepicker
+
+npm install vue-router@4

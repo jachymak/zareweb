@@ -1,5 +1,5 @@
 <script setup>
-import {computed, defineProps, ref, watch} from 'vue';
+import {computed, ref, watch} from 'vue';
   import {collection, doc, onSnapshot, orderBy, query, updateDoc} from "firebase/firestore";
   import db from "@/firebase/firebase.js";
 
