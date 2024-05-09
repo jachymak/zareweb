@@ -1,0 +1,17 @@
+body {
+    font-family: themix, sans-serif !important;
+    background-color: #E7DFC9 !important;
+    --bs-body-color: #11284F;
+}
+
+.bg-navy {
+    background-color: #11284F !important;
+}
+
+.bg-sand {
+    background-color: #D7D3C0 !important;
+}
+
+main {
+    min-height: 70vh;
+}
