@@ -1,5 +1,13 @@
 import { createRouter, createWebHistory } from "vue-router";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import {getAuth, onAuthStateChanged, signOut} from "firebase/auth";
+import {doc, getDoc} from "firebase/firestore";
+import db from "@/firebase/firebase.js";
+
+const userVerified = async (user) => {
+    const docSnap = await getDoc(doc(db, "users", user.uid));
+    if (!docSnap.exists()) return false;
+    else return docSnap.data().verifiedMember;
+}
 
 const router = createRouter({
     history: createWebHistory(),
@@ -13,19 +21,40 @@ const router = createRouter({
             }
         },
         {
+            path: "/register",
+            component: () => import("@/views/Register/RegisterGate.vue"),
+            meta: {
+                signOutCurrentUser: true
+            }
+        },
+        {
+            path: "/register/main",
+            component: () => import("@/views/Register/RegisterMain.vue"),
+            meta: {
+                requiresAuth: true
+            }
+        },
+        {
+            path: "/register/children",
+            component: () => import("@/views/Register/RegisterAddChildren.vue"),
+            meta: {
+                requiresAuth: true
+            }
+        },
+        {
             path: "/member",
             component: () => import("@/views/Member.vue"),
             meta: {
-                requiresAuth: true
+                requiresVerifiedAuth: true
             }
         },
         {
             path: "/event/:id",
             component: () => import("@/views/Event.vue"),
             meta: {
-                requiresAuth: true
+                requiresVerifiedAuth: true
             }
-        },
+        }
     ]
 });
 
@@ -47,6 +76,28 @@ router.beforeEach(async (to, from, next) => {
         } else {
             console.log("You dont have access");
             next("/");
+        }
+    }
+
+    else if (to.matched.some((record) => record.meta.requiresVerifiedAuth)) {
+        const user = await getCurrentUser();
+        if (await userVerified(user)) {
+            next();
+        } else {
+            console.log("You dont have access, requires verified");
+            next("/");
+        }
+    }
+
+    else if (to.matched.some((record) => record.meta.signOutCurrentUser)) {
+        if (await getCurrentUser()) {
+            const auth = getAuth();
+            await signOut(auth).then(() => {
+                console.log("user signed out");
+                next();
+            })
+        } else {
+            next();
         }
     }
 
