@@ -10,6 +10,8 @@ import EventInfoForm from "@/components/EventInfoForm.vue";
 import EventInfo from "@/components/EventInfo.vue";
 import EventItemsCard from "@/components/EventItemsCard.vue";
 import router from "@/router/router.js";
+import WelcomeMember from "@/components/Member/WelcomeMember.vue";
+import Photos from "@/components/Member/Photos.vue";
 
 const isLoggedIn = ref(false);
 const currentUserData = ref({});
@@ -54,10 +56,17 @@ const handleEventInfoClicked = (id) => {
   <div class="container-fluid mt-5 px-5 mb-5">
     <div class="row">
       <div class="col-12 col-md-6">
-<!--        <vyprava-form />-->
+        <div class="row mb-5">
+          <welcome-member :user-data="currentUserData"/>
+        </div>
+
+        <div class="row">
+          <photos />
+        </div>
       </div>
       <div class="col-12 col-md-6">
         <vypravnik @eventInfoClicked="handleEventInfoClicked" />
+        <vyprava-form class="mt-5" />
       </div>
     </div>
     <div class="row">

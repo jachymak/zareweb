@@ -4,7 +4,7 @@ import Badge from "@/components/Badge.vue";
 import {doc, onSnapshot} from "firebase/firestore";
 import db from "@/firebase/firebase.js";
 import {computed, ref} from "vue";
-import ChildCard from "@/components/ChildCard.vue";
+import ChildCard from "@/components/Member/ChildCard.vue";
 import SignUpBtn from "@/components/SignUpBtn.vue";
 
 const props = defineProps({
