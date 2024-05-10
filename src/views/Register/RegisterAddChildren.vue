@@ -86,6 +86,7 @@ const handleChange = (i) => {
                          maxlength="11" type="text"
                          :class="['form-control', 'form-control-lg', (errorInData[i-1] ? 'is-invalid' : '')]"
                          placeholder="Rodné číslo dítěte">
+                  <div class="invalid-feedback">Dítě neexistuje</div>
                 </div>
 
               </div>

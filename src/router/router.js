@@ -3,12 +3,6 @@ import {getAuth, onAuthStateChanged, signOut} from "firebase/auth";
 import {doc, getDoc} from "firebase/firestore";
 import db from "@/firebase/firebase.js";
 
-const userVerified = async (user) => {
-    const docSnap = await getDoc(doc(db, "users", user.uid));
-    if (!docSnap.exists()) return false;
-    else return docSnap.data().verifiedMember;
-}
-
 const router = createRouter({
     history: createWebHistory(),
     routes: [
@@ -69,6 +63,12 @@ const getCurrentUser = () => {
     })
 };
 
+const userVerifiedAndChildren = async (user) => {
+    const docSnap = await getDoc(doc(db, "users", user.uid));
+    if (!docSnap.exists()) return [false, false];
+    else return [docSnap.data().verifiedMember, docSnap.data().hasChildren];
+}
+
 router.beforeEach(async (to, from, next) => {
     if (to.matched.some((record) => record.meta.requiresAuth)) {
         if (await getCurrentUser()) {
@@ -81,10 +81,13 @@ router.beforeEach(async (to, from, next) => {
 
     else if (to.matched.some((record) => record.meta.requiresVerifiedAuth)) {
         const user = await getCurrentUser();
-        if (await userVerified(user)) {
+        const verification = await userVerifiedAndChildren(user);
+        if (verification[0] && verification[1]) {
             next();
+        } else if (verification[0] && !verification[1]) {
+            next("/register/children");
         } else {
-            console.log("You dont have access, requires verified");
+            console.log("You dont have access, requires verified and has children");
             next("/");
         }
     }

@@ -18,6 +18,7 @@ const addToFirestore = async (user) => {
     email: user.user.email,
     name: user.user.displayName,
     verifiedMember: true,
+    hasChildren: false,
     leader: false
   }
   await setDoc(doc(db, "users", user.user.uid), userData);

@@ -41,7 +41,7 @@ const register = () => {
 }
 
 const signIn = () => {
-  signInWithEmailAndPassword(getAuth(), email.value, password.value)
+  signInWithEmailAndPassword(getAuth(), email.value.trimEnd(), password.value)
       .then((user) => {
         router.push('/member');
       })
@@ -106,17 +106,19 @@ const signInWithGoogle = () => {
 
               <h3 class="mb-5">Přihlášení pro členy</h3>
 
-              <div class="form-outline mb-4">
-                <input v-model="email" type="email" id="typeEmailX-2" class="form-control form-control-lg" placeholder="Email"/>
-              </div>
+              <form @submit.prevent="signIn">
+                <div class="form-outline mb-4">
+                  <input v-model="email" type="email" id="typeEmailX-2" class="form-control form-control-lg" placeholder="Email"/>
+                </div>
 
-              <div class="form-outline mb-4">
-                <input v-model="password" type="password" id="typePasswordX-2" class="form-control form-control-lg" placeholder="Heslo"/>
-              </div>
+                <div class="form-outline mb-4">
+                  <input v-model="password" type="password" id="typePasswordX-2" class="form-control form-control-lg" placeholder="Heslo"/>
+                </div>
 
-             <p v-if="errorMsg">{{ errorMsg }}</p>  <!-- TODO error handling with focus -->
+                <p v-if="errorMsg">{{ errorMsg }}</p>  <!-- TODO error handling with focus -->
 
-              <button class="btn btn-primary btn-lg btn-block" type="submit" @click="signIn">Přihlásit se</button>
+                <button class="btn btn-primary btn-lg btn-block" type="submit">Přihlásit se</button>
+              </form>
 
               <hr class="my-4">
 
@@ -131,11 +133,6 @@ const signInWithGoogle = () => {
   </section>
 
 <!--  https://mdbootstrap.com/docs/standard/extended/login/#! -->
-
-  <h1>Register</h1>
-  <p><input type="text" placeholder="email" v-model="email"/></p>
-  <p><input type="text" placeholder="password" v-model="password"/></p>
-  <p><button @click="register">Register!</button></p>
 
 </template>
 
