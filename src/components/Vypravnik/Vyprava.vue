@@ -39,15 +39,15 @@ const infoPublished = computed(() => { return props.data.infoPublished })
 
 <template>
   <div class="row my-1">
-    <div class="card bg-sand">
+    <div class="card bg-sand-light">
       <div class="card-body p-2">
         <div class="row align-items-center flex-nowrap">
           <div class="col-3 col-md-2">{{ dateString }}</div>
           <div class="col-5 col-md-5"><badge :type="data.who" />{{ data.title }}</div>
           <div class="col-md-3 d-none d-md-block">{{ data.leader }}</div>
           <div class="col d-flex justify-content-end">
-            <button :class="['btn', 'btn-sm', (infoPublished ? 'btn-secondary' : 'btn-outline-secondary')]" @click="onEventInfoClicked">plakátek</button>
-            <button :class="['btn', 'btn-sm', 'btn-secondary']" @click="handleDelete(data.id)">del</button>
+            <button :class="['btn', 'btn-sm', (infoPublished ? 'btn-secondary' : ['btn-outline-secondary', 'disabled'])]" @click="onEventInfoClicked">plakátek</button>
+            <button :class="['btn', 'btn-sm', 'btn-secondary', 'd-none']" @click="handleDelete(data.id)">del</button>
           </div>
         </div>
       </div>

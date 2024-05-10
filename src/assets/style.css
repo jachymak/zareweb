@@ -12,6 +12,10 @@ body {
     background-color: #D7D3C0 !important;
 }
 
+.bg-sand-light {
+    background-color: #E7DFC9 !important;
+}
+
 main {
     min-height: 70vh;
 }

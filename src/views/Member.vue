@@ -54,24 +54,23 @@ const handleEventInfoClicked = (id) => {
   {{ currentUserData }}
 
   <div class="container-fluid mt-5 px-5 mb-5">
-    <div class="row">
-      <div class="col-12 col-md-6">
-        <div class="row mb-5">
-          <welcome-member :user-data="currentUserData"/>
-        </div>
 
-        <div class="row">
-          <photos />
-        </div>
-      </div>
+    <div class="row align-items-center">
       <div class="col-12 col-md-6">
-        <vypravnik @eventInfoClicked="handleEventInfoClicked" />
-        <vyprava-form class="mt-5" />
+        <welcome-member :user-data="currentUserData"/>
       </div>
+
+      <div class="col-12 col-md-6">
+        <photos />
+      </div>
+
     </div>
-    <div class="row">
+
+    <div class="row ps-3 pe-4">
       <div class="col">
 <!--        <event-info-form :id="currentEventId" />-->
+        <vypravnik @eventInfoClicked="handleEventInfoClicked" />
+
       </div>
       <div class="col"></div>
     </div>
