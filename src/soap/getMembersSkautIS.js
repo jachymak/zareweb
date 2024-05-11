@@ -5,7 +5,7 @@ const getMembersSkautIS = async () => {
           <soap:Body>
             <PersonAllExport xmlns="https://is.skaut.cz/">
               <personAllExportInput>
-                <ID_Login>859eaa6e-4b9c-49b2-854d-66b5a1d78595</ID_Login>
+                <ID_Login>b0ecbc84-401f-4007-b099-1891dc813e59</ID_Login>
                 <ID_Unit>26778</ID_Unit>
               </personAllExportInput>
             </PersonAllExport>
@@ -36,6 +36,7 @@ const getMembersSkautIS = async () => {
 
         for (let i = 0; i < fullNodeList.length; i++) {
             const person = {
+                id: fullNodeList[i].querySelector('ID').textContent,
                 firstName: fullNodeList[i].querySelector('FirstName').textContent,
                 lastName: fullNodeList[i].querySelector('LastName').textContent,
                 nickname: fullNodeList[i].querySelector('NickName').textContent,
