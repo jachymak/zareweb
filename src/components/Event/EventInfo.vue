@@ -114,22 +114,10 @@ const itemsCustomString = computed(() => {
   else return "";
 })
 
-const childInfo = {
-  nickname: "Lvice",
-  name: "Johana",
-  surname: "Kallistová"
-}
-
-const childInfo2 = {
-  nickname: "Róza",
-  name: "Róza",
-  surname: "Kallistová"
-}
-
 </script>
 
 <template>
-  <div style="min-height: 400px">
+  <div>
     <span class=""><badge :type="who" /> <h1>{{ title }} ({{ dateString }})</h1> </span>
 
     <p :class="[(infoPar.length > 0 ? '' : 'd-none')]">{{ infoPar }}</p>
@@ -143,17 +131,6 @@ const childInfo2 = {
     <br>
     <p>Těší se na vás <b>{{ leader }}</b></p>
 
-  </div>
-
-  <div style="min-height: 400px">
-    <form id="form" @submit.prevent="onSubmit">
-      <child-card :data="childInfo">
-        <sign-up-btn></sign-up-btn>
-      </child-card>
-      <child-card :data="childInfo2">
-        <sign-up-btn></sign-up-btn>
-      </child-card>
-    </form>
   </div>
 </template>
 

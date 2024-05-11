@@ -6,7 +6,10 @@ import db from "@/firebase/firebase.js";
 const router = createRouter({
     history: createWebHistory(),
     routes: [
-        { path: "/", component: () => import("@/views/Home.vue") },
+        {
+            path: "/",
+            component: () => import("@/views/Home.vue")
+        },
         {
             path: "/login",
             component: () => import("@/views/Login.vue"),
@@ -16,38 +19,48 @@ const router = createRouter({
         },
         {
             path: "/register",
-            component: () => import("@/views/Register/RegisterGate.vue"),
-            meta: {
-                signOutCurrentUser: true
-            }
-        },
-        {
-            path: "/register/main",
-            component: () => import("@/views/Register/RegisterMain.vue"),
-            meta: {
-                requiresAuth: true
-            }
-        },
-        {
-            path: "/register/children",
-            component: () => import("@/views/Register/RegisterAddChildren.vue"),
-            meta: {
-                requiresAuth: true
-            }
+            children: [
+                {
+                    path: '',
+                    component: () => import("@/views/Register/RegisterGate.vue"),
+                    meta: {
+                        signOutCurrentUser: true
+                    }
+                },
+                {
+                    path: "main",
+                    component: () => import("@/views/Register/RegisterMain.vue"),
+                    meta: {
+                        requiresAuth: true
+                    }
+                },
+                {
+                    path: "children",
+                    component: () => import("@/views/Register/RegisterAddChildren.vue"),
+                    meta: {
+                        requiresAuth: true
+                    }
+                },
+            ],
         },
         {
             path: "/member",
-            component: () => import("@/views/Member.vue"),
-            meta: {
-                requiresVerifiedAuth: true
-            }
-        },
-        {
-            path: "/event/:id",
-            component: () => import("@/views/Event.vue"),
-            meta: {
-                requiresVerifiedAuth: true
-            }
+            children: [
+                {
+                    path: '',
+                    component: () => import("@/views/Member.vue"),
+                    meta: {
+                        requiresVerifiedAuth: true
+                    }
+                },
+                {
+                    path: "event/:id",
+                    component: () => import("@/views/Event.vue"),
+                    meta: {
+                        requiresVerifiedAuth: true
+                    }
+                },
+            ],
         },
         {
             path: "/admin/members",
@@ -71,7 +84,6 @@ const getCurrentUser = () => {
 };
 
 const userVerifiedAndChildren = async (user) => {
-    console.log(user);
     const docSnap = await getDoc(doc(db, "users", user.uid));
     if (!docSnap.exists()) return [false, false];
     else return [docSnap.data().verifiedMember, docSnap.data().children.length > 0];

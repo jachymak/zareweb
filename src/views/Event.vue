@@ -1,7 +1,16 @@
 <script setup>
   import { useRouter, useRoute } from 'vue-router';
-  import EventInfo from "@/components/EventInfo.vue";
-  import EventItemsCard from "@/components/EventItemsCard.vue";
+  import EventInfo from "@/components/Event/EventInfo.vue";
+  import EventItemsCard from "@/components/Event/EventItemsCard.vue";
+  import ChildCard from "@/components/Member/ChildCard.vue";
+  import SignUpBtn from "@/components/SignUpBtn.vue";
+
+  import { useUserStore } from '@/stores/user.js'
+  import {storeToRefs} from "pinia";
+
+  const store = useUserStore()
+  const { childrenData } = storeToRefs(store)
+  store.authUser()
 
   const router = useRouter();
   const route = useRoute();
@@ -10,6 +19,8 @@
   const handleExitClick = () => {
     router.push("/login");
   };
+
+
 
 </script>
 
@@ -23,7 +34,24 @@
 
     <div class="row">
       <div class="col-12 col-md-7">
-        <event-info :event-id="eventId" /> <!-- 2024-05-24-a-sportovni-vyprava -->
+
+        <div class="row">
+          <event-info :event-id="eventId" />
+        </div>
+
+        <div class="row">
+
+          <div style="min-height: 400px">
+            <form id="form" @submit.prevent="onSubmit">
+
+              <child-card v-for="ch in childrenData" :data="ch">
+                <sign-up-btn></sign-up-btn>
+              </child-card>
+
+            </form>
+          </div>
+
+        </div>
       </div>
       <div class="col-12 col-md-5 ps-5">
         <event-items-card :event-id="eventId"></event-items-card>

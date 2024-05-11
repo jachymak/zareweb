@@ -15,7 +15,7 @@ const props = defineProps({
 });
 
 const onEventInfoClicked = () => {
-  if (props.data.infoPublished) router.push("/event/" + props.data.id);
+  if (props.data.infoPublished) router.push("/member/event/" + props.data.id);
 }
 
 const handleDelete = async (id) => {

@@ -1,13 +1,17 @@
-import { createApp } from 'vue';
-import App from './App.vue';
-import firebase from "@/firebase/firebase.js";
-import router from "@/router/router.js";
+import { createApp } from 'vue'
+import App from './App.vue'
+import { createPinia } from 'pinia'
+import router from "@/router/router.js"
 
 import "@/assets/style.css"
 import "@/assets/fonts.css"
 
-const app = createApp(App);
+const pinia = createPinia()
 
-app.use(router);
+const app = createApp(App)
 
-app.mount('#app');
+app.use(router)
+app.use(pinia)
+
+
+app.mount('#app')
