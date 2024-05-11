@@ -27,7 +27,7 @@ const addToFirestore = async (user) => {
 
 
 const register = () => {
-  createUserWithEmailAndPassword(getAuth(), email.value, password.value)
+  createUserWithEmailAndPassword(getAuth(), email.value.trimEnd(), password.value)
       .then((user) => {
         addToFirestore(user);
         router.push('/register/children');

@@ -30,7 +30,7 @@ export const useUserStore = defineStore('user', () => {
     }
 
     function signUserIn(email, password) {
-        signInWithEmailAndPassword(getAuth(), email, password)
+        signInWithEmailAndPassword(getAuth(), email.trimEnd(), password)
             .then(async () => {
                 await authUser()
                 router.push('/member')

@@ -21,7 +21,7 @@ const errorMsg = ref('');
 
               <h3 class="mb-5">Přihlášení pro členy</h3>
 
-              <form @submit.prevent="store.signUserIn(email.trimEnd(), password)">
+              <form @submit.prevent="store.signUserIn(email, password)">
                 <div class="form-outline mb-4">
                   <input v-model="email" type="email" id="typeEmailX-2" class="form-control form-control-lg" placeholder="Email"/>
                 </div>
