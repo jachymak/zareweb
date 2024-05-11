@@ -48,7 +48,14 @@ const router = createRouter({
             meta: {
                 requiresVerifiedAuth: true
             }
-        }
+        },
+        {
+            path: "/admin/members",
+            component: () => import("@/views/Admin/UpdateMembers.vue"),
+            meta: {
+                // TODO
+            }
+        },
     ]
 });
 
