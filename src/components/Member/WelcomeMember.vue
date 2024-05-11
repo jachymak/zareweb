@@ -2,20 +2,9 @@
   import ChildCard from "@/components/Member/ChildCard.vue";
 
   const props = defineProps({
-    userData: Object
+    userData: Object,
+    childrenData: Array
   });
-
-  const childInfo = {
-    nickname: "Lvice",
-    name: "Johana",
-    surname: "Kallistová"
-  }
-
-  const childInfo2 = {
-    nickname: "Róza",
-    name: "Róza",
-    surname: "Kallistová"
-  }
 
 </script>
 
@@ -32,7 +21,8 @@
       </div>
       <div class="row">
         <div class="col">
-          <child-card :data="childInfo">
+
+          <child-card v-for="ch in childrenData" :data="ch">
             <div class="row">
               <div class="col">
                 výpravy: 2/4
@@ -43,16 +33,6 @@
             </div>
           </child-card>
 
-          <child-card :data="childInfo2">
-            <div class="row">
-              <div class="col">
-                výpravy: 3/4
-              </div>
-              <div class="col">
-                schůzky: 80 %
-              </div>
-            </div>
-          </child-card>
         </div>
       </div>
     </div>

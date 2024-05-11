@@ -1,7 +1,7 @@
 <script setup>
 import {computed, ref, watch} from "vue";
 import { useRouter } from "vue-router";
-import {doc, onSnapshot, setDoc} from "firebase/firestore";
+import {collection, doc, getDocs, onSnapshot, query, where, setDoc, updateDoc} from "firebase/firestore";
 import {getAuth, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, deleteUser} from "firebase/auth"
 import db from "@/firebase/firebase.js";
 
@@ -11,14 +11,20 @@ const errorMsg = ref('');
 
 /* --- FIRESTORE --- */
 
-const addToFirestore = async (user) => {
-  const userData = {
-    email: user.user.email,
-    name: user.user.displayName,
-    verifiedMember: true,
-    leader: false
+const addChild = async (childrenIds) => {
+  const user = getAuth().currentUser
+  const data = {
+    children: childrenIds
   }
-  await setDoc(doc(db, "users", user.user.uid), userData);
+  await updateDoc(doc(db, "users", user.uid), data);
+}
+
+const getMemberId = async (identificationCode) => {
+  const q = query(collection(db, "members"), where("identificationCode", "==", identificationCode));
+  const querySnapshot = await getDocs(q);
+
+  if (querySnapshot.empty) return null;
+  return querySnapshot.docs[0].id;
 }
 
 /* --- END FIRESTORE --- */
@@ -35,10 +41,34 @@ const childrenCount = computed(() => {
   return ret;
 });
 
+// 990925/0010, 070101/0000
 
-const confirm = () => {
+const confirm = async () => {
   if (errorInData.value.some(value => value === true)) console.log("err")
-  else console.log(children.value);
+  else {
+    const childrenIds = [];
+
+    for (let i = 0; i < children.value.length; i++) {
+      const currentChildValue = children.value[i];
+      if (currentChildValue.length === 0) continue;
+
+      const childId = await getMemberId(currentChildValue);
+      if (childId !== null) {
+        childrenIds.push(childId);
+      } else {
+        errorInData.value[i] = true;
+      }
+    }
+
+    if (childrenIds.length > 0 && !errorInData.value.some(value => value === true)) {
+      console.log(childrenIds);
+      await addChild(childrenIds);
+      router.push("/member");
+    } else {
+      errorMsg.value = "Některý člen nebyl nalezen!"
+    }
+
+  }
 };
 
 const handleKeyDown = (event, i) => {
@@ -49,7 +79,7 @@ const handleKeyDown = (event, i) => {
 
 const handleChange = (i) => {
   const regex = /^\d{6}\/\d{4}$/;
-  if (!regex.test(children.value[i])) {
+  if (!regex.test(children.value[i]) && children.value[i].length > 0) {
     errorInData.value[i] = true;
   } else {
     errorInData.value[i] = false;
@@ -81,12 +111,11 @@ const handleChange = (i) => {
                     </svg>
                   </span>
                   <input v-model="children[i-1]"
-                         @keyup="handleKeyDown($event,i-1)"
+                         @keydown="handleKeyDown($event,i-1)"
                          @change="handleChange(i-1)"
                          maxlength="11" type="text"
                          :class="['form-control', 'form-control-lg', (errorInData[i-1] ? 'is-invalid' : '')]"
                          placeholder="Rodné číslo dítěte">
-                  <div class="invalid-feedback">Dítě neexistuje</div>
                 </div>
 
               </div>

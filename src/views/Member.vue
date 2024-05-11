@@ -12,9 +12,11 @@ import EventItemsCard from "@/components/EventItemsCard.vue";
 import router from "@/router/router.js";
 import WelcomeMember from "@/components/Member/WelcomeMember.vue";
 import Photos from "@/components/Member/Photos.vue";
+import getChildrenData from "@/firebase/getChildrenData.js";
 
 const isLoggedIn = ref(false);
 const currentUserData = ref({});
+const childrenData = ref([]);
 
 const auth = getAuth();
 onMounted(() => {
@@ -28,6 +30,8 @@ onMounted(() => {
       } else {
         console.log("No such document!");
       }
+
+      childrenData.value = await getChildrenData(docSnap.data().children);
 
     } else {
       isLoggedIn.value = false;
@@ -57,7 +61,7 @@ const handleEventInfoClicked = (id) => {
 
     <div class="row align-items-center">
       <div class="col-12 col-md-6">
-        <welcome-member :user-data="currentUserData"/>
+        <welcome-member :user-data="currentUserData" :children-data="childrenData"/>
       </div>
 
       <div class="col-12 col-md-6">

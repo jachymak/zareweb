@@ -16,9 +16,8 @@ const errorMsg = ref('');
 const addToFirestore = async (user) => {
   const userData = {
     email: user.user.email,
-    name: user.user.displayName,
     verifiedMember: true,
-    hasChildren: false,
+    children: [],
     leader: false
   }
   await setDoc(doc(db, "users", user.user.uid), userData);

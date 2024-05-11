@@ -71,9 +71,10 @@ const getCurrentUser = () => {
 };
 
 const userVerifiedAndChildren = async (user) => {
+    console.log(user);
     const docSnap = await getDoc(doc(db, "users", user.uid));
     if (!docSnap.exists()) return [false, false];
-    else return [docSnap.data().verifiedMember, docSnap.data().hasChildren];
+    else return [docSnap.data().verifiedMember, docSnap.data().children.length > 0];
 }
 
 router.beforeEach(async (to, from, next) => {
@@ -88,6 +89,7 @@ router.beforeEach(async (to, from, next) => {
 
     else if (to.matched.some((record) => record.meta.requiresVerifiedAuth)) {
         const user = await getCurrentUser();
+        if (user === null) next("/");
         const verification = await userVerifiedAndChildren(user);
         if (verification[0] && verification[1]) {
             next();
