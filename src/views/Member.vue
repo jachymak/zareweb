@@ -14,14 +14,11 @@ store.authUser()
 </script>
 
 <template>
-  <button @click="store.signUserOut()" v-if="loggedIn">Odhlásit se</button>
-  {{ userData }}
-
   <div class="container-fluid mt-5 px-5 mb-5">
 
     <div class="row align-items-center">
       <div class="col-12 col-md-6">
-        <welcome-member :user-data="userData" :children-data="childrenData"/>
+        <welcome-member @sign-out="store.signUserOut()" :user-data="userData" :children-data="childrenData"/>
       </div>
 
       <div class="col-12 col-md-6">
