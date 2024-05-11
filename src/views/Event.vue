@@ -1,26 +1,44 @@
 <script setup>
-  import { useRouter, useRoute } from 'vue-router';
-  import EventInfo from "@/components/Event/EventInfo.vue";
-  import EventItemsCard from "@/components/Event/EventItemsCard.vue";
-  import ChildCard from "@/components/Member/ChildCard.vue";
-  import SignUpBtn from "@/components/SignUpBtn.vue";
+  import { useRouter, useRoute } from 'vue-router'
+  import EventInfo from "@/components/Event/EventInfo.vue"
+  import EventItemsCard from "@/components/Event/EventItemsCard.vue"
+  import ChildCard from "@/components/Member/ChildCard.vue"
+  import SignUpBtn from "@/components/SignUpBtn.vue"
 
   import { useUserStore } from '@/stores/user.js'
-  import {storeToRefs} from "pinia";
+  import {storeToRefs} from "pinia"
+  import {onMounted, ref} from "vue"
+  import {doc, onSnapshot, updateDoc} from "firebase/firestore"
+  import db from "@/firebase/firebase.js"
 
   const store = useUserStore()
   const { childrenData } = storeToRefs(store)
   store.authUser()
 
-  const router = useRouter();
-  const route = useRoute();
-  const eventId = route.params.id;
+  const router = useRouter()
+  const route = useRoute()
+  const eventId = route.params.id
 
   const handleExitClick = () => {
-    router.push("/login");
-  };
+    router.push("/login")
+  }
 
+  const registeredChildren = ref([])
 
+  onSnapshot(doc(db, "vypravy", eventId), (doc) => {
+    if (doc.exists()) {
+      registeredChildren.value = doc.data().registeredChildren
+    }
+  })
+
+  const isChildRegistered = (childId) => {
+    return registeredChildren.value.some((child) => child === childId)
+  }
+
+  const handleStatusChange = async (id, newStatus) => {
+    const data = newStatus ? [...registeredChildren.value, id] : registeredChildren.value.filter(ch => ch !== id)
+    await updateDoc(doc(db, "vypravy", eventId), { registeredChildren: data })
+  }
 
 </script>
 
@@ -44,9 +62,11 @@
           <div style="min-height: 400px">
             <form id="form" @submit.prevent="onSubmit">
 
-              <child-card v-for="ch in childrenData" :data="ch">
-                <sign-up-btn></sign-up-btn>
-              </child-card>
+              <div :key="registeredChildren">
+                <child-card v-for="ch in childrenData" :data="ch" :key="ch.id">
+                  <sign-up-btn :child-id="ch.id" :status="isChildRegistered(ch.id)" @status-changed="handleStatusChange" />
+                </child-card>
+              </div>
 
             </form>
           </div>
@@ -55,6 +75,7 @@
       </div>
       <div class="col-12 col-md-5 ps-5">
         <event-items-card :event-id="eventId"></event-items-card>
+
       </div>
     </div>
   </div>

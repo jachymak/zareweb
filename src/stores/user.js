@@ -1,5 +1,5 @@
 import {defineStore} from "pinia"
-import {computed, ref, watch} from "vue"
+import {ref} from "vue"
 import {
     deleteUser,
     getAuth,

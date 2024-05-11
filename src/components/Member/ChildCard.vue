@@ -1,8 +1,8 @@
 <script setup>
 
-const props = defineProps({
-  data: Object
-})
+  const props = defineProps({
+    data: Object
+  })
 
 </script>
 
