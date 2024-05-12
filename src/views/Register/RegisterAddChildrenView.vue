@@ -7,6 +7,7 @@ import db from "@/firebase/firebase.js";
 
 const router = useRouter();
 
+const loading = ref(false);
 const errorMsg = ref('');
 
 /* --- FIRESTORE --- */
@@ -41,11 +42,10 @@ const childrenCount = computed(() => {
   return ret;
 });
 
-// 990925/0010, 070101/0000
-
 const confirm = async () => {
   if (errorInData.value.some(value => value === true)) console.log("err")
   else {
+    loading.value = true
     const childrenIds = [];
 
     for (let i = 0; i < children.value.length; i++) {
@@ -61,19 +61,21 @@ const confirm = async () => {
     }
 
     if (childrenIds.length > 0 && !errorInData.value.some(value => value === true)) {
-      console.log(childrenIds);
-      await addChild(childrenIds);
-      router.push("/member");
+      await addChild(childrenIds).then(() => {
+        router.push("/member")
+      })
     } else {
       errorMsg.value = "Některý člen nebyl nalezen!"
+      loading.value = false
     }
 
   }
 };
 
+// TODO slash appear on sixth char
 const handleKeyDown = (event, i) => {
   if (children.value[i].length === 6 && event.key !== "Backspace") {
-    children.value[i] += "/";
+    children.value[i] += '/';
   }
 };
 
@@ -121,7 +123,9 @@ const handleChange = (i) => {
               </div>
 
 
-              <button class="btn btn-primary btn-lg btn-block mt-4" type="submit" @click="confirm">Potvrdit</button>
+              <button class="btn btn-primary btn-lg btn-block mt-4" type="submit" @click="confirm">
+                Potvrdit <span v-if="loading" class='spinner-border spinner-border-sm' aria-hidden='true'></span>
+              </button>
 
 
               <p v-if="errorMsg">{{ errorMsg }}</p>  <!-- TODO error handling with focus -->
