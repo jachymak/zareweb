@@ -38,7 +38,6 @@ const router = createRouter({
                     path: "children",
                     component: () => import("@/views/Register/RegisterAddChildrenView.vue"),
                     meta: {
-                        requiresAuth: true
                     }
                 },
             ],

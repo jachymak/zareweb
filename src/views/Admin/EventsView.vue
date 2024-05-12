@@ -2,14 +2,12 @@
   import EventsList from "@/components/EventsList/EventsList.vue";
   import NewEventForm from "@/components/Admin/Events/NewEventForm.vue";
   import EventInfoForm from "@/components/Admin/Events/EventInfoForm.vue";
+  import AdminPageLayout from "@/components/Admin/AdminPageLayout.vue";
 
 </script>
 
 <template>
-  <div class="container-fluid">
-    <div class="row text-center bg-sand py-4"><h1 class="m-0">Výpravy</h1></div>
-  </div>
-  <div class="container my-5">
+  <admin-page-layout title="Výpravy">
     <div class="row">
       <div class="col">
         <event-info-form />
@@ -29,8 +27,7 @@
         </div>
       </div>
     </div>
-
-  </div>
+  </admin-page-layout>
 </template>
 
 <style scoped>
