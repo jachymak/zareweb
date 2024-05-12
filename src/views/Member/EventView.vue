@@ -1,9 +1,9 @@
 <script setup>
   import { useRouter, useRoute } from 'vue-router'
-  import EventInfo from "@/components/Event/EventInfo.vue"
-  import EventItemsCard from "@/components/Event/EventItemsCard.vue"
+  import EventInfo from "@/components/Member/EventPage/EventInfo.vue"
+  import EventItemsCard from "@/components/Member/EventPage/EventItemsCard.vue"
   import ChildCard from "@/components/Member/ChildCard.vue"
-  import SignUpBtn from "@/components/SignUpBtn.vue"
+  import SignUpBtn from "@/components/Member/EventPage/EventSignUpBtn.vue"
 
   import { useUserStore } from '@/stores/user.js'
   import {storeToRefs} from "pinia"

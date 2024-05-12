@@ -12,7 +12,7 @@
   const itemsDefaultList = ref([]);
 
   onSnapshot(doc(db, "vypravy", props.eventId), (d) => {
-    if (!d.data().info) console.log("Event with no info!");
+    if (!d.data().info) console.log("EventPage with no info!");
     else {
       itemsDefault.value = d.data().info.items.itemsDefault;
       itemsCustomList.value = d.data().info.items.itemsCustomList;

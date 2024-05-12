@@ -1,6 +1,6 @@
 <script setup>
-  import Month from "@/components/Vypravnik/Month.vue";
-  import Vyprava from "@/components/Vypravnik/Vyprava.vue";
+  import Month from "@/components/EventList/Month.vue";
+  import Vyprava from "@/components/EventList/Event.vue";
   import {ref} from "vue";
   import {collection, onSnapshot, orderBy, query} from "firebase/firestore";
   import db from "@/firebase/firebase.js";

@@ -53,41 +53,41 @@
 </script>
 
 <template>
-  <form id="form" @submit.prevent="onSubmit">
-    <div class="row">
-      <div class="col">
-        <div class="mb-3">
-          <label for="title" class="form-label">Název výpravy</label>
-          <input type="text" id="title" v-model="title" class="form-control">
+  <div class="container">
+    <form id="form" @submit.prevent="onSubmit">
+      <div class="row">
+        <div class="col">
+          <div class="mb-3">
+            <label for="title" class="form-label">Název výpravy</label>
+            <input type="text" id="title" v-model="title" class="form-control">
+          </div>
+
+          <div class="mb-3">
+            <label for="who" class="form-label">Kdo</label>
+            <select class="form-select" id="who" v-model="who">
+              <option value="v">vlčušky</option>
+              <option value="s">skauti</option>
+              <option value="a">všichni</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="leader" class="form-label">Vedoucí</label>
+            <input type="text" class="form-control" id="leader" v-model="leader">
+          </div>
+
+          <button type="submit" class="btn btn-primary">Submit</button>
         </div>
 
-        <div class="mb-3">
-          <label for="who" class="form-label">Kdo</label>
-          <select class="form-select" id="who" v-model="who">
-            <option value="v">vlčušky</option>
-            <option value="s">skauti</option>
-            <option value="a">všichni</option>
-          </select>
+        <div class="col">
+          <div class="mb-3">
+            <VueDatePicker v-model="date" locale="cs" range inline auto-apply
+                           :enable-time-picker="false"
+                           :start-time="[{ hours: 0, minutes: 0 }, { hours: 0, minutes: 0 }]"/>
+          </div>
         </div>
-
-        <div class="mb-3">
-          <label for="leader" class="form-label">Vedoucí</label>
-          <input type="text" class="form-control" id="leader" v-model="leader">
-        </div>
-
-        <button type="submit" class="btn btn-primary">Submit</button>
       </div>
+    </form>
+  </div>
 
-      <div class="col">
-        <div class="mb-3">
-          <VueDatePicker v-model="date" locale="cs" range inline auto-apply
-                         :enable-time-picker="false"
-                         :start-time="[{ hours: 0, minutes: 0 }, { hours: 0, minutes: 0 }]"/>
-        </div>
-      </div>
-    </div>
-
-    <div class="row">
-    </div>
-  </form>
 </template>

@@ -1,6 +1,6 @@
 <script setup>
 import {ref} from "vue"
-import Vypravnik from "@/components/Vypravnik/Vypravnik.vue"
+import Vypravnik from "@/components/EventList/EventList.vue"
 import WelcomeMember from "@/components/Member/WelcomeMember.vue"
 import Photos from "@/components/Member/Photos.vue"
 
@@ -8,7 +8,7 @@ import { useUserStore } from '@/stores/user.js'
 import {storeToRefs} from "pinia"
 
 const store = useUserStore()
-const { loggedIn, userData, childrenData } = storeToRefs(store)
+const { userData, childrenData } = storeToRefs(store)
 store.authUser()
 
 </script>
@@ -25,7 +25,8 @@ store.authUser()
 <!--        <photos />-->
         <ul>
           <li><router-link to="/admin/attendance">Docházka</router-link></li>
-          <li><router-link to="/admin/members">Spravování členů</router-link></li>
+          <li><router-link to="/admin/events">Výpravy</router-link></li>
+          <li><router-link to="/admin/members">Členové</router-link></li>
         </ul>
 
       </div>

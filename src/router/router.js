@@ -8,11 +8,11 @@ const router = createRouter({
     routes: [
         {
             path: "/",
-            component: () => import("@/views/Home.vue")
+            component: () => import("@/views/HomeView.vue")
         },
         {
             path: "/login",
-            component: () => import("@/views/Login.vue"),
+            component: () => import("@/views/LoginView.vue"),
             meta: {
                 requiresNoAuth: true
             }
@@ -22,21 +22,21 @@ const router = createRouter({
             children: [
                 {
                     path: '',
-                    component: () => import("@/views/Register/RegisterGate.vue"),
+                    component: () => import("@/views/Register/RegisterGateView.vue"),
                     meta: {
                         signOutCurrentUser: true
                     }
                 },
                 {
                     path: "main",
-                    component: () => import("@/views/Register/RegisterMain.vue"),
+                    component: () => import("@/views/Register/RegisterMainView.vue"),
                     meta: {
                         requiresAuth: true
                     }
                 },
                 {
                     path: "children",
-                    component: () => import("@/views/Register/RegisterAddChildren.vue"),
+                    component: () => import("@/views/Register/RegisterAddChildrenView.vue"),
                     meta: {
                         requiresAuth: true
                     }
@@ -48,14 +48,14 @@ const router = createRouter({
             children: [
                 {
                     path: '',
-                    component: () => import("@/views/Member.vue"),
+                    component: () => import("@/views/Member/MemberView.vue"),
                     meta: {
                         requiresVerifiedAuth: true
                     }
                 },
                 {
                     path: "event/:id",
-                    component: () => import("@/views/Event.vue"),
+                    component: () => import("@/views/Member/EventView.vue"),
                     meta: {
                         requiresVerifiedAuth: true
                     }
@@ -63,13 +63,26 @@ const router = createRouter({
             ],
         },
         {
-            path: "/admin/members",
-            component: () => import("@/views/Admin/UpdateMembers.vue"),
+            path: "/admin",
+            children: [
+                {
+                    path: "attendance",
+                    component: () => import("@/views/Admin/AttendanceView.vue"),
+                },
+                {
+                    path: "events",
+                    component: () => import("@/views/Admin/EventsView.vue"),
+                },
+                {
+                    path: "members",
+                    component: () => import("@/views/Admin/MembersView.vue"),
+                },
+            ],
             meta: {
                 // TODO
             }
         },
-        { path: '/:pathMatch(.*)*', name: 'NotFound', component: () => import("@/views/NotFound.vue") }
+        { path: '/:pathMatch(.*)*', name: 'NotFound', component: () => import("@/views/NotFoundView.vue") }
     ]
 });
 
