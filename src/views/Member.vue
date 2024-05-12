@@ -14,7 +14,7 @@ store.authUser()
 </script>
 
 <template>
-  <div class="container-fluid mt-5 px-5 mb-5">
+  <div class="container-fluid container-md p-0 mb-5 mt-md-5">
 
     <div class="row align-items-center">
       <div class="col-12 col-md-6">
@@ -22,17 +22,21 @@ store.authUser()
       </div>
 
       <div class="col-12 col-md-6">
-        <photos />
+<!--        <photos />-->
+        <ul>
+          <li><router-link to="/admin/attendance">Docházka</router-link></li>
+          <li><router-link to="/admin/members">Spravování členů</router-link></li>
+        </ul>
+
       </div>
 
     </div>
 
-    <div class="row ps-3 pe-4">
-      <div class="col">
+    <div class="row px-2">
+      <div class="col-12 col-md-6">
         <vypravnik />
 
       </div>
-      <div class="col"></div>
     </div>
   </div>
 </template>

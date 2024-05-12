@@ -38,19 +38,26 @@ const infoPublished = computed(() => { return props.data.infoPublished })
 </script>
 
 <template>
-  <div class="row my-1">
-    <div class="card bg-sand-light">
-      <div class="card-body p-2">
-        <div class="row align-items-center flex-nowrap">
-          <div class="col-3 col-md-2">{{ dateString }}</div>
-          <div class="col-5 col-md-5"><badge :type="data.who" />{{ data.title }}</div>
-          <div class="col-md-3 d-none d-md-block">{{ data.leader }}</div>
-          <div class="col d-flex justify-content-end">
-            <button :class="['btn', 'btn-sm', (infoPublished ? 'btn-secondary' : ['btn-outline-secondary', 'disabled'])]" @click="onEventInfoClicked">plakátek</button>
-            <button :class="['btn', 'btn-sm', 'btn-secondary', 'd-none']" @click="handleDelete(data.id)">del</button>
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="card bg-sand-light">
+        <div class="card-body py-2 px-1">
+
+          <div class="container-fluid">
+            <div class="row align-items-center d-flex justify-content-around">
+              <div class="col-2 col-md-2 p-0 text-truncate">{{ dateString }}</div>
+              <div class="col-6 col-md-5 p-0 text-truncate"><badge :type="data.who" />{{ data.title }}</div>
+              <div class="col-md-3 d-none d-md-block">{{ data.leader }}</div>
+              <div class="col-2 text-center p-0">
+                <button :class="['btn', 'btn-sm', 'm-0', (infoPublished ? 'btn-secondary' : ['btn-outline-secondary', 'disabled'])]" @click="onEventInfoClicked">plakátek</button>
+<!--                <button :class="['btn', 'btn-sm', 'btn-secondary', 'd-none']" @click="handleDelete(data.id)">del</button>-->
+              </div>
+            </div>
           </div>
+
         </div>
       </div>
     </div>
   </div>
+
 </template>
