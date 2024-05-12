@@ -1,11 +1,6 @@
 <script setup>
 import Badge from "@/components/Badge.vue";
 import { computed } from 'vue';
-import db from "@/firebase/firebase.js"
-import { doc, deleteDoc } from "firebase/firestore";
-import { useRouter } from "vue-router";
-
-const router = useRouter();
 
 const props = defineProps({
   data: {
@@ -13,15 +8,6 @@ const props = defineProps({
     required: true,
   },
 });
-
-const onEventInfoClicked = () => {
-  if (props.data.infoPublished) router.push("/member/event/" + props.data.id);
-}
-
-const handleDelete = async (id) => {
-  await deleteDoc(doc(db, "vypravy", id));
-  console.log("deleted")
-}
 
 const dateString = computed(() => {
   const d = [props.data.date[0], props.data.date[1]];
@@ -34,7 +20,6 @@ const dateString = computed(() => {
   else return day[0] + "." + month[0] + ".-" + day[1] + "." + month[1] + ".";
 })
 
-const infoPublished = computed(() => { return props.data.infoPublished })
 </script>
 
 <template>
@@ -49,8 +34,7 @@ const infoPublished = computed(() => { return props.data.infoPublished })
               <div class="col-6 col-md-5 p-0 text-truncate"><badge :type="data.who" />{{ data.title }}</div>
               <div class="col-md-3 d-none d-md-block">{{ data.leader }}</div>
               <div class="col-2 text-center p-0">
-                <button :class="['btn', 'btn-sm', 'm-0', (infoPublished ? 'btn-secondary' : ['btn-outline-secondary', 'disabled'])]" @click="onEventInfoClicked">plakátek</button>
-<!--                <button :class="['btn', 'btn-sm', 'btn-secondary', 'd-none']" @click="handleDelete(data.id)">del</button>-->
+                <slot />
               </div>
             </div>
           </div>

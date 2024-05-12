@@ -53,39 +53,72 @@
 </script>
 
 <template>
-  <div class="container">
+  <div class="container-fluid py-3">
+    <div class="row">
+      <h3>Přidat akci</h3>
+    </div>
+
     <form id="form" @submit.prevent="onSubmit">
       <div class="row">
-        <div class="col">
-          <div class="mb-3">
-            <label for="title" class="form-label">Název výpravy</label>
-            <input type="text" id="title" v-model="title" class="form-control">
+        <div class="col px-4">
+
+          <div class="row">
+            <div class="col p-0">
+              <div class="mb-3">
+                <label for="title" class="form-label">Název akce</label>
+                <input type="text" id="title" v-model="title" class="form-control">
+              </div>
+            </div>
           </div>
 
-          <div class="mb-3">
-            <label for="who" class="form-label">Kdo</label>
-            <select class="form-select" id="who" v-model="who">
-              <option value="v">vlčušky</option>
-              <option value="s">skauti</option>
-              <option value="a">všichni</option>
-            </select>
+
+          <div class="row">
+            <div class="col p-0">
+              <div class="mb-3">
+                <label for="who" class="form-label">Pro koho</label>
+                <select class="form-select" id="who" v-model="who">
+                  <option value="v">vlčušky</option>
+                  <option value="s">skauti</option>
+                  <option value="a">všichni</option>
+                </select>
+              </div>
+            </div>
           </div>
 
-          <div class="mb-3">
-            <label for="leader" class="form-label">Vedoucí</label>
-            <input type="text" class="form-control" id="leader" v-model="leader">
+
+          <div class="row">
+            <div class="col p-0">
+              <div class="mb-3">
+                <label for="leader" class="form-label">Vedoucí</label>
+                <input type="text" class="form-control" id="leader" v-model="leader">
+              </div>
+            </div>
           </div>
 
-          <button type="submit" class="btn btn-primary">Submit</button>
+          <div class="row align-items-center">
+            <div class="col-9 p-0">
+                <label class="form-check-label" for="campCheck">
+                  Akce bez plakátku <br class="d-none d-md-inline">(např. tábor)
+                </label>
+            </div>
+            <div class="col-3 p-0 text-end">
+              <input class="form-check-input" type="checkbox" value="" id="campCheck" style="width: 25px; height: 25px;">
+            </div>
+          </div>
+
         </div>
 
-        <div class="col">
+        <div class="col d-flex justify-content-center mt-4 mt-md-2">
           <div class="mb-3">
             <VueDatePicker v-model="date" locale="cs" range inline auto-apply
                            :enable-time-picker="false"
                            :start-time="[{ hours: 0, minutes: 0 }, { hours: 0, minutes: 0 }]"/>
           </div>
         </div>
+      </div>
+
+      <div class="row mt-3 px-2">
+        <button type="submit" class="btn btn-primary">Submit</button>
       </div>
     </form>
   </div>

@@ -1,6 +1,6 @@
 <script setup>
 import {ref} from "vue"
-import Vypravnik from "@/components/EventList/EventList.vue"
+import Vypravnik from "@/components/EventsList/EventsList.vue"
 import WelcomeMember from "@/components/Member/WelcomeMember.vue"
 import Photos from "@/components/Member/Photos.vue"
 
