@@ -25,7 +25,7 @@
 
   const registeredChildren = ref([])
 
-  onSnapshot(doc(db, "vypravy", eventId), (doc) => {
+  onSnapshot(doc(db, "events", eventId), (doc) => {
     if (doc.exists()) {
       registeredChildren.value = doc.data().registeredChildren
     }
@@ -37,7 +37,7 @@
 
   const handleStatusChange = async (id, newStatus) => {
     const data = newStatus ? [...registeredChildren.value, id] : registeredChildren.value.filter(ch => ch !== id)
-    await updateDoc(doc(db, "vypravy", eventId), { registeredChildren: data })
+    await updateDoc(doc(db, "events", eventId), { registeredChildren: data })
   }
 
 </script>
@@ -60,7 +60,6 @@
         <div class="row">
 
           <div style="min-height: 400px">
-            <form id="form" @submit.prevent="onSubmit">
 
               <div :key="registeredChildren">
                 <child-card v-for="ch in childrenData" :data="ch" :key="ch.id">
@@ -68,7 +67,6 @@
                 </child-card>
               </div>
 
-            </form>
           </div>
 
         </div>

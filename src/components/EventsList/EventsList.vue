@@ -13,13 +13,11 @@
     edit: Boolean
   })
 
-  console.log(props.edit)
-
   const months = ["Leden", "Únor", "Březen", "Duben", "Květen", "Červen", "Červenec", "Srpen", "Září", "Říjen", "Listopad", "Prosinec"];
 
   const events = ref([])
 
-  const q = query(collection(db, "vypravy"), orderBy("date", "asc"));
+  const q = query(collection(db, "events"), orderBy("date", "asc"));
   const unsubscribe = onSnapshot(q, (querySnapshot) => {
     events.value = []
     querySnapshot.forEach((doc) => {
@@ -30,7 +28,8 @@
         leader: doc.data().leader,
         date: [doc.data().date[0].toDate(), doc.data().date[1].toDate()],
         monthIdx: doc.data().date[0].toDate().getMonth(),
-        infoPublished: doc.data().infoPublished
+        infoPublished: doc.data().infoPublished,
+        withoutInfo: doc.data().withoutInfo
       })
     });
   });
@@ -50,7 +49,7 @@
 
   const handleDelete = async (id) => {
     if (confirm("Opravdu smazat akci? (" + id + ")")) {
-      await deleteDoc(doc(db, "vypravy", id));
+      await deleteDoc(doc(db, "events", id));
       console.log("deleted")
     }
   }
@@ -62,6 +61,7 @@
     <month v-if="getMonthEvents(i-1).length > 0" :month="months[i-1]">
       <event v-for="event in getMonthEvents(i-1)" :data="event" :key="event.id">
         <button
+            v-if="!event.withoutInfo"
             :class="['btn', 'btn-sm', 'm-0', (event.infoPublished ? 'btn-secondary' : ['btn-outline-secondary', (edit ? '' : 'disabled')])]"
             @click="handleEventInfoClick(event)">
           {{ edit ? "P" : "plakátek"}}

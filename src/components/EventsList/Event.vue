@@ -29,7 +29,7 @@ const dateString = computed(() => {
         <div class="card-body py-2 px-1">
 
           <div class="container-fluid">
-            <div class="row align-items-center d-flex justify-content-around">
+            <div class="row align-items-center d-flex justify-content-around" style="min-height: 31px">
               <div class="col-2 col-md-2 p-0 text-truncate">{{ dateString }}</div>
               <div class="col-6 col-md-5 p-0 text-truncate"><badge :type="data.who" />{{ data.title }}</div>
               <div class="col-md-3 d-none d-md-block">{{ data.leader }}</div>

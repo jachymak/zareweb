@@ -59,7 +59,7 @@ import Badge from "@/components/Badge.vue";
       unsubscribe();
       unsubscribe = null;
     }
-    if (currentEventId.value) unsubscribe = onSnapshot(doc(db, "vypravy", currentEventId.value), (doc) => {
+    if (currentEventId.value) unsubscribe = onSnapshot(doc(db, "events", currentEventId.value), (doc) => {
       if (!doc.data().info) clearFields();
       else {
         infoPar.value = doc.data().info.infoPar;
@@ -124,7 +124,7 @@ import Badge from "@/components/Badge.vue";
       food: food.value
     }
 
-    await updateDoc(doc(db, "vypravy", currentEventId.value), {
+    await updateDoc(doc(db, "events", currentEventId.value), {
       infoPublished: infoPublished.value,
       info: infoData
     })

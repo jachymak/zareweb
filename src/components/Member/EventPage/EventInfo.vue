@@ -4,8 +4,6 @@ import Badge from "@/components/Badge.vue";
 import {doc, onSnapshot} from "firebase/firestore";
 import db from "@/firebase/firebase.js";
 import {computed, ref} from "vue";
-import ChildCard from "@/components/Member/ChildCard.vue";
-import SignUpBtn from "@/components/Member/EventPage/EventSignUpBtn.vue";
 
 const props = defineProps({
   eventId: {
@@ -32,7 +30,7 @@ const itemsDefault = ref('');
 const itemsCustomList = ref([]);
 const food = ref('');
 
-const unsubscribe = onSnapshot(doc(db, "vypravy", props.eventId), (doc) => {
+const unsubscribe = onSnapshot(doc(db, "events", props.eventId), (doc) => {
   if (!doc.data().info) console.log("EventPage with no info!");
   else {
     title.value = doc.data().title;
