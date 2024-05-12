@@ -31,7 +31,8 @@
   }
 
   const onSubmit = async () => {
-    if (!title.value || !who.value || !date.value) {
+    console.log(date.value)
+    if (!title.value || !who.value || !date.value[0] || !date.value[1]) {
       console.log("hovno nemas vsechno vyplneny!")
       return
     }
@@ -117,6 +118,7 @@
           <div class="mb-3">
             <VueDatePicker v-model="date" locale="cs" range inline auto-apply
                            :enable-time-picker="false"
+                           :month-change-on-scroll="false"
                            :start-time="[{ hours: 0, minutes: 0 }, { hours: 0, minutes: 0 }]"/>
           </div>
         </div>
