@@ -1,6 +1,6 @@
 import {defineStore} from "pinia"
 import {ref} from "vue"
-import {collection, doc, onSnapshot, query} from "firebase/firestore";
+import {collection, doc, onSnapshot, query, setDoc} from "firebase/firestore";
 import db from "@/firebase/firebase.js";
 import {eachDayOfInterval} from "date-fns";
 
@@ -29,58 +29,73 @@ const datesToArray = (dates) => {
 
 
 export const useAttendanceStore = defineStore('attendance', () => {
+    const data= ref([])
     const currentEventId = ref("")
-    const currentEventLabel = ref({})
-
-    const doneDates = ref([])
-    const eventDates = ref([])
-
 
     function setup() {
         getEvents()
         getDoneDates()
     }
 
-    function setCurrentEvent(id, title, who) {
-        currentEventId.value = id
-        currentEventLabel.value.title = title
-        currentEventLabel.value.who = who
-    }
-
     function resetCurrentEvent() {
         currentEventId.value = ""
-        currentEventLabel.value = {}
     }
 
     function getDoneDates() {
         onSnapshot(query(collection(db, "attendance")), (querySnapshot) => {
-            doneDates.value = []
-            const dates = []
             querySnapshot.forEach((doc) => {
-                dates.push(doc.data().date)
-            })
+                const ev = data.value.find(val => val.id === doc.id)
 
-            for (const d of dates) {
-                datesToArray(d).forEach((val) => {
-                    doneDates.value.push(val)
-                })
-            }
+                if (ev) data.value[ev].done = true
+                else {
+                    const ev = {
+                        id: doc.id,
+                        dates: datesToArray(doc.data().date),
+                        done: true,  // will be updated in getDoneDates function
+                        title: "Schůzka",
+                        who: ""
+                    }
+                    data.value.push(ev)
+                }
+
+            })
         })
     }
 
     function getEvents() {
         onSnapshot(query(collection(db, "events")), (querySnapshot) => {
-            eventDates.value = []
+            data.value = []
             querySnapshot.forEach((doc) => {
-                const dates = datesToArray(doc.data().date)
-                eventDates.value.push({
-                    dates: dates,
+                const ev = {
+                    id: doc.id,
+                    dates: datesToArray(doc.data().date),
+                    done: false,  // will be updated in getDoneDates function
                     title: doc.data().title,
                     who: doc.data().who
-                })
+                }
+                data.value.push(ev)
             })
         })
     }
 
-    return { currentEventId, currentEventLabel, doneDates, eventDates, setCurrentEvent, resetCurrentEvent, setup, getEvents, getDoneDates }
+    async function createAttendanceMeeting(eventId, date) {
+        await setDoc(doc(db, "attendance", eventId), {
+            date: [date, date],
+            eventCancelled: false,
+            children: [],
+            leaders: []
+        });
+        data.value.find((e, i) => {
+            if (e.id === eventId) {
+                data.value[i].done = true
+                return true
+            }
+        })
+    }
+
+    function getAttendance() {
+
+    }
+
+    return { data, currentEventId, resetCurrentEvent, setup, getEvents, getDoneDates, getAttendance, createAttendanceMeeting }
 })
