@@ -19,11 +19,12 @@
   <section>
     <div class="container-fluid bg-sand p-3 pt-4 pt-md-3 pb-md-2">
       <div class="row align-items-center mb-3">
-        <div class="col">
+        <div class="col-6">
           <h3 class="m-md-0">Ahoj!</h3>
         </div>
-        <div class="col text-end">
-          <div class="d-flex d-inline-block align-items-center">
+
+        <div class="col-6">
+          <div class="d-flex d-inline-block align-items-center justify-content-end">
             <h6 class="m-0 me-3 me-md-2">{{ userData.email }}</h6>
             <button @click="emit('signOut')" class="btn btn-sm btn-secondary d-flex align-items-center" style="padding-right: 4px; padding-left: 6px">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-box-arrow-right" viewBox="0 0 16 16">

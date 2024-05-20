@@ -87,12 +87,9 @@ import Badge from "@/components/Badge.vue";
     });
   });
 
-
-  // TODO refresh form warning
-
   const onSubmit = async () => {
     // if (!title.value || !who.value || !leader.value || !date.value) {
-    //   console.log("hovno nemas vsechno vyplneny!")
+    //   TODO validate fields
     //   return;
     // }
 

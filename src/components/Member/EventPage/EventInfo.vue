@@ -126,8 +126,7 @@ const itemsCustomString = computed(() => {
     <p><b>Peněz:</b> {{ money }}</p>
     <p><b>S sebou:</b> {{ itemsDefaultString }}{{ (itemsCustomList.length > 0 && itemsDefaultString) ? ", " : ""}}{{ itemsCustomString }}</p>
     <p><b>Jídlo:</b> {{ food }}</p>
-    <br>
-    <p>Těší se na vás <b>{{ leader }}</b></p>
+    <p class="text-end">Těší se na vás <b>{{ leader }}</b></p>
 
   </div>
 </template>

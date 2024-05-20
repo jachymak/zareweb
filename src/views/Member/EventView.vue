@@ -7,13 +7,18 @@
 
   import { useUserStore } from '@/stores/user.js'
   import {storeToRefs} from "pinia"
-  import {onMounted, ref} from "vue"
+  import {computed, onMounted, ref} from "vue"
   import {doc, onSnapshot, updateDoc} from "firebase/firestore"
   import db from "@/firebase/firebase.js"
+  import {useMembersStore} from "@/stores/members.js";
+  import getChildrenData from "@/firebase/getChildrenData.js";
+  import NickOrName from "@/components/NickOrName.vue";
 
   const store = useUserStore()
-  const { childrenData } = storeToRefs(store)
+  const { childrenData, userData } = storeToRefs(store)
   store.authUser()
+
+  const memberStore = useMembersStore()
 
   const router = useRouter()
   const route = useRoute()
@@ -24,10 +29,13 @@
   }
 
   const registeredChildren = ref([])
+  const childData = ref([])
 
-  onSnapshot(doc(db, "events", eventId), (doc) => {
+  onSnapshot(doc(db, "events", eventId), async (doc) => {
     if (doc.exists()) {
       registeredChildren.value = doc.data().registeredChildren
+
+      if (userData.value.leader) childData.value = await getChildrenData(registeredChildren.value)
     }
   })
 
@@ -39,6 +47,10 @@
     const data = newStatus ? [...registeredChildren.value, id] : registeredChildren.value.filter(ch => ch !== id)
     await updateDoc(doc(db, "events", eventId), { registeredChildren: data })
   }
+
+  const registeredCount = computed(() => {
+    return registeredChildren.value.length
+  })
 
 </script>
 
@@ -61,19 +73,36 @@
 
           <div style="min-height: 400px">
 
-              <div :key="registeredChildren">
-                <child-card v-for="ch in childrenData" :data="ch" :key="ch.id">
-                  <sign-up-btn :child-id="ch.id" :status="isChildRegistered(ch.id)" @status-changed="handleStatusChange" />
-                </child-card>
+            <div v-if="!userData.leader" :key="registeredChildren">
+              <child-card v-for="ch in childrenData" :data="ch" :key="ch.id">
+                <sign-up-btn :child-id="ch.id" :status="isChildRegistered(ch.id)" @status-changed="handleStatusChange" />
+              </child-card>
+            </div>
+
+            <div v-if="userData.leader" class="container-fluid p-4 mt-4 bg-sand">
+              <div class="row align-items-center mb-3">
+                <div class="col">
+                  <h3>Přihlášené děti</h3>
+                </div>
+                <div class="col text-end">
+                  <h3>{{ registeredCount }}</h3>
+                </div>
               </div>
+
+              <div class="row">
+                <div v-for="ch in childData" class="col-3 text-center">
+                  <nick-or-name :short="true" :user-data="ch" />
+                </div>
+              </div>
+            </div>
 
           </div>
 
         </div>
       </div>
+
       <div class="col-12 col-md-5 ps-5">
         <event-items-card :event-id="eventId"></event-items-card>
-
       </div>
     </div>
   </div>
