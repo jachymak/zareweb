@@ -14,11 +14,11 @@ const props = defineProps({
 
 const emit = defineEmits(["statusChanged"])
 
-const classDefault = "btn btn-sm btn-primary w-50 me-3"
+const classDefault = "btn btn-sm btn-primary w-50"
 const textDefault = "Přihlásit na akci"
-const classSuccess = "btn btn-sm btn-success w-50 me-3"
+const classSuccess = "btn btn-sm btn-success w-50"
 const textSuccess = "Přihlášen!"
-const classHover = "btn btn-sm btn-danger w-50 me-3"
+const classHover = "btn btn-sm btn-danger w-50"
 const textHover = "Odhlásit?"
 
 const st = ref(props.status)

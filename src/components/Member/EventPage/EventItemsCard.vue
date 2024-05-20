@@ -30,21 +30,34 @@
     <div class="row">
       <div class="col">
 
-        <h5>
-          <div class="form-check" v-for="(item, idx) in itemsDefaultList">
-            <input class="form-check-input" type="checkbox" value="" :id="'check' + idx">
-            <label class="form-check-label" :for="'check' + idx">
-              {{ item }}
-            </label>
+        <div class="card bg-sand-light">
+          <div class="card-body py-3 px-4">
+
+            <h5 style="font-weight: normal !important;">
+              <div class="row mb-2" v-for="(item, idx) in itemsDefaultList">
+                <div class="col">
+                  <input class="form-check-input m-0 align-middle" type="checkbox" value="" :id="'check' + idx">
+                  <label class="form-check-label align-middle ms-3" :for="'check' + idx">
+                    {{ item }}
+                  </label>
+                </div>
+              </div>
+
+              <hr>
+
+              <div class="row mb-2" v-for="(item, idx) in itemsCustomList">
+                <div class="col">
+                  <input class="form-check-input m-0 align-middle" type="checkbox" value="" :id="'check' + idx">
+                  <label class="form-check-label align-middle ms-3" :for="'check' + idx">
+                    {{ item }}
+                  </label>
+                </div>
+              </div>
+
+            </h5>
+
           </div>
-          ---
-          <div class="form-check" v-for="(item, idx) in itemsCustomList">
-            <input class="form-check-input" type="checkbox" value="" :id="'checkC' + idx">
-            <label class="form-check-label" :for="'checkC' + idx">
-              {{ item }}
-            </label>
-          </div>
-        </h5>
+        </div>
 
       </div>
     </div>

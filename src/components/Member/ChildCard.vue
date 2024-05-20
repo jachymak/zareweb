@@ -12,7 +12,7 @@
   <div class="card mb-2 bg-sand">
     <div class="card-body">
       <div class="row align-items-center">
-        <div class="col">
+        <div class="col-6 text-truncate">
           <span>
             <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-person-circle px-auto pe-2" viewBox="0 0 16 16">
               <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/>
@@ -22,7 +22,7 @@
           <nick-or-name class="d-none d-md-inline" :short="false" :user-data="data" :bold="true" />
           <nick-or-name class="d-inline d-md-none" :short="true" :user-data="data" :bold="true" />
         </div>
-        <div class="col text-center">
+        <div class="col-6 p-0 text-center">
           <slot />
         </div>
       </div>
