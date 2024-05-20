@@ -1,5 +1,6 @@
 <script setup>
   import ChildCard from "@/components/Member/ChildCard.vue";
+  import router from "@/router/router.js";
 
   const props = defineProps({
     userData: Object,
@@ -7,6 +8,10 @@
   });
 
   const emit = defineEmits(["signOut"]);
+
+  const handleBtnClick = (path) => {
+    router.push(path)
+  }
 
 </script>
 
@@ -31,7 +36,7 @@
       </div>
 
       <div class="row pt-2 pt-md-0">
-        <div class="col">
+        <div v-if="!userData.leader" class="col-12">
 
           <child-card v-for="ch in childrenData" :data="ch">
             <div class="container-fluid">
@@ -45,13 +50,35 @@
               </div>
             </div>
           </child-card>
-
         </div>
+
+        <div v-if="userData.leader" class="container px-4" id="admin-buttons">
+          <div class="row mb-3 d-flex justify-content-evenly">
+            <div class="col-10 col-md-5 btn btn-secondary" @click="handleBtnClick('/admin/attendance')">
+              Docházka
+            </div>
+            <div class="col-10 col-md-5 btn btn-secondary" @click="handleBtnClick('/admin/events')">
+              Výpravy
+            </div>
+          </div>
+          <div class="row mb-3 d-flex justify-content-evenly">
+            <div class="col-10 col-md-5 btn btn-secondary" @click="handleBtnClick('/admin/members')">
+              Členové
+            </div>
+            <div class="col-10 col-md-5 btn btn-secondary" @click="handleBtnClick('/admin/door')">
+              Otrok matoun
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   </section>
 </template>
 
 <style scoped>
-
+  #admin-buttons .btn {
+    min-height: 3em;
+    align-content: center;
+  }
 </style>
