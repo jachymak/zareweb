@@ -76,6 +76,10 @@ const router = createRouter({
                     path: "members",
                     component: () => import("@/views/Admin/MembersView.vue"),
                 },
+                {
+                    path: "door",
+                    component: () => import("@/views/Admin/DoorOpeningSystemView.vue"),
+                },
             ],
             meta: {
                 // TODO

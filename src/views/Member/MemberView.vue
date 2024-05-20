@@ -27,6 +27,7 @@ store.authUser()
           <li><router-link to="/admin/attendance">Docházka</router-link></li>
           <li><router-link to="/admin/events">Výpravy</router-link></li>
           <li><router-link to="/admin/members">Členové</router-link></li>
+          <li><router-link to="/admin/door">Otrok</router-link></li>
         </ul>
 
       </div>
