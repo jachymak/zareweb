@@ -1,46 +1,63 @@
 <script setup>
   import PhotoAlbum from "@/components/Member/PhotoAlbum.vue";
+  import {ref} from "vue";
 
-  const photosData = {
-    photos1: {
-      title: "Velikonočka 2024",
-      url: "https://img30.rajce.idnes.cz/d3001/18/18994/18994846_c49a1a3c7a9b585ed0dbecfd5b9ad08f/thumb/IMG_3267.jpg"
-    },
-    photos2: {
-      title: "Výprava do středohoří",
-      url: "https://img31.rajce.idnes.cz/d3103/18/18968/18968863_7958795c265972900867f25109ece579/thumb/IMG_0763.jpg"
-    },
-    photos3: {
-      title: "Pololetní výprava",
-      url: "https://img42.rajce.idnes.cz/d4202/18/18904/18904322_8b8506b3a87a9620f3b622fe19b49c68/thumb/DSC_8535.jpg"
-    }
+  const albumsData = ref([])
+
+  const extractTitle = (titleString) => {
+    const regex = /\| (.*)$/
+    const match = regex.exec(titleString)
+    return match[1]
   }
+
+  const extractThumbnailUrl = (content) => {
+    const regex = /<img.*?src="(.*?)"/
+    const match = regex.exec(content)
+    return match[1]
+  }
+
+  fetch("https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fzare-sipka.rajce.idnes.cz%2F%3Frss%3Dnews")
+      .then((res) => res.json())
+      .then((data) => {
+        for (const item of data.items) {
+          const album = {
+            title: extractTitle(item.title),
+            link: item.link,
+            thumbnailUrl: extractThumbnailUrl(item.content)
+          }
+          albumsData.value.push(album)
+          if (albumsData.value.length >= 3) break
+        }
+      })
+
 
 </script>
 
 <template>
   <section>
-    <div class="container-fluid">
-      <div class="row px-3 pb-3">
-        <div class="col">
-          <photo-album :data="photosData.photos1" ></photo-album>
-          <!--<img class="img-fluid" :src="photosData.photos1.url" alt="">-->
+    <div class="container mt-4">
+      <div class="row p-md-0 p-5 gy-md-0 gy-4">
+        <div v-for="(album, i) in albumsData" :key="i" class="col-12 col-md-4">
+          <photo-album :data="album" />
         </div>
-
-        <div class="col">
-          <photo-album :data="photosData.photos2" ></photo-album>
+      </div>
+      <div class="row mt-3">
+        <div class="col-12 text-end">
+          <a href="https://zare-sipka.rajce.idnes.cz" target="_blank" class="custom-link">zobrazit další alba...</a>
         </div>
-
-        <div class="col">
-          <photo-album :data="photosData.photos3" ></photo-album>
-        </div>
-
-
       </div>
     </div>
   </section>
 </template>
 
 <style scoped>
+  .custom-link {
+    text-decoration: none;
+    color: #11284F;
+  }
 
+  .custom-link:hover {
+    text-decoration: none;
+    color: #050d19;
+  }
 </style>
