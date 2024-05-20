@@ -65,7 +65,15 @@
           phoneString: doc.id.replace(/(\d{3})(?=\d)/g, '$1 '),
           lastOpened: lastOpened
         }
-        numbers.value.push(data)
+
+        const exists = numbers.value.findIndex(n => n.phoneString === data.phoneString)
+
+        if (exists >= 0) {
+          numbers.value[exists].lastOpened = data.lastOpened
+        }
+        else numbers.value.push(data)
+
+
       })
     })
   })
