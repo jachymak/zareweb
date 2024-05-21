@@ -1,27 +1,34 @@
 <script setup>
-  import {ref} from "vue";
-  import {doc, onSnapshot} from "firebase/firestore";
-  import db from "@/firebase/firebase.js";
+  import { ref } from "vue"
+  import { doc, onSnapshot } from "firebase/firestore"
+  import db from "@/firebase/firebase.js"
+  import { useSubscriptionsStore } from "@/stores/subsriptions.js"
+
+  const subscriptionsStore = useSubscriptionsStore()
 
   const props = defineProps({
     eventId: String
   })
 
-  const itemsDefault = ref('');
-  const itemsCustomList = ref(''); // TODO
-  const itemsDefaultList = ref([]);
+  const itemsDefault = ref('')
+  const itemsCustomList = ref('') // TODO
+  const itemsDefaultList = ref([])
 
-  onSnapshot(doc(db, "events", props.eventId), (d) => {
-    if (!d.data().info) console.log("EventPage with no info!");
+  const unsub1 = onSnapshot(doc(db, "events", props.eventId), (d) => {
+    if (!d.data().info) console.log("EventPage with no info!")
     else {
-      itemsDefault.value = d.data().info.items.itemsDefault;
-      itemsCustomList.value = d.data().info.items.itemsCustomList;
+      itemsDefault.value = d.data().info.items.itemsDefault
+      itemsCustomList.value = d.data().info.items.itemsCustomList
 
-      if (itemsDefault.value !== "") onSnapshot(doc(db, "default-items", itemsDefault.value), (d2) => {
-          itemsDefaultList.value = d2.data().items;
-      });
+      if (itemsDefault.value !== "") {
+        const unsub2 = onSnapshot(doc(db, "default-items", itemsDefault.value), (d2) => {
+          itemsDefaultList.value = d2.data().items
+        })
+        subscriptionsStore.activeSubscriptions.push(unsub2)
+      }
     }
-  });
+  })
+  subscriptionsStore.activeSubscriptions.push(unsub1)
 
 </script>
 
@@ -63,7 +70,3 @@
     </div>
   </div>
 </template>
-
-<style scoped>
-
-</style>

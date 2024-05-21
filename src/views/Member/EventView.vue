@@ -10,15 +10,15 @@
   import {computed, onMounted, ref} from "vue"
   import {doc, onSnapshot, updateDoc} from "firebase/firestore"
   import db from "@/firebase/firebase.js"
-  import {useMembersStore} from "@/stores/members.js";
   import getChildrenData from "@/firebase/getChildrenData.js";
   import NickOrName from "@/components/NickOrName.vue";
+  import {useSubscriptionsStore} from "@/stores/subsriptions.js";
+
+  const subscriptionsStore = useSubscriptionsStore()
 
   const store = useUserStore()
   const { childrenData, userData } = storeToRefs(store)
   store.authUser()
-
-  const memberStore = useMembersStore()
 
   const router = useRouter()
   const route = useRoute()
@@ -31,13 +31,14 @@
   const registeredChildren = ref([])
   const childData = ref([])
 
-  onSnapshot(doc(db, "events", eventId), async (doc) => {
+  const unsubscribe = onSnapshot(doc(db, "events", eventId), async (doc) => {
     if (doc.exists()) {
       registeredChildren.value = doc.data().registeredChildren
 
       if (userData.value.leader) childData.value = await getChildrenData(registeredChildren.value)
     }
   })
+  subscriptionsStore.activeSubscriptions.push(unsubscribe)
 
   const isChildRegistered = (childId) => {
     return registeredChildren.value.some((child) => child === childId)

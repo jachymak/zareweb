@@ -4,6 +4,7 @@ import Badge from "@/components/Badge.vue";
 import {doc, onSnapshot} from "firebase/firestore";
 import db from "@/firebase/firebase.js";
 import {computed, ref} from "vue";
+import {useSubscriptionsStore} from "@/stores/subsriptions.js";
 
 const props = defineProps({
   eventId: {
@@ -30,6 +31,8 @@ const itemsDefault = ref('');
 const itemsCustomList = ref([]);
 const food = ref('');
 
+const subscriptionsStore = useSubscriptionsStore()
+
 const unsubscribe = onSnapshot(doc(db, "events", props.eventId), (doc) => {
   if (!doc.data().info) console.log("EventPage with no info!");
   else {
@@ -53,6 +56,7 @@ const unsubscribe = onSnapshot(doc(db, "events", props.eventId), (doc) => {
     food.value = doc.data().info.food;
   }
 });
+subscriptionsStore.activeSubscriptions.push(unsubscribe)
 
 const dateString = computed(() => {
   if (!date.value) return "";

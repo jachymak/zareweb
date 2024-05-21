@@ -12,6 +12,9 @@ import getUserData from "@/firebase/getUserData.js";
 import getChildrenData from "@/firebase/getChildrenData.js";
 import router from "@/router/router.js";
 import isUserInDatabase from "@/firebase/isUserInDatabase.js";
+import {useSubscriptionsStore} from "@/stores/subsriptions.js";
+
+const subscriptionsStore = useSubscriptionsStore()
 
 export const useUserStore = defineStore('user', () => {
     const loggedIn = ref(false)
@@ -88,13 +91,14 @@ export const useUserStore = defineStore('user', () => {
     };
 
     function signUserOut() {
-        signOut(auth.value).then(() => {
-            loggedIn.value = false
-            auth.value = null
-            userData.value = {}
-            childrenData.value = []
-
-            router.push("/");
+        subscriptionsStore.unsubscribeAll()
+        router.push("/").then(() => {
+            signOut(auth.value).then(() => {
+                loggedIn.value = false
+                auth.value = null
+                userData.value = {}
+                childrenData.value = []
+            })
         })
     }
 

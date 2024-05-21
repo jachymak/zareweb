@@ -6,8 +6,10 @@
   import db from "@/firebase/firebase.js";
   import router from "@/router/router.js";
   import {useEventStore} from "@/stores/event.js";
+  import {useSubscriptionsStore} from "@/stores/subsriptions.js";
 
   const eventStore = useEventStore()
+  const subscriptionsStore = useSubscriptionsStore()
 
   const props = defineProps({
     edit: Boolean
@@ -33,6 +35,8 @@
       })
     });
   });
+
+  subscriptionsStore.activeSubscriptions.push(unsubscribe)
 
   const getMonthEvents = (month) => {
     return events.value.filter((event) => event.monthIdx === month)

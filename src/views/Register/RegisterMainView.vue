@@ -1,26 +1,33 @@
 <script setup>
-import { ref } from "vue";
-import { useRouter } from "vue-router";
-import { doc, setDoc } from "firebase/firestore";
-import {getAuth, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, deleteUser} from "firebase/auth"
-import db from "@/firebase/firebase.js";
+import { ref } from "vue"
+import { useRouter } from "vue-router"
+import { doc, setDoc, updateDoc, deleteField } from "firebase/firestore"
+import { getAuth, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth"
+import db from "@/firebase/firebase.js"
 
-const router = useRouter();
+const router = useRouter()
 
-const email = ref('');
-const password = ref('');
-const errorMsg = ref('');
+const email = ref('')
+const password = ref('')
+const errorMsg = ref('')
 
 /* --- FIRESTORE --- */
 
+const verificationUid = getAuth().currentUser.uid
+
 const addToFirestore = async (user) => {
-  const userData = {
+  const data = {
     email: user.user.email,
     verifiedMember: true,
     children: [],
-    leader: false
+    leader: false,
+    verificationUid: verificationUid   // uid of "user" registrace@zareweb.cz, used in RegisterGateView
   }
-  await setDoc(doc(db, "users", user.user.uid), userData);
+  return await setDoc(doc(db, "users", user.user.uid), data)
+}
+
+const removeVerificationUid = async (user) => {
+  await updateDoc(doc(db, "users", user.user.uid), { verificationUid: deleteField() })
 }
 
 /* --- END FIRESTORE --- */
@@ -29,24 +36,30 @@ const addToFirestore = async (user) => {
 const register = () => {
   createUserWithEmailAndPassword(getAuth(), email.value.trimEnd(), password.value)
       .then((user) => {
-        addToFirestore(user);
-        router.push('/register/children');
+        addToFirestore(user)
+            .then(() => {
+              removeVerificationUid(user)
+              router.push('/register/children')
+            })
+            .catch(() => {
+              console.log("Registration unsuccessful!")
+            })
       })
       .catch((error) => {
-        console.log(error);
+        console.log(error)
       })
 }
 
 const registerWithGoogle = () => {
-  const provider = new GoogleAuthProvider();
+  const provider = new GoogleAuthProvider()
   signInWithPopup(getAuth(), provider)
       .then((user) => {
-        router.push('/register/children');
+        router.push('/register/children')
       })
       .catch((error) => {
-        console.log(error);
-      });
-};
+        console.log(error)
+      })
+}
 
 </script>
 
@@ -55,7 +68,7 @@ const registerWithGoogle = () => {
     <div class="container py-5 h-100">
       <div class="row d-flex justify-content-center align-items-center h-100">
         <div class="col-12 col-md-8 col-lg-6 col-xl-5">
-          <div class="card shadow-2-strong" style="border-radius: 1rem;">
+          <div class="card shadow-2-strong" style="border-radius: 1rem">
             <div class="card-body p-5 text-center">
 
               <h3 class="mb-5">Registrace do systému</h3>

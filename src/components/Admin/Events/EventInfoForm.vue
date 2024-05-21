@@ -1,10 +1,13 @@
 <script setup>
-import {computed, ref, watch} from 'vue';
+  import {computed, ref, watch} from 'vue';
   import {collection, doc, onSnapshot, orderBy, query, updateDoc} from "firebase/firestore";
   import db from "@/firebase/firebase.js";
   import {useEventStore} from "@/stores/event.js";
   import {storeToRefs} from "pinia";
-import Badge from "@/components/Badge.vue";
+  import Badge from "@/components/Badge.vue";
+  import { useSubscriptionsStore } from "@/stores/subsriptions.js";
+
+  const subscriptionsStore = useSubscriptionsStore()
 
   const eventStore = useEventStore()
   const { currentEventId, currentEventLabel } = storeToRefs(eventStore)
@@ -56,7 +59,7 @@ import Badge from "@/components/Badge.vue";
 
   watch(currentEventId, () => {
     if (unsubscribe) {
-      unsubscribe();
+      subscriptionsStore.unsubscribeOne(unsubscribe)
       unsubscribe = null;
     }
     if (currentEventId.value) unsubscribe = onSnapshot(doc(db, "events", currentEventId.value), (doc) => {
@@ -85,6 +88,7 @@ import Badge from "@/components/Badge.vue";
         infoPublished.value = doc.data().infoPublished;
       }
     });
+    subscriptionsStore.activeSubscriptions.push(unsubscribe)
   });
 
   const onSubmit = async () => {

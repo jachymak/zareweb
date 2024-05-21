@@ -1,9 +1,12 @@
 <script setup>
-  import AdminPageLayout from "@/components/Admin/AdminPageLayout.vue";
-  import db from "@/firebase/firebase.js";
+  import AdminPageLayout from "@/components/Admin/AdminPageLayout.vue"
+  import db from "@/firebase/firebase.js"
+  import { collection, query, where, onSnapshot, orderBy, limit } from "firebase/firestore"
+  import { ref } from "vue"
+  import { useSubscriptionsStore } from "@/stores/subsriptions.js"
 
-  import {collection, query, where, onSnapshot, orderBy, limit} from "firebase/firestore";
-  import {computed, ref} from "vue";
+  const subscriptionsStore = useSubscriptionsStore()
+
 
   const logs = ref([])
   const lastUpdateTimestamp = ref("")
@@ -31,7 +34,7 @@
   }
 
   const q1 = query(collection(db, "logs"), orderBy("timestamp", "desc"), limit(10))
-  onSnapshot(q1, (querySnapshot) => {
+  const unsub1 = onSnapshot(q1, (querySnapshot) => {
     logs.value = []
     querySnapshot.forEach((doc) => {
       const data = {
@@ -42,21 +45,23 @@
       logs.value.push(data)
     })
   })
+  subscriptionsStore.activeSubscriptions.push(unsub1)
 
   const q2 = query(collection(db, "logs"), where("type", "==", "2") , orderBy("timestamp", "desc"), limit(1))
-  onSnapshot(q2, (querySnapshot) => {
+  const unsub2 = onSnapshot(q2, (querySnapshot) => {
     querySnapshot.forEach((doc) => {
       lastUpdateTimestamp.value = formatDateTime(doc.data().timestamp.toDate());
     })
   })
+  subscriptionsStore.activeSubscriptions.push(unsub2)
 
-  onSnapshot(collection(db, "numbers"), (querySnapshot) => {
+  const unsub3 = onSnapshot(collection(db, "numbers"), (querySnapshot) => {
     numbers.value = []
     querySnapshot.forEach((doc) => {
       let lastOpened = "-"
 
       const q3 = query(collection(db, "logs"), where("content", "==", doc.id), orderBy("timestamp", "desc"), limit(1))
-      onSnapshot(q3, (querySnapshot2) => {
+      const unsub4 = onSnapshot(q3, (querySnapshot2) => {
         querySnapshot2.forEach((doc2) => {
           lastOpened = formatDateTime(doc2.data().timestamp.toDate())
         })
@@ -75,8 +80,10 @@
 
 
       })
+      subscriptionsStore.activeSubscriptions.push(unsub4)
     })
   })
+  subscriptionsStore.activeSubscriptions.push(unsub3)
 
 </script>
 

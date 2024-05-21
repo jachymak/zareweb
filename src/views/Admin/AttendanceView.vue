@@ -13,21 +13,16 @@ import {storeToRefs} from "pinia";
 const currentDate = ref(new Date())
 
 const attendanceStore = useAttendanceStore()
-const { data, currentEventId } = storeToRefs(attendanceStore)
+const {
+  data,
+  currentEventId,
+  currentAttendance,
+  dateIsDone,
+  dateIsEvent,
+  dateIsMeeting
+} = storeToRefs(attendanceStore)
 attendanceStore.setup()
 
-
-const dateIsDone = (date) => {
-  return data.value.some(ev => ev.dates.some(d => isEqual(d, date) && ev.done))
-}
-
-const dateIsEvent = (date) => {
-  return data.value.some(ev => ev.dates.some(d => isEqual(d, date)))
-}
-
-const dateIsMeeting = (date) => {
-  return date.getDay() > 0 && date.getDay() < 5
-}
 
 const currentDateEvents = computed(() => {
   const date = startOfDay(currentDate.value)
@@ -39,7 +34,6 @@ const currentDateEvents = computed(() => {
   if (day === 0 || day > 4) return []
 
   // meeting
-  const czechDays = ["neděle", "pondělí", "úterý", "středa", "čtvrtek", "pátek", "sobota"]
   const who = (day === 1 || day === 4) ? 'v' : ( (day === 2 || day === 3) ? 's' : '' )
 
   const year = currentDate.value.getFullYear().toString()
@@ -54,20 +48,19 @@ const currentDateEvents = computed(() => {
     id: year + '-' + month + '-' + dayy + '-' + who + '-schuzka',
     dates: [date],
     done: false,
-    title: "Schůzka " + czechDays[day],
+    title: "Schůzka",
     who: who
   }]
 })
 
-const changeCurrentEventId = (eventId, date) => {
+const changeCurrentEventId = (eventId) => {
   currentEventId.value = eventId
-  attendanceStore.createAttendanceMeeting(eventId, date)
 }
 
 const getDayClass = (date) => {
-  if (dateIsDone(date)) return ''
-  else if (dateIsEvent(date)) return 'marked-cell-event'
-  else if (dateIsMeeting(date)) return 'marked-cell-meeting'
+  if (attendanceStore.dateIsDone(date)) return ''
+  else if (attendanceStore.dateIsEvent(date)) return 'marked-cell-event'
+  else if (attendanceStore.dateIsMeeting(date)) return 'marked-cell-meeting'
   return ''
 }
 
@@ -89,7 +82,7 @@ const getDayClass = (date) => {
           </div>
           <div class="col-5">
             <button class="btn btn-sm btn-secondary"
-                    @click="changeCurrentEventId(ev.id, ev.dates[0])"
+                    @click="changeCurrentEventId(ev.id)"
             >{{ ev.done ? "Zobrazit" : "Založit"}} docházku</button>
 
           </div>
@@ -100,6 +93,8 @@ const getDayClass = (date) => {
 
       <div class="col">
         {{ currentEventId }}
+        <br>
+        {{ currentAttendance }}
       </div>
     </div>
   </admin-page-layout>

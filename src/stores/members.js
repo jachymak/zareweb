@@ -2,6 +2,9 @@ import {defineStore} from "pinia"
 import {ref} from "vue"
 import {collection, doc, onSnapshot, query, where} from "firebase/firestore";
 import db from "@/firebase/firebase.js";
+import {useSubscriptionsStore} from "@/stores/subsriptions.js";
+
+const subscriptionsStore = useSubscriptionsStore()
 
 export const useMembersStore = defineStore('members', () => {
     const userAccounts = ref([])
@@ -9,7 +12,7 @@ export const useMembersStore = defineStore('members', () => {
     const leaders = ref([])
 
     async function getMembers() {
-        await onSnapshot(query(collection(db, "members")), async (querySnapshot) => {
+        const unsub1 = await onSnapshot(query(collection(db, "members")), async (querySnapshot) => {
             querySnapshot.forEach( (doc) => {
                 const category = doc.data().category
                 if (category === "ranger" || category === "rover") {
@@ -19,7 +22,7 @@ export const useMembersStore = defineStore('members', () => {
                 }
             })
 
-            await onSnapshot(query(collection(db, "users")), (querySnapshot) => {
+            const unsub2 = await onSnapshot(query(collection(db, "users")), (querySnapshot) => {
                 children.value.forEach((ch) => {ch.accounts = []})
                 querySnapshot.forEach((doc) => {
                     const chIds = doc.data().children
@@ -36,7 +39,9 @@ export const useMembersStore = defineStore('members', () => {
 
                 })
             })
+            subscriptionsStore.activeSubscriptions.push(unsub2)
         })
+        subscriptionsStore.activeSubscriptions.push(unsub1)
     }
 
     async function getUserAccounts() {
@@ -44,8 +49,9 @@ export const useMembersStore = defineStore('members', () => {
         const unsubscribe = await onSnapshot(q, (querySnapshot) => {
             querySnapshot.forEach((doc) => {
                 userAccounts.value.push({id: doc.id, ...doc.data()});
-            });
-        });
+            })
+        })
+        subscriptionsStore.activeSubscriptions.push(unsubscribe)
     }
 
     return { userAccounts, children, leaders, getMembers, getUserAccounts }
