@@ -27,9 +27,7 @@ export const useMembersStore = defineStore('members', () => {
                 querySnapshot.forEach((doc) => {
                     const chIds = doc.data().children
                     for (const id of chIds) {
-                        console.log(id)
                         for (const ch of children.value) {
-                            console.log(ch, ch.id)
                             if (ch.id === id) {
                                 ch.accounts.push({id: doc.id, ...doc.data()})
                                 break

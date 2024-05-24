@@ -72,7 +72,6 @@
             <th scope="col">Jméno</th>
             <th scope="col">E-mail</th>
             <th scope="col">Telefon</th>
-            <th scope="col" class="text-center">Zobrazovat<br>kontakt?</th>
           </tr>
           </thead>
           <tbody>
@@ -80,22 +79,21 @@
             <td>{{ l.nickname }} {{ l.firstName }}&nbsp;{{ l.lastName }}</td>
             <td>jachym.vitecek@gmail.com</td>
             <td>776 019 939</td>
-            <td class="text-center"><input class="form-check-input" type="checkbox" id="checkboxNoLabel" value="" aria-label="..."></td>
           </tr>
 
           </tbody>
         </table>
 
+        <div class="row mt-4 px-5">
+          <button class="btn btn-secondary disabled" @click="updateMembers">Aktualizovat data ze SkautISu</button>
+          <p v-if="status === 1">Fetching...</p>
+          <p v-if="status === 2">Updating database...</p>
+          <p v-if="status === 3">DONE!</p>
+          <p>Pro aktualizaci dat je vyžadováno přihlášení do systému SkautIS</p>
+
+        </div>
+
       </div>
-    </div>
-
-
-    <div class="container mt-5">
-      <button class="btn btn-secondary" @click="updateMembers">Aktualizovat data ze SkautISu</button>
-      <p v-if="status === 1">Fetching...</p>
-      <p v-if="status === 2">Updating database...</p>
-      <p v-if="status === 3">DONE!</p>
-
     </div>
 
   </admin-page-layout>

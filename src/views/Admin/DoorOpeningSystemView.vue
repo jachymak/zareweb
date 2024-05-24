@@ -88,12 +88,12 @@
 </script>
 
 <template>
-  <admin-page-layout title="Otrok Matoun">
+  <admin-page-layout title="Systém pro otevírání dveří">
     <div class="row">
 
       <div class="col">
         <ul v-for="l in logs" :key="l.id">
-          <li>{{ l.timestamp }} {{ l.log }}</li>
+          <li>{{ l.timestamp }} <b>{{ l.log }}</b></li>
         </ul>
       </div>
 
