@@ -92,11 +92,6 @@
   });
 
   const onSubmit = async () => {
-    // if (!title.value || !who.value || !leader.value || !date.value) {
-    //   TODO validate fields
-    //   return;
-    // }
-
     const itemsCustomList = itemsCustom.value ? itemsCustom.value.split(", ") : [];
 
     const moneyWithCurrency = /^\d+\s*$/.test(money.value) ? money.value.replace(/\s/g, '') + " Kč" : money.value;

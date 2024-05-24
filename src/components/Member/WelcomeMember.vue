@@ -14,13 +14,6 @@
     router.push(path)
   }
 
-  const childrenData2 = ref([])
-
-
-
-
-
-
 </script>
 
 <template>

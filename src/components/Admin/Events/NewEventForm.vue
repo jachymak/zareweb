@@ -31,9 +31,7 @@
   }
 
   const onSubmit = async () => {
-    console.log(date.value)
     if (!title.value || !who.value || !date.value[0] || !date.value[1]) {
-      console.log("hovno nemas vsechno vyplneny!")
       return
     }
 

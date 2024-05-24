@@ -41,24 +41,9 @@ export const useUserStore = defineStore('user', () => {
             })
             .catch((error) => {
                 console.log(error.code);
-                // switch (error.code) {
-                //     case "auth/invalid-email":
-                //         errorMsg.value = "Neplatná e-mailová adresa!";
-                //         break;
-                //     case "auth/user-not-found":
-                //         errorMsg.value = "Uživatel nenalezen!";
-                //         break;
-                //     case "auth/wrong-password":
-                //         errorMsg.value = "Špatné heslo!";
-                //         break;
-                //     default:
-                //         errorMsg.value = "Špatné přihlašovací údaje!"
-                // }
             })
 
     }
-
-    // TODO protect from overwriting e&p account with google account
 
     function signUserInWithGoogle() {
         const provider = new GoogleAuthProvider();

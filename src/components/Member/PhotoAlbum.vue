@@ -21,10 +21,10 @@
 <style>
 .square {
   width: 100%;
-  padding-top: 100%; /* 1:1 Aspect Ratio */
+  padding-top: 100%;
   position: relative;
   overflow: hidden;
-  cursor: pointer; /* Show pointer on hover */
+  cursor: pointer;
 }
 
 .square::before {
@@ -34,7 +34,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-image: v-bind('imageUrlAttribute'); /* Background image URL */
+  background-image: v-bind('imageUrlAttribute');
   background-size: cover;
   background-position: center;
   transition: background-color 0.3s ease;
@@ -52,25 +52,24 @@
   color: white;
   opacity: 0;
   transition: opacity 0.3s ease;
-  background-color: rgba(0, 0, 0, 0.6); /* Dark overlay */
+  background-color: rgba(0, 0, 0, 0.6);
   text-align: center;
   padding: 10%;
-  margin: auto; /* Centers the content */
-  flex-direction: column; /* Allows text to wrap to multiple lines */
-  box-sizing: border-box; /* Ensures padding is included in the element's total width and height */
+  margin: auto;
+  flex-direction: column;
+  box-sizing: border-box;
 }
 
 .square:hover .square-content {
-  opacity: 1; /* Show text on hover */
+  opacity: 1;
 }
 
-/* Media Query for Small Screens */
 @media (max-width: 767px) {
   .square::after {
-    opacity: 1; /* Show dark overlay by default on smaller screens */
+    opacity: 1;
   }
   .square:hover::after .square-content {
-    opacity: 1; /* Keep dark overlay visible on hover for smaller screens */
+    opacity: 1;
   }
 }
 </style>

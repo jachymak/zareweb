@@ -39,7 +39,6 @@ const checkPassword = () => {
                 <div class="form-outline mb-4">
                   <input v-model="password" type="text" id="typePasswordX-2" class="form-control form-control-lg" placeholder="Heslo"/>
                 </div>
-                <!--              'TODO do not remember password -->
 
                 <button class="btn btn-primary btn-lg btn-block" type="submit">Vstoupit</button>
 

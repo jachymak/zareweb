@@ -1,8 +1,8 @@
 <script setup>
-import {computed, ref, watch} from "vue";
+import {computed, ref} from "vue";
 import { useRouter } from "vue-router";
-import {collection, doc, getDocs, onSnapshot, query, where, setDoc, updateDoc} from "firebase/firestore";
-import {getAuth, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, deleteUser} from "firebase/auth"
+import {collection, doc, getDocs, query, where, updateDoc} from "firebase/firestore";
+import {getAuth} from "firebase/auth"
 import db from "@/firebase/firebase.js";
 
 const router = useRouter();
@@ -72,7 +72,6 @@ const confirm = async () => {
   }
 };
 
-// TODO slash appear on sixth char
 const handleKeyDown = (event, i) => {
   if (children.value[i].length === 6 && event.key !== "Backspace") {
     children.value[i] += '/';
