@@ -17,15 +17,15 @@
 
 <template>
   <section>
-    <div class="container-fluid bg-sand p-3 pt-4 pt-md-3 pb-md-2">
+    <div class="p-3 pt-4 pt-md-3 pb-md-2">
       <div class="row align-items-center mb-3">
         <div class="col-6">
-          <h3 class="m-md-0">Ahoj!</h3>
+          <h3 class="m-0">Ahoj!</h3>
         </div>
 
         <div class="col-6">
           <div class="d-flex d-inline-block align-items-center justify-content-end">
-            <h6 class="m-0 me-3 me-md-2">{{ userData.email }}</h6>
+            <h6 class="d-none d-md-inline m-0 me-3 me-md-2">{{ userData.email }}</h6>
             <button @click="emit('signOut')" class="btn btn-sm btn-secondary d-flex align-items-center" style="padding-right: 4px; padding-left: 6px">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-box-arrow-right" viewBox="0 0 16 16">
                 <path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"/>
@@ -43,10 +43,10 @@
             <div class="container-fluid">
               <div class="row">
                 <div class="col">
-                  výpravy: 2/4
+                  výpravy: X
                 </div>
                 <div class="col">
-                  schůzky: 67&nbsp;%
+                  schůzky: X&nbsp;%
                 </div>
               </div>
             </div>
@@ -67,7 +67,7 @@
               Členové
             </div>
             <div class="col-10 col-md-5 btn btn-secondary" @click="handleBtnClick('/admin/door')">
-              Otrok matoun
+              Dveře
             </div>
           </div>
         </div>

@@ -57,12 +57,6 @@
 
 <template>
   <div class="container my-5">
-<!--    <div class="row justify-content-end">
-      <div class="col-1">
-        <button class="btn btn-sm btn-light" @click="handleExitClick">X</button>
-      </div>
-    </div>-->
-
     <div class="row justify-content-between">
       <div class="col-12 col-md-6 order-1 order-md-1">
           <event-info :event-id="eventId" />
