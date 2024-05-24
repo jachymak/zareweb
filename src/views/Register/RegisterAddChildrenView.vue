@@ -98,7 +98,7 @@ const handleChange = (i) => {
     <div class="container py-5 h-100">
       <div class="row d-flex justify-content-center align-items-center h-100">
         <div class="col-12 col-md-8 col-lg-6 col-xl-5">
-          <div class="card shadow-2-strong" style="border-radius: 1rem;">
+          <div class="card shadow-2-strong bg-sand" style="border-radius: 1rem;">
             <div class="card-body p-5 text-center">
 
               <h3 class="mb-5">Členové pro tento účet</h3>
@@ -128,7 +128,7 @@ const handleChange = (i) => {
               </button>
 
 
-              <p v-if="errorMsg">{{ errorMsg }}</p>  <!-- TODO error handling with focus -->
+              <p class="pt-4 mb-0" v-if="errorMsg">{{ errorMsg }}</p>  <!-- TODO error handling with focus -->
 
 
             </div>
