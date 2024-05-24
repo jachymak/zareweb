@@ -3,8 +3,8 @@
 </script>
 
 <template>
-  <div class="container mt-md-5 mt-5 bg-sand">
-    <div class="container pt-4 pb-3">
+  <div class="container mt-md-5 mt-5 pb-4 bg-sand">
+    <div class="container pt-4">
       <h6>Jak dlouho se průměrně čeká na přijetí do oddílu? Kdy se vybírají nováčci?</h6>
       <p>
         Čekací listinu aktualizujeme každý rok, průměrně na ní koncem prázdnin, kdy vybíráme nováčky, máme kolem 150 dětí. Většinou nejsme schopni, kvůli kapacitě, nabrat více než 5-7 dětí. Rozhodně tedy nejsme schopni přijmout všechny a tedy se i stává, že někdo na čekací listině "čeká" docela dlouho, ale pro nabrání do oddílu je již moc starý.
@@ -29,6 +29,12 @@
       <p>
         Ve většině případů ano! Skauting je velice inkluzivním prostředím, ve kterém se na odlišnosti obvykle nehledí. Kokretní případy však s námi prosím zkonzultujte.
       </p>
+    </div>
+    <hr class="mx-3">
+    <div class="row">
+      <div class="col-12 text-center">
+        <i>V případě dalších dotazů nás neváhejte kontaktovat</i> | <i>zare@skaut.cz</i>
+      </div>
     </div>
   </div>
 </template>

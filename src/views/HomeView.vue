@@ -108,7 +108,7 @@
 
     <why-scouting />
 
-    <!--<clubhouse />-->
+    <clubhouse />
 
     <how-to-join />
 
