@@ -1,110 +1,105 @@
 <script setup>
-
-import AdminPageLayout from "@/components/Admin/AdminPageLayout.vue";
-import VueDatePicker from '@vuepic/vue-datepicker'
-import '@vuepic/vue-datepicker/dist/main.css'
-import {computed, ref, watch} from "vue";
-import {addDays, eachDayOfInterval, isEqual, isSameDay, set, startOfDay} from 'date-fns';
-import Badge from "@/components/Badge.vue";
-import {useAttendanceStore} from "@/stores/attendance.js";
+import AdminPageLayout from "@/components/Admin/AdminPageLayout.vue"
+import db from "@/firebase/firebase.js"
+import {collection, query, where, onSnapshot, orderBy, limit, doc, updateDoc, addDoc, setDoc, arrayUnion, arrayRemove} from "firebase/firestore"
+import {computed, ref, watch} from "vue"
+import { useSubscriptionsStore } from "@/stores/subsriptions.js"
+import {useUserStore} from "@/stores/user.js";
+import EventsList from "@/components/EventsList/EventsList.vue";
+import {useEventStore} from "@/stores/event.js";
 import {storeToRefs} from "pinia";
+import Badge from "@/components/Badge.vue";
+import NickOrName from "@/components/NickOrName.vue";
+
+const subscriptionsStore = useSubscriptionsStore()
+const eventStore = useEventStore()
+const { currentEventId, currentEventLabel } = storeToRefs(eventStore)
+
+eventStore.resetCurrentEvent()
+
+const store = useUserStore()
+store.authUser()
+
+const attendanceList = ref([])
+const membersList = ref([])
 
 
-const currentDate = ref(new Date())
+watch(currentEventId, async () => {
+  const uns = onSnapshot(collection(db, "members"), (querySnapshot) => {
+    membersList.value = []
+    querySnapshot.forEach((doc) => {
+      membersList.value.push({id: doc.id, ...doc.data()})
+    });
+  });
 
-const attendanceStore = useAttendanceStore()
-const {
-  data,
-  currentEventId,
-  currentAttendance,
-  dateIsDone,
-  dateIsEvent,
-  dateIsMeeting
-} = storeToRefs(attendanceStore)
-attendanceStore.setup()
+  onSnapshot(doc(db, "attendance", currentEventId.value), async (dd) => {
 
+    if (dd.exists()) {
+      attendanceList.value = dd.data().children
+    }
+    else {
+      await setDoc(doc(db, "attendance", currentEventId.value), {
+        children: []
+      });
+      attendanceList.value = []
+    }
 
-const currentDateEvents = computed(() => {
-  const date = startOfDay(currentDate.value)
-  const events = data.value.filter(ev => ev.dates.some(d => isEqual(d, date)))
-  if (events.length > 0) return events
+  });
+});
 
-  // weekend
-  const day = date.getDay()
-  if (day === 0 || day > 4) return []
-
-  // meeting
-  const who = (day === 1 || day === 4) ? 'v' : ( (day === 2 || day === 3) ? 's' : '' )
-
-  const year = currentDate.value.getFullYear().toString()
-  const month = (currentDate.value.getMonth() + 1).toString().length < 2 ?
-      '0' + (currentDate.value.getMonth() + 1).toString() :
-      (currentDate.value.getMonth() + 1).toString()
-  const dayy = currentDate.value.getDate().toString().length < 2 ?
-      '0' + currentDate.value.getDate().toString() :
-      currentDate.value.getDate().toString()
-
-  return [{
-    id: year + '-' + month + '-' + dayy + '-' + who + '-schuzka',
-    dates: [date],
-    done: false,
-    title: "Schůzka",
-    who: who
-  }]
-})
-
-const changeCurrentEventId = (eventId) => {
-  currentEventId.value = eventId
+const handleClick = async (memberId, add) => {
+  await updateDoc(doc(db, "attendance", currentEventId.value), {
+    children: add ? arrayUnion(memberId) : arrayRemove(memberId)
+  });
 }
 
-const getDayClass = (date) => {
-  if (attendanceStore.dateIsDone(date)) return ''
-  else if (attendanceStore.dateIsEvent(date)) return 'marked-cell-event'
-  else if (attendanceStore.dateIsMeeting(date)) return 'marked-cell-meeting'
-  return ''
+const isAttending = (memberId) => {
+  return attendanceList.value.indexOf(memberId) !== -1
 }
 
-// Sort by
 </script>
 
 <template>
-  <admin-page-layout title="Docházka">
+  <admin-page-layout title="Evidence docházky">
     <div class="row">
-      <div class="col">
-        <VueDatePicker v-if="data.length > 0" v-model="currentDate" locale="cs" inline auto-apply
-                       :enable-time-picker="false"
-                       :month-change-on-scroll="false"
-                       :day-class="getDayClass"
-                       :start-time="{ hours: 0, minutes: 0 }"/>
-        <div class="row my-3 align-items-center" v-for="ev in currentDateEvents">
-          <div class="col-7">
-            <badge :type="ev.who" /> {{ ev.title }}
-          </div>
-          <div class="col-5">
-            <button class="btn btn-sm btn-secondary"
-                    @click="changeCurrentEventId(ev.id)"
-            >{{ ev.done ? "Zobrazit" : "Založit"}} docházku</button>
 
-          </div>
+      <div class="col">
+        <events-list :edit="true" :attendance="true"/>
+      </div>
+
+      <div class="col">
+        <div class="row text-center mb-4">
+          <span class="text-truncate"><badge :type="currentEventLabel.who" /><b>{{ currentEventLabel.title }}</b></span>
+        </div>
+
+        <div class="row px-5">
+          <table class="table table-striped">
+            <thead>
+            <tr>
+              <th scope="col" class="col-8">Jméno</th>
+              <th scope="col" class="col-4">Účast na akci?</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="m in membersList" :key="m.id">
+              <td><nick-or-name class="" :short="false" :user-data="m" :bold="true" /></td>  <!-- TODO truncate text -->
+              <td>
+                <input v-if="isAttending(m.id)" class="form-check-input" type="checkbox" :id="m.id" @click="handleClick(m.id, false)" checked>
+                <input v-else class="form-check-input" type="checkbox" :id="m.id" @click="handleClick(m.id, true)">
+              </td>
+            </tr>
+
+            </tbody>
+          </table>
         </div>
 
 
       </div>
 
-      <div class="col">
-        {{ currentEventId }}
-        <br>
-        {{ currentAttendance }}
-      </div>
     </div>
   </admin-page-layout>
 </template>
 
 <style>
-  .marked-cell-meeting:not(.dp__active_date) {
-    background: orange;
-  }
-  .marked-cell-event:not(.dp__active_date) {
-    background: violet;
-  }
+
 </style>

@@ -39,13 +39,13 @@ store.authUser()
       <h4>Kontakty</h4>
       <div class="row mt-2 mx-auto">
         <div class="col-12 col-md-4 mb-3 mb-md-0">
-          <contact name="Jáchym Víteček" role="vedoucí oddílu vlčušek" phone="776 018 939" email="jachym.vitecek@skaut.cz" img-url="http://www.zare.skauting.cz/profiles/jachym.png"/>
+          <contact name="Jáchym Víteček" role="vedoucí oddílu vlčušek" phone="776 018 939" email="jachym.vitecek@skaut.cz" img-url="/src/assets/contactImg/jachym.png"/>
         </div>
         <div class="col-12 col-md-4 mb-3 mb-md-0">
-          <contact name="Hobit - Theodor Mikolajek" role="vedoucí oddílu skautů" phone="776 772 777" email="hobit@skaut.cz" img-url="http://www.zare.skauting.cz/profiles/hobit.jpg"/>
+          <contact name="Hobit - Theodor Mikolajek" role="vedoucí oddílu skautů" phone="776 772 777" email="hobit@skaut.cz" img-url="/src/assets/contactImg/hobit.jpg"/>
         </div>
         <div class="col-12 col-md-4 mb-3 mb-md-0">
-          <contact name="Quido Hanulík" role="správce klubovny" phone="735 305 823" email="quido.hanulik@skaut.cz" img-url="http://www.zare.skauting.cz/profiles/quido.jpg"/>
+          <contact name="Quido Hanulík" role="správce klubovny" phone="735 305 823" email="quido.hanulik@skaut.cz" img-url="/src/assets/contactImg/quido.jpg"/>
         </div>
       </div>
     </div>

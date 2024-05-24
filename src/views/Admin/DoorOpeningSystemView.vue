@@ -4,9 +4,12 @@
   import { collection, query, where, onSnapshot, orderBy, limit } from "firebase/firestore"
   import { ref } from "vue"
   import { useSubscriptionsStore } from "@/stores/subsriptions.js"
+  import {useUserStore} from "@/stores/user.js";
 
   const subscriptionsStore = useSubscriptionsStore()
 
+  const store = useUserStore()
+  store.authUser()
 
   const logs = ref([])
   const lastUpdateTimestamp = ref("")

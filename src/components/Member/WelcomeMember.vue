@@ -1,6 +1,7 @@
 <script setup>
   import ChildCard from "@/components/Member/ChildCard.vue";
   import router from "@/router/router.js";
+  import {ref} from "vue";
 
   const props = defineProps({
     userData: Object,
@@ -12,6 +13,13 @@
   const handleBtnClick = (path) => {
     router.push(path)
   }
+
+  const childrenData2 = ref([])
+
+
+
+
+
 
 </script>
 
@@ -43,10 +51,10 @@
             <div class="container-fluid">
               <div class="row">
                 <div class="col">
-                  výpravy: X
+                  výpravy: {{ch.eventCount}}
                 </div>
                 <div class="col">
-                  schůzky: X&nbsp;%
+                  schůzky: ??
                 </div>
               </div>
             </div>
