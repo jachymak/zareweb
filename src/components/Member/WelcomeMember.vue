@@ -56,7 +56,7 @@
 
         <div v-if="userData.leader" class="container px-4" id="admin-buttons">
           <div class="row mb-3 d-flex justify-content-evenly">
-            <div class="col-10 col-md-5 btn btn-secondary" @click="handleBtnClick('/admin/attendance')">
+            <div class="col-10 col-md-5 mb-3 mb-md-0 btn btn-secondary" @click="handleBtnClick('/admin/attendance')">
               Docházka
             </div>
             <div class="col-10 col-md-5 btn btn-secondary" @click="handleBtnClick('/admin/events')">
@@ -64,7 +64,7 @@
             </div>
           </div>
           <div class="row mb-3 d-flex justify-content-evenly">
-            <div class="col-10 col-md-5 btn btn-secondary" @click="handleBtnClick('/admin/members')">
+            <div class="col-10 col-md-5 mb-3 mb-md-0 btn btn-secondary" @click="handleBtnClick('/admin/members')">
               Členové
             </div>
             <div class="col-10 col-md-5 btn btn-secondary" @click="handleBtnClick('/admin/door')">

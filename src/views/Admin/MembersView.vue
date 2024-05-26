@@ -40,7 +40,7 @@
 
 
     <div class="row">
-      <div class="col-5">
+      <div class="col col-md-5">
         <h2>Děti</h2>
 
         <table class="table table-striped">
@@ -62,23 +62,23 @@
 
       </div>
 
-      <div class="col-7">
+      <div class="col col-md-7">
         <h2>Vedoucí</h2>
 
         <table class="table table-striped">
           <caption><i>Ve SkautISu nastavená kategorie rover/ranger</i></caption>
           <thead>
-          <tr> <!-- TODO align items center -->
+          <tr>
             <th scope="col">Jméno</th>
             <th scope="col">E-mail</th>
-            <th scope="col">Telefon</th>
+            <th scope="col" class="d-none d-md-block">Telefon</th>
           </tr>
           </thead>
           <tbody>
           <tr v-for="l in leaders" :key="l.id">
             <td>{{ l.nickname }} {{ l.firstName }}&nbsp;{{ l.lastName }}</td>
             <td>jachym.vitecek@gmail.com</td>
-            <td>776 019 939</td>
+            <td class="d-none d-md-block">776 019 939</td>
           </tr>
 
           </tbody>

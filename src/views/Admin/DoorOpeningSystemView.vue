@@ -94,13 +94,13 @@
   <admin-page-layout title="Systém pro otevírání dveří">
     <div class="row">
 
-      <div class="col">
+      <div class="col-12 col-md-6 mt-5 mt-md-0 order-2 order-md-1">
         <ul v-for="l in logs" :key="l.id">
           <li>{{ l.timestamp }} <b>{{ l.log }}</b></li>
         </ul>
       </div>
 
-      <div class="col">
+      <div class="col-12 col-md-6 order-1 order-md-2">
 
         <div class="row mb-4 align-items-center">
           <div class="col">

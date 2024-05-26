@@ -68,7 +68,7 @@ const isAttending = (memberId) => {
       </div>
 
       <div class="col">
-        <div class="row text-center mb-4">
+        <div class="row text-center mb-4 mt-5 mt-md-0">
           <span class="text-truncate"><badge :type="currentEventLabel.who" /><b>{{ currentEventLabel.title }}</b></span>
         </div>
 
