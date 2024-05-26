@@ -7,6 +7,10 @@ import { useUserStore } from '@/stores/user.js'
 import {storeToRefs} from "pinia"
 import Contact from "@/components/Member/Contact.vue";
 
+import JachymImg from "@/assets/contactImg/jachym.png"
+import HobitImg from "@/assets/contactImg/hobit.jpg"
+import QuidoImg from "@/assets/contactImg/quido.jpg"
+
 const store = useUserStore()
 const { userData, childrenData } = storeToRefs(store)
 store.authUser()
@@ -38,13 +42,13 @@ store.authUser()
       <h4>Kontakty</h4>
       <div class="row mt-2 mx-auto">
         <div class="col-12 col-md-4 mb-3 mb-md-0">
-          <contact name="Jáchym Víteček" role="vedoucí oddílu vlčušek" phone="776 018 939" email="jachym.vitecek@skaut.cz" img-url="/src/assets/contactImg/jachym.png"/>
+          <contact name="Jáchym Víteček" role="vedoucí oddílu vlčušek" phone="776 018 939" email="jachym.vitecek@skaut.cz" :img-url="JachymImg"/>
         </div>
         <div class="col-12 col-md-4 mb-3 mb-md-0">
-          <contact name="Hobit - Theodor Mikolajek" role="vedoucí oddílu skautů" phone="776 772 777" email="hobit@skaut.cz" img-url="/src/assets/contactImg/hobit.jpg"/>
+          <contact name="Hobit - Theodor Mikolajek" role="vedoucí oddílu skautů" phone="776 772 777" email="hobit@skaut.cz" :img-url="HobitImg"/>
         </div>
         <div class="col-12 col-md-4 mb-3 mb-md-0">
-          <contact name="Quido Hanulík" role="správce klubovny" phone="735 305 823" email="quido.hanulik@skaut.cz" img-url="/src/assets/contactImg/quido.jpg"/>
+          <contact name="Quido Hanulík" role="správce klubovny" phone="735 305 823" email="quido.hanulik@skaut.cz" :img-url="QuidoImg"/>
         </div>
       </div>
     </div>
