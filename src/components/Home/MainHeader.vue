@@ -37,14 +37,15 @@
     </div>
 
     <div class="row justify-content-center">
-      <div class="col-lg-2 col-md-4 col-sm-5 col-4 text-center">
+      <div class="col-lg-2 col-md-4 col-sm-5 col-5 text-center pt-3 pt-sm-0">
         <img class="img-fluid w-auto pt-4 pb-3" src="@/assets/img/zare-logo-transparent.png" alt="">
       </div>
     </div>
 
     <div class="row justify-content-center mb-5">
       <div class="col-12 text-center">
-        <h1 class="text-white">Skautský oddíl Záře</h1>
+        <h1 class="text-white d-block d-sm-none h1mobile">Skautský oddíl Záře</h1>
+        <h1 class="text-white d-none d-sm-block">Skautský oddíl Záře</h1>
       </div>
     </div>
   </div>

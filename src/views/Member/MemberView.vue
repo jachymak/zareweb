@@ -50,7 +50,6 @@ store.authUser()
     </div>
     -->
 
-    <!--
     <div class="row mt-4">
       <h4>Kontakty</h4>
       <div class="row mt-2 mx-auto">
@@ -65,7 +64,6 @@ store.authUser()
         </div>
       </div>
     </div>
-    -->
 
   </div>
 </template>

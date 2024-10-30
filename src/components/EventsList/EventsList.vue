@@ -67,6 +67,19 @@
 </script>
 
 <template>
+  <div class="row d-block d-sm-none">
+    <div class="col d-flex justify-content-center align-items-center">
+      <ul class="nav nav-pills">
+        <li class="nav-item">
+          <a class="nav-link bg-navy active"><h6 class="mb-0">První pololetí</h6></a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-navy"><h6 class="mb-0">Druhé pololetí</h6></a>
+        </li>
+      </ul>
+    </div>
+
+  </div>
   <div class="row">
     <div v-for="arr in [[9,10,11,12,1], [2,3,4,5,6,7,8]]" class="col-6">
       <div v-for="i in arr">

@@ -11,7 +11,7 @@
       <div class="col-md-6 col-12">
         <div class="row">
           <div class="col-12">
-            <p>Naše klubovna se nachází v Dejvicích - kousek od Kulaťáku, v Kafkově ulici č. 23. Můžeš se sem dopravit buď autobusem na zastávku Kafkova/Vítězné náměstí, či tramvají nebo metrem na Dejvickou.</p>
+            <p>Naše klubovna se nachází v Dejvicích - kousek od Kulaťáku, v Kafkově ulici č. 23. Můžeš se sem dopravit buď autobusem na zastávku Vítězné náměstí, či tramvají nebo metrem na Dejvickou.</p>
           </div>
         </div>
         <div class="row pt-2 pb-3">
@@ -31,9 +31,11 @@
           </div>
         </div>
         <div class="row">
+          <!--
           <div class="col-12 mb-md-0 mb-3">
-            <p>Za klubovnou, ve vnitrobloku, se nachází dětské hřiště, kam často na schůzkách chodíme.</p>
+            <p> V klubovně se scházíme každý týden na schůzkách. Za klubovnou, ve vnitrobloku, se nachází dětské hřiště, kam často na schůzkách chodíme.</p>
           </div>
+          -->
         </div>
       </div>
       <div class="col-md-6 text-center">

@@ -17,6 +17,18 @@ body {
     background-color: #E7DFC9 !important;
 }
 
+.text-navy {
+    color: #11284F !important;
+}
+
+a {
+    color: #cd6a2d !important;
+}
+
+.h1mobile {
+    font-size: 1.728rem !important;
+}
+
 main {
     min-height: 70vh;
 }

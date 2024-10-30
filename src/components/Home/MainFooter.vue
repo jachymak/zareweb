@@ -25,7 +25,9 @@
 
               <img class="mx-1 mx-sm-3" src="@/assets/img/support/Praha6_logo.svg" width="50px"/>
 
+              <!--
               <img class="ms-1 ms-sm-3" src="@/assets/img/support/ndh_logo_black.svg" width="90px"/>
+              -->
             </div>
           </div>
 
