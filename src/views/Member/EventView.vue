@@ -66,6 +66,7 @@
         <event-items-card :event-id="eventId"></event-items-card>
       </div>
 
+      <!--
       <div class="col-12 col-md-6 order-2 order-md-3 mt-3">
         <div v-if="!userData.leader" :key="registeredChildren">
           <child-card v-for="ch in childrenData" :data="ch" :key="ch.id">
@@ -90,7 +91,7 @@
           </div>
         </div>
       </div>
-
+      -->
     </div>
 
   </div>

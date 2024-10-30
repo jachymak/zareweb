@@ -24,6 +24,7 @@
           <h3 class="m-0">Ahoj!</h3>
         </div>
 
+        <!--
         <div class="col-6">
           <div class="d-flex d-inline-block align-items-center justify-content-end">
             <h6 class="d-none d-md-inline m-0 me-3 me-md-2">{{ userData.email }}</h6>
@@ -35,9 +36,14 @@
             </button>
           </div>
         </div>
+        -->
       </div>
 
+      <!--
+
       <div class="row pt-2 pt-md-0">
+
+
         <div v-if="!userData.leader" class="col-12">
 
           <child-card v-for="ch in childrenData" :data="ch">
@@ -74,6 +80,8 @@
         </div>
 
       </div>
+      -->
+
     </div>
   </section>
 </template>

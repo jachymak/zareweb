@@ -10,6 +10,7 @@ import Contact from "@/components/Member/Contact.vue";
 import JachymImg from "@/assets/contactImg/jachym.png"
 import HobitImg from "@/assets/contactImg/hobit.jpg"
 import QuidoImg from "@/assets/contactImg/quido.jpg"
+import MainHeader from "@/components/Home/MainHeader.vue";
 
 const store = useUserStore()
 const { userData, childrenData } = storeToRefs(store)
@@ -18,9 +19,18 @@ store.authUser()
 </script>
 
 <template>
+  <main-header @sign-out="store.signUserOut()" :logged-in="true" :user-data="userData"/>
+
   <div class="container-fluid container-md mt-3 mb-5">
 
+    <div class="col-12 mx-auto">
+      <vypravnik />
+    </div>
+
+
+    <!--
     <div class="row">
+
       <div class="col-12 col-md-6 px-0">
         <div class="row">
           <div class="col-12">
@@ -33,11 +43,14 @@ store.authUser()
         </div>
       </div>
 
-      <div class="col-12 col-md-6 ps-4 vypravnik-container">
+
+      <div class="col-12 col-md-6 ps-4">
           <vypravnik />
       </div>
     </div>
+    -->
 
+    <!--
     <div class="row mt-4">
       <h4>Kontakty</h4>
       <div class="row mt-2 mx-auto">
@@ -52,6 +65,7 @@ store.authUser()
         </div>
       </div>
     </div>
+    -->
 
   </div>
 </template>

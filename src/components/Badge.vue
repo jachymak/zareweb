@@ -8,13 +8,13 @@ const props = defineProps({
 const badgeClass = computed(() => {
   switch (props.type) {
     case "v":
-      return "badge text-bg-warning me-2"
+      return "badge h-100 text-bg-warning me-2"
     case "s":
-      return "badge text-bg-danger me-2"
+      return "badge h-100 text-bg-danger me-2"
     case "a":
-      return "badge text-bg-primary me-2"
+      return "badge h-100 text-bg-primary me-2"
     default:
-      return "badge text-bg-secondary me-2"
+      return "badge h-100 text-bg-secondary me-2"
   }
 })
 

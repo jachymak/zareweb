@@ -8,7 +8,7 @@
 </script>
 
 <template>
-  <main-header />
+  <main-header :logged-in="false" />
 
   <main>
     <div class="container mt-md-5 mt-3">
