@@ -1,0 +1,8 @@
+@import "tailwindcss";
+
+body {
+    font-family: themix, sans-serif !important;
+    background-color: #E7DFC9 !important;
+    --bs-body-color: #11284F;
+    touch-action: manipulation; /* https://stackoverflow.com/questions/10614481/disable-double-tap-zoom-option-in-browser-on-touch-devices */
+}
