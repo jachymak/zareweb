@@ -1,18 +1,22 @@
-# Vue 3 + Vite
+# zareweb
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+Skautský oddíl Záře website.
 
-Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://vuejs.org/guide/scaling-up/tooling.html#ide-support).
+## Project setup
 
+This project was created using these commands, according to the [Tailwind tutorial](https://tailwindcss.com/docs/installation/using-vite).
 
-
+````
 npm create vite@latest zareweb
 - vue
 - javascript
 - no
 
-https://tailwindcss.com/docs/installation/using-vite
-
 npm install tailwindcss @tailwindcss/vite
 
 npm install -D prettier prettier-plugin-tailwindcss
+
++ add code to `vite.config.js` and `style.css` (see Tailwind tutorial)
+````
+
+To compile and run it during developement use `npm run dev`. Compile for production using `npm run build`.
