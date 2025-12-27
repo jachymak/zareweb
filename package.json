@@ -1,7 +1,7 @@
 {
   "name": "zareweb",
-  "version": "0.0.0",
   "private": true,
+  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,16 +9,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@vuepic/vue-datepicker": "^8.5.1",
-    "date-fns": "^3.6.0",
-    "firebase": "^10.11.1",
-    "pinia": "^2.1.7",
-    "vue": "^3.4.21",
-    "vue-router": "^4.3.2"
+    "@tailwindcss/vite": "^4.1.18",
+    "tailwindcss": "^4.1.18",
+    "vue": "^3.5.24"
   },
   "devDependencies": {
-    "@types/node": "^20.12.11",
-    "@vitejs/plugin-vue": "^5.0.4",
-    "vite": "^5.2.8"
+    "@vitejs/plugin-vue": "^6.0.1",
+    "prettier": "^3.7.4",
+    "prettier-plugin-tailwindcss": "^0.7.2",
+    "vite": "^7.2.4"
   }
 }

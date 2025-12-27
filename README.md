@@ -1,37 +1,18 @@
-# zareweb
+# Vue 3 + Vite
 
-This template should help get you started developing with Vue 3 in Vite.
+This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
 
-## Recommended IDE Setup
+Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://vuejs.org/guide/scaling-up/tooling.html#ide-support).
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
 
-## Customize configuration
 
-See [Vite Configuration Reference](https://vitejs.dev/config/).
+npm create vite@latest zareweb
+- vue
+- javascript
+- no
 
-## Project Setup
+https://tailwindcss.com/docs/installation/using-vite
 
-```sh
-npm install
-```
+npm install tailwindcss @tailwindcss/vite
 
-### Compile and Hot-Reload for Development
-
-```sh
-npm run dev
-```
-
-### Compile and Minify for Production
-
-```sh
-npm run build
-```
-
-npm install firebase
-
-npm install @vuepic/vue-datepicker
-
-npm install vue-router@4
-
-($ npm i --save-dev @types/node)
+npm install -D prettier prettier-plugin-tailwindcss
