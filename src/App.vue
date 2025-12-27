@@ -1,23 +1,9 @@
-<script setup>
-import HelloWorld from "./components/HelloWorld.vue";
-</script>
+<script setup></script>
 
 <template>
-  <div class="m-4 grid gap-4 sm:grid-cols-12">
-    <div class="min-h-[100px] rounded-lg bg-orange-500 shadow sm:col-span-2">
-      <div class="p-4">
-        <HelloWorld msg="Hey!" />
-      </div>
-    </div>
+  <p><strong>Current route path:</strong> {{ $route.fullPath }}</p>
+  <p><RouterLink to="/">Go to Home</RouterLink></p>
+  <p><RouterLink to="/member">Go to Member</RouterLink></p>
 
-    <div class="min-h-[100px] rounded-lg bg-teal-500 shadow sm:col-span-8">
-      <div class="pt-3 text-center">
-        <h1>Skautský oddíl Záře</h1>
-      </div>
-    </div>
-
-    <div class="min-h-[100px] rounded-lg bg-red-500 shadow sm:col-span-2"></div>
-  </div>
+  <RouterView :key="$route.fullPath" />
 </template>
-
-<style scoped></style>
