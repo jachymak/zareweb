@@ -40,3 +40,7 @@ Settings → Languages & Frameworks → JavaScript → Prettier
 ✔ Run on save (optional)
 Prettier package:
 Use project local Prettier (node_modules/prettier)
+
+
+
+npm install @vuepic/vue-datepicker
