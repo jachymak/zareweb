@@ -11,14 +11,15 @@
     >
       <img
         v-if="visible"
-        src="@/assets/intro-image.png"
+        src="@/assets/intro-drawing.png"
         alt="Intro background"
-        class="absolute inset-0 h-full w-full object-cover"
+        class="absolute inset-0 h-full w-full object-cover contrast-125"
       />
     </transition>
 
     <!-- Content -->
-    <div class="fixed inset-0 flex items-center justify-center">
+    <div class="fixed inset-0 flex items-end justify-start p-25">
+      <!-- fixed inset-0 flex items-center justify-center -->
       <transition
         enter-active-class="transition-all duration-700 ease-out"
         enter-from-class="opacity-0 scale-95"
@@ -27,9 +28,10 @@
         leave-from-class="opacity-100 scale-100"
         leave-to-class="opacity-0 scale-105"
       >
-        <div v-if="visible" class="relative z-10 text-center text-white">
+        <div v-if="visible" class="relative z-10 text-left text-white">
+          <!-- text-center -->
           <h1
-            class="mb-6 text-4xl font-bold md:text-6xl"
+            class="mb-8 text-4xl font-bold md:text-6xl"
             style="text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.6)"
           >
             Skautský oddíl Záře
@@ -37,7 +39,7 @@
 
           <button
             @click="enterSite"
-            class="rounded-full bg-white px-8 py-3 font-semibold text-black shadow-xl transition hover:scale-105"
+            class="cursor-pointer rounded-full bg-white px-8 py-3 font-semibold text-black shadow-xl transition hover:scale-105"
           >
             Hurá na web!
           </button>
