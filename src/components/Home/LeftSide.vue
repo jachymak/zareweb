@@ -10,10 +10,10 @@ import HelloWorld from "@/components/HelloWorld.vue";
           <div class="col-span-9">
             <div class="mx-auto">
               <p class="leading-relaxed">
-                My jsme Záře. Jsme dva skautské oddíly – jeden pro mladší, druhý
-                pro starší děti. Členové u nás obvykle nastupují do mladších
-                vlčušek a poté přecházejí do starších skautů. Spolu s dalšími
-                oddíly nás zastřešuje středisko
+                Nazdar! My jsme Záře. Jsme dva skautské oddíly – jeden pro
+                mladší, druhý pro starší děti. Členové u nás obvykle nastupují
+                do mladších vlčušek a poté přecházejí do starších skautů. Spolu
+                s dalšími oddíly nás zastřešuje středisko
                 <a href="https://stredisko-sipka.skauting.cz" class="underline"
                   >Šipka</a
                 >.
