@@ -2,8 +2,8 @@
 
 body {
     font-family: themix, sans-serif !important;
-    background-color: #11284F !important; /* #ADC2C2 6AABC4 */
+    background-color: #11284F !important; /* #ADC2C2 6AABC4 11284F */
     --bs-body-color: #11284F;
-    color: white !important;
+    color: #ffffff !important;
     touch-action: manipulation; /* https://stackoverflow.com/questions/10614481/disable-double-tap-zoom-option-in-browser-on-touch-devices */
 }

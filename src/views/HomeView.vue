@@ -6,36 +6,54 @@ import HelloWorld from "@/components/HelloWorld.vue";
 <template>
   <div class="min-h-screen">
     <div class="grid grid-cols-12">
+      <div class="col-span-1"></div>
       <div class="col-span-8">
-        <div class="mx-12 mt-8 grid gap-4 sm:grid-cols-12">
-          <div
-            class="my-auto mb-10 min-h-[100px] items-center gap-4 rounded-lg sm:col-span-8"
-          >
+        <div class="mx-12 mt-17 grid sm:grid-cols-12">
+          <div class="my-auto mb-8 items-center gap-4 rounded-lg sm:col-span-8">
             <img
               src="@/assets/zare-logo-transparent.png"
               alt=""
-              class="my-auto h-30 w-auto brightness-0 invert filter"
+              class="ms-2 mb-[-25px] h-60 w-auto brightness-0 invert filter"
             />
             <div class="text-left">
-              <h1>Skautský oddíl Záře</h1>
+              <h1
+                class="bg-gradient-to-r from-[#ff6a00] via-[#ffcc00] to-[#00c3ff] bg-clip-text text-5xl font-bold text-transparent"
+              >
+                Skautský oddíl Záře
+                <!-- Kdy se scházíme -->
+              </h1>
             </div>
           </div>
         </div>
 
-        <hr class="mx-10 mb-10" />
+        <!-- <hr class="mx-10 mb-10" /> -->
 
         <LeftSide />
       </div>
-      <div class="col-span-4">
-        <img
-          src="@/assets/path.png"
-          class="h-full w-full rounded-lg object-cover p-8"
-        />
+
+      <div class="col-span-3 hidden">
+        <div class="ms-50 mt-90 text-4xl">
+          <ul>
+            <li>Hovno</li>
+            <li class="mt-3">Hovno</li>
+            <li class="mt-3">Hovno</li>
+          </ul>
+        </div>
       </div>
     </div>
 
-    <RouterLink to="/">Go to INTRO</RouterLink>
+    <!--<RouterLink class="m-72" to="/">Go to INTRO</RouterLink>-->
   </div>
 </template>
 
 <style scoped></style>
+
+<!--
+TODO
+
+- tlačítko pro členy na intro stránce
+- vrátit se na intro stránku při daní zpět
+- přeskakování mezi textem na veřejnost stránce pomocí tlačítka pokračovat někde vpravo dole
+- nadpis skautský oddíl záře se mění na "kdy se scházíme" "naše klubovna" ...
+
+-->

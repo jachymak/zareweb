@@ -13,7 +13,7 @@
         v-if="visible"
         src="@/assets/intro-drawing.png"
         alt="Intro background"
-        class="absolute inset-0 h-full w-full object-cover contrast-125"
+        class="absolute inset-0 h-full w-full object-cover contrast-[1.35]"
       />
     </transition>
 
