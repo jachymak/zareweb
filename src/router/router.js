@@ -8,9 +8,12 @@ const routes = [
   },
   {
     path: "/home",
-    name: "Home",
     component: () => import("@/views/HomeView.vue"),
     meta: { fromIntro: true },
+    children: [
+      { path: "", redirect: "/home/about" },
+      { path: ":page", name: "Home" },
+    ],
   },
   {
     path: "/member",

@@ -1,5 +1,7 @@
 <script setup>
-import HelloWorld from "@/components/HelloWorld.vue";
+import Home01About from "@/components/Home/Home01About.vue";
+import Home02When from "@/components/Home/Home02When.vue";
+import Home03Where from "@/components/Home/Home03Where.vue";
 </script>
 
 <template>
@@ -9,31 +11,7 @@ import HelloWorld from "@/components/HelloWorld.vue";
         <div class="grid grid-cols-12">
           <div class="col-span-9">
             <div class="mx-auto">
-              <p class="leading-relaxed">
-                Nazdar! My jsme Záře. Jsme dva skautské oddíly – jeden pro
-                mladší, druhý pro starší děti. Členové u nás obvykle nastupují
-                do mladších vlčušek a poté přecházejí do starších skautů. Spolu
-                s dalšími oddíly nás zastřešuje středisko
-                <a href="https://stredisko-sipka.skauting.cz" class="underline"
-                  >Šipka</a
-                >.
-              </p>
-
-              <p class="mt-4 leading-relaxed">
-                Každý týden se scházíme v naší klubovně – hrajeme hry, povídáme
-                si, smějeme se, debatujeme, vyrábíme a spoustu dalšího. Jednou
-                až dvakrát do měsíce vyrážíme na výpravy.
-              </p>
-
-              <p class="mt-4 leading-relaxed">
-                Jsme skauti a to znamená, že máme svoje zásady, konáme dobré
-                skutky, řídíme se dle našich zákonů a jednáme tak, abychom co
-                nejlépe dodrželi náš slib. Více o samotném skautingu se můžeš
-                dočíst
-                <a href="https://www.skaut.cz/skauting/" class="underline"
-                  >zde</a
-                >.
-              </p>
+              <Home01About />
             </div>
           </div>
         </div>

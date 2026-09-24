@@ -1,14 +1,42 @@
 <script setup>
-import LeftSide from "@/components/Home/LeftSide.vue";
-import HelloWorld from "@/components/HelloWorld.vue";
-
 import { ref, computed, onMounted, onUnmounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import Home01About from "@/components/Home/Home01About.vue";
+import Home02When from "@/components/Home/Home02When.vue";
+import Home03Where from "@/components/Home/Home03Where.vue";
 
+const route = useRoute();
+const router = useRouter();
+
+const pages = [
+  { key: "about", title: "Skautský oddíl Záře" },
+  { key: "when", title: "Kdy se scházíme" },
+  { key: "where", title: "Naše klubovna" },
+];
+
+const currentIndex = computed(() => {
+  const idx = pages.findIndex((p) => p.key === route.params.page);
+  return idx >= 0 ? idx : 0;
+});
+
+const currentPage = computed(() => pages[currentIndex.value]);
+const hasPrev = computed(() => currentIndex.value > 0);
+const hasNext = computed(() => currentIndex.value < pages.length - 1);
+
+function goNext() {
+  if (hasNext.value)
+    router.push(`/home/${pages[currentIndex.value + 1].key}`);
+}
+
+function goPrev() {
+  if (hasPrev.value)
+    router.push(`/home/${pages[currentIndex.value - 1].key}`);
+}
+
+// Mouse gradient
 const titleRef = ref(null);
-
 const mouseX = ref(window.innerWidth / 2);
 const mouseY = ref(window.innerHeight / 2);
-
 const smoothX = ref(0);
 const smoothY = ref(0);
 
@@ -20,14 +48,11 @@ function handleMouseMove(e) {
 function animate() {
   if (titleRef.value) {
     const rect = titleRef.value.getBoundingClientRect();
-
     const targetX = mouseX.value - rect.left;
     const targetY = mouseY.value - rect.top;
-
     smoothX.value += (targetX - smoothX.value) * 0.06;
     smoothY.value += (targetY - smoothY.value) * 0.06;
   }
-
   requestAnimationFrame(animate);
 }
 
@@ -64,57 +89,85 @@ const gradientStyle = computed(() => ({
 </script>
 
 <template>
-  <div class="min-h-screen">
-    <div class="grid grid-cols-12">
-      <div class="col-span-1"></div>
-      <div class="col-span-8">
-        <div class="mx-12 mt-17 grid sm:grid-cols-12">
-          <div class="my-auto mb-8 items-center gap-4 rounded-lg sm:col-span-8">
-            <img
-              src="@/assets/zare-logo-transparent.png"
-              alt=""
-              class="ms-2 mb-[-25px] h-60 w-auto brightness-0 invert filter"
-            />
-            <!-- class="bg-gradient-to-r from-[#ff6a00] via-[#ffcc00] to-[#00c3ff] bg-clip-text text-5xl font-bold text-transparent" -->
+  <div class="min-h-screen px-20 pt-20 pb-16">
+    <img src="@/assets/zare-white.svg" alt="" class="mb-10 w-64" />
 
-            <div class="text-left">
-              <h1
-                ref="titleRef"
-                class="inline-block bg-clip-text text-5xl font-bold text-transparent"
-                :style="gradientStyle"
-              >
-                Skautský oddíl Záře
-              </h1>
-            </div>
-            <!--
-            <div class="text-left">
-              <h1
-                class="inline-block bg-gradient-to-r from-[#e40613] via-[#f39200] to-[#ffff00] bg-clip-text text-5xl font-bold text-transparent"
-              >
-                Skautský oddíl Záře
-                Kdy se scházíme
-              </h1>
-            </div>
-          --></div>
-        </div>
+    <h1
+      ref="titleRef"
+      class="inline-block bg-clip-text text-5xl font-bold text-transparent"
+      :style="gradientStyle"
+    >
+      {{ currentPage.title }}
+    </h1>
 
-        <!-- <hr class="mx-10 mb-10" /> -->
-
-        <LeftSide />
-      </div>
-
-      <div class="col-span-3 hidden">
-        <div class="ms-50 mt-90 text-4xl">
-          <ul>
-            <li>Hovno</li>
-            <li class="mt-3">Hovno</li>
-            <li class="mt-3">Hovno</li>
-          </ul>
-        </div>
-      </div>
+    <div class="mt-8 max-w-lg">
+      <Home01About v-if="currentPage.key === 'about'" />
+      <Home02When v-else-if="currentPage.key === 'when'" />
+      <Home03Where v-else-if="currentPage.key === 'where'" />
     </div>
 
-    <!--<RouterLink class="m-72" to="/">Go to INTRO</RouterLink>-->
+    <!-- Nav fixed to right side, vertically centered -->
+    <div
+      class="fixed right-12 top-1/2 flex -translate-y-1/2 flex-col items-center gap-4"
+    >
+      <button
+        @click="goPrev"
+        :class="
+          hasPrev
+            ? 'cursor-pointer text-white/40 hover:border-white/60 hover:text-white/90'
+            : 'invisible'
+        "
+        class="flex h-14 w-14 items-center justify-center rounded-full border border-white/20 transition-all"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="h-6 w-6"
+        >
+          <polyline points="18 15 12 9 6 15" />
+        </svg>
+      </button>
+
+      <div class="flex flex-col gap-2.5 py-1">
+        <span
+          v-for="(p, i) in pages"
+          :key="p.key"
+          class="block h-3 w-3 rounded-full transition-all"
+          :class="
+            i === currentIndex
+              ? 'scale-125 bg-white/80'
+              : 'cursor-pointer bg-white/25 hover:bg-white/50'
+          "
+          @click="router.push(`/home/${p.key}`)"
+        />
+      </div>
+
+      <button
+        @click="goNext"
+        :class="
+          hasNext
+            ? 'cursor-pointer text-white/40 hover:border-white/60 hover:text-white/90'
+            : 'invisible'
+        "
+        class="flex h-14 w-14 items-center justify-center rounded-full border border-white/20 transition-all"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="h-6 w-6"
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+    </div>
   </div>
 </template>
 
