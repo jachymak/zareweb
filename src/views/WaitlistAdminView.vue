@@ -6,7 +6,7 @@ import { useAuthStore } from '@/stores/auth'
 import AreaFooter from '@/components/AreaFooter.vue'
 import LeaderHeader from '@/components/leader/LeaderHeader.vue'
 import { LOAD_ERROR } from '@/components/parent/parentText'
-import ResetWizard from '@/components/waitlistAdmin/ResetWizard.vue'
+import ResetExplanation from '@/components/waitlistAdmin/ResetExplanation.vue'
 import WaitlistFilters from '@/components/waitlistAdmin/WaitlistFilters.vue'
 import WaitlistStats from '@/components/waitlistAdmin/WaitlistStats.vue'
 import WaitlistTable from '@/components/waitlistAdmin/WaitlistTable.vue'
@@ -23,12 +23,12 @@ import {
   EMPTY_LIST,
   formatDate,
   NO_MATCH,
-  resetDoneText,
 } from '@/components/waitlistAdmin/waitlistAdminText'
 
 // Waiting list management — SPEC §4.6: stats, filters, the sortable table
-// with notes and deleting, CSV export and the annual reset (admins only;
-// leaders see when it last happened).
+// with notes and deleting, CSV export, and when the list was last reset (with
+// „i“ explaining the reset). The reset itself is in Administration — admins
+// only get a link there; otherwise the page is the same for them.
 const w = useWaitlistAdmin()
 const isAdmin = computed(() => useAuthStore().role === 'admin')
 
@@ -51,12 +51,7 @@ function downloadCsv() {
   setTimeout(() => URL.revokeObjectURL(a.href), 1000)
 }
 
-const wizardOpen = ref(false)
-const lastResult = ref(null)
-function resetDone(result) {
-  lastResult.value = result
-  w.resetDone(result.date)
-}
+const infoOpen = ref(false)
 
 const section = 'mx-auto max-w-[1180px] px-4 sm:px-6'
 </script>
@@ -78,48 +73,63 @@ const section = 'mx-auto max-w-[1180px] px-4 sm:px-6'
           </h1>
         </div>
         <div
-          class="flex flex-wrap items-center gap-3.5 rounded-[14px] border-[1.5px] border-dashed border-line-strong py-2.5 pr-3 pl-4"
+          class="flex flex-wrap items-center gap-x-3.5 gap-y-1 rounded-[14px] border-[1.5px] border-dashed border-line-strong py-2.5 pr-3 pl-4"
         >
           <div class="flex flex-col">
             <span class="font-hand text-[20px] leading-[1.1] font-bold text-brown"
               >jednou za rok</span
             >
             <span class="text-[13px] text-muted-2" data-testid="last-reset">
-              {{ isAdmin ? 'naposledy' : 'listina naposledy resetována' }}
+              listina naposledy resetována
               {{ w.lastReset.value ? formatDate(w.lastReset.value) : 'zatím nikdy' }}
             </span>
           </div>
           <button
-            v-if="isAdmin"
             type="button"
-            :disabled="w.loading.value || w.loadError.value"
-            class="flex cursor-pointer items-center gap-2 rounded-full border-[1.5px] border-ink bg-cream px-4 py-[9px] text-[15px] text-ink hover:bg-gold-light disabled:cursor-default disabled:opacity-50"
-            @click="wizardOpen = true"
+            :aria-expanded="infoOpen"
+            aria-controls="reset-info"
+            aria-label="Jak funguje reset listiny"
+            title="Jak funguje reset listiny"
+            class="grid size-9 cursor-pointer place-items-center rounded-full border-[1.5px] font-hand text-[21px] font-bold hover:border-ink hover:text-ink"
+            :class="
+              infoOpen
+                ? 'border-ink bg-gold-light text-ink'
+                : 'border-line-strong bg-transparent text-brown'
+            "
+            @click="infoOpen = !infoOpen"
           >
-            <svg
-              viewBox="0 0 24 24"
-              class="block size-[17px]"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.9"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M4 12 A8 8 0 1 0 6.5 6.2 M4 4 L4 8.5 L8.5 8.5" />
-            </svg>
-            Resetovat listinu na další rok
+            i
           </button>
+          <RouterLink
+            v-if="isAdmin"
+            :to="{ path: '/vedouci/administrace', query: { zalozka: 'cekaci-listina' } }"
+            class="py-1 text-[14.5px]"
+          >
+            resetovat v Administraci →
+          </RouterLink>
         </div>
       </div>
 
-      <div
-        v-if="lastResult && !wizardOpen"
-        role="status"
-        class="mb-[22px] rounded-[14px] border-[1.5px] border-green bg-green-light px-4 py-3 text-[15.5px] text-ink"
+      <section
+        v-if="infoOpen"
+        id="reset-info"
+        aria-label="Jak funguje reset listiny"
+        class="mb-[22px] rounded-[14px] border-[1.5px] border-line-soft bg-paper px-4 py-3.5 sm:px-5"
       >
-        {{ resetDoneText(lastResult) }}
-      </div>
+        <div class="mb-2 flex items-start gap-3">
+          <h2 class="m-0 flex-1 text-[19px] font-semibold text-ink">Jak funguje reset listiny</h2>
+          <button
+            type="button"
+            aria-label="Zavřít"
+            class="cursor-pointer border-0 bg-transparent p-1 text-[18px] leading-none text-muted-2"
+            @click="infoOpen = false"
+          >
+            ✕
+          </button>
+        </div>
+        <ResetExplanation />
+        <p class="m-0 mt-3 text-[14.5px] text-muted-2">Reset dělá správce oddílu v Administraci.</p>
+      </section>
     </div>
 
     <p v-if="w.loading.value" :class="section" class="font-hand text-2xl text-muted">načítám…</p>
@@ -157,11 +167,4 @@ const section = 'mx-auto max-w-[1180px] px-4 sm:px-6'
       >
     </p>
   </AreaFooter>
-  <ResetWizard
-    v-if="isAdmin && wizardOpen"
-    :rows="w.rows.value"
-    :today="w.today"
-    @close="wizardOpen = false"
-    @done="resetDone"
-  />
 </template>

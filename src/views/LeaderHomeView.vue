@@ -18,6 +18,7 @@ const {
   troop,
   settings,
   todayPlan,
+  meetingTime,
   upcomingEvents,
   troopStats,
 } = useLeaderHome()
@@ -40,7 +41,7 @@ const section = 'mx-auto max-w-[1000px] px-4 sm:px-6'
       </div>
 
       <div :class="section" class="pt-[22px]">
-        <TodayCard :plan="todayPlan" :troop="troop" :today="today" />
+        <TodayCard :plan="todayPlan" :troop="troop" :today="today" :meeting-time="meetingTime" />
       </div>
 
       <div :class="section" class="pt-8">
@@ -49,7 +50,7 @@ const section = 'mx-auto max-w-[1000px] px-4 sm:px-6'
 
       <div class="mt-[34px] border-y-2 border-[#e0d3af] bg-[#f6efdc]">
         <div :class="section" class="pt-7 pb-[34px]">
-          <TroopAttendance :troop="troop" :stats="troopStats" :settings="settings" />
+          <TroopAttendance :troop="troop" :stats="troopStats" :requirement="settings[troop]" />
         </div>
       </div>
     </template>

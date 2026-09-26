@@ -5,6 +5,7 @@ import { deleteAccount, revokeAccess, setUserRole, subscribeUsers } from '@/serv
 import { getParentContactsOf, pairParent, subscribeMembers, unpairParent } from '@/services/members'
 import AccountCard from './AccountCard.vue'
 import AccountFilter from './AccountFilter.vue'
+import UnpairedChildren from './UnpairedChildren.vue'
 import { FILTERS, suggestChildren } from './accounts'
 
 // „Účty a párování“ — SPEC §4.8. Accounts and members are live, so a new
@@ -49,14 +50,20 @@ const loading = computed(() => !loadError.value && (!accounts.value || !members.
 
 const childrenOf = (uid) => (members.value ?? []).filter((m) => m.parentUids?.includes(uid))
 
-const counts = computed(() =>
-  Object.fromEntries(
+// Active children without any paired parent account.
+const unpaired = computed(() =>
+  (members.value ?? []).filter((m) => m.active && !m.parentUids?.length),
+)
+
+const counts = computed(() => ({
+  ...Object.fromEntries(
     FILTERS.map((f) => [
       f.id,
       (accounts.value ?? []).filter((a) => f.roles.includes(a.role ?? 'pending')).length,
     ]),
   ),
-)
+  unpaired: unpaired.value.length,
+}))
 
 const filter = ref('pending')
 
@@ -134,7 +141,12 @@ const remove = (account) => run(account, () => deleteAccount(account.id))
 
     <template v-else>
       <AccountFilter v-model="filter" :counts="counts" class="mb-4" />
-      <div class="flex flex-col gap-2.5">
+      <UnpairedChildren
+        v-if="filter === 'unpaired'"
+        :children="unpaired"
+        :parent-contacts="parentContacts"
+      />
+      <div v-else class="flex flex-col gap-2.5">
         <AccountCard
           v-for="account in visible"
           :key="account.id"

@@ -22,6 +22,27 @@ export function tripCount(member, events, participantOf) {
   return events.filter((e) => isTrip(e) && participantOf(e.id, member.id)?.attended === true).length
 }
 
-export function meetsCampRequirement({ percent, trips }, { campMinTrips, campMinMeetingPct }) {
-  return trips >= campMinTrips && (percent ?? 0) >= campMinMeetingPct
+// Camp requirement per troop (settings/app.campRequirements): minimum trips and
+// meeting %, each null when the troop doesn't require it.
+export const DEFAULT_CAMP_REQUIREMENTS = {
+  vlc: { trips: 4, meetingPct: 60 },
+  ss: { trips: 4, meetingPct: 60 },
 }
+
+// settings/app (possibly missing or partial) → { vlc: { trips, meetingPct }, ss: … }.
+export function campRequirements(appSettings) {
+  const stored = appSettings?.campRequirements
+  const troop = (code) => {
+    const t = { ...DEFAULT_CAMP_REQUIREMENTS[code], ...stored?.[code] }
+    return { trips: t.trips ?? null, meetingPct: t.meetingPct ?? null }
+  }
+  return { vlc: troop('vlc'), ss: troop('ss') }
+}
+
+// Each part holds when it isn't required.
+export const tripsOk = ({ trips }, req) => req.trips === null || trips >= req.trips
+export const meetingsOk = ({ percent }, req) =>
+  req.meetingPct === null || (percent ?? 0) >= req.meetingPct
+
+// req = the child's troop requirement (campRequirements(…)[troop]).
+export const meetsCampRequirement = (row, req) => tripsOk(row, req) && meetingsOk(row, req)

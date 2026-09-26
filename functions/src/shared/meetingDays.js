@@ -1,10 +1,51 @@
-// Meeting days of the troops and what a leader's troop has on a given day — SPEC §1, §4.1.
+// Meeting schedule of the troops and what a leader's troop has on a given day — SPEC §1, §4.1, §4.8.
 // Dates are `YYYY-MM-DD` strings in Europe/Prague.
 
 import { isTrip } from './attendance.js'
 
-// Hardcoded until the meeting settings in Administration exist (SPEC §4.8 Meetings).
-export const TROOP_MEETING_DAYS = { vlc: ['mon', 'thu'], ss: ['tue', 'wed'] }
+// Weekdays a troop can meet on, in week order.
+export const MEETING_WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri']
+
+// Used until (or unless) `settings/meetings` is saved in Administration.
+export const DEFAULT_MEETING_SCHEDULE = {
+  vlc: { days: ['mon', 'thu'], start: '17:00', end: '19:00' },
+  ss: { days: ['tue', 'wed'], start: '17:00', end: '19:00' },
+  noMeetings: [], // [{ from, to, troop: 'vlc' | 'ss' | 'all', reason }]
+}
+
+// Stored `settings/meetings` (possibly missing or partial) → a complete schedule.
+export function meetingSchedule(stored) {
+  const troop = (code) => {
+    const t = { ...DEFAULT_MEETING_SCHEDULE[code], ...stored?.[code] }
+    return { days: sortWeekdays(t.days), start: t.start, end: t.end }
+  }
+  return {
+    vlc: troop('vlc'),
+    ss: troop('ss'),
+    noMeetings: (stored?.noMeetings ?? [])
+      .map(({ from, to, troop, reason }) => ({ from, to, troop, reason: reason ?? '' }))
+      .sort((a, b) => a.from.localeCompare(b.from)),
+  }
+}
+
+export const sortWeekdays = (days) =>
+  [...days].sort((a, b) => MEETING_WEEKDAYS.indexOf(a) - MEETING_WEEKDAYS.indexOf(b))
+
+// `17:00` → `17`, `17:30` → `17.30` (as in „17–19 h“).
+const shortTime = (time) =>
+  time.endsWith(':00') ? String(Number(time.slice(0, 2))) : time.replace(':', '.').replace(/^0/, '')
+
+// „17–19 h“
+export const meetingTimeShort = ({ start, end }) => `${shortTime(start)}–${shortTime(end)} h`
+
+// „17:00–19:00“
+export const meetingTimeLong = ({ start, end }) => `${start}–${end}`
+
+// The no-meeting range covering the troop's date (troop or both), or null.
+export const noMeetingOn = (schedule, troop, date) =>
+  schedule.noMeetings.find(
+    (r) => (r.troop === 'all' || r.troop === troop) && r.from <= date && date <= r.to,
+  ) ?? null
 
 const WEEKDAYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
 
@@ -14,24 +55,30 @@ export function weekdayOf(isoDate) {
 }
 
 // Dates (`YYYY-MM-DD`) of the weekday between two dates (inclusive), oldest first.
-export function meetingDates(weekday, fromDate, toDate) {
+// `skip(date)` leaves dates out (e.g. those without meetings).
+export function meetingDates(weekday, fromDate, toDate, skip = () => false) {
   const dates = []
   const d = new Date(`${fromDate}T12:00:00Z`)
   while (weekdayOf(d.toISOString().slice(0, 10)) !== weekday) d.setUTCDate(d.getUTCDate() + 1)
   for (let iso = d.toISOString().slice(0, 10); iso <= toDate;) {
-    dates.push(iso)
+    if (!skip(iso)) dates.push(iso)
     d.setUTCDate(d.getUTCDate() + 7)
     iso = d.toISOString().slice(0, 10)
   }
   return dates
 }
 
+// Whether the troop meets on the date: one of its days and not in a no-meeting range.
+export const meetsOn = (schedule, troop, date) =>
+  schedule[troop].days.includes(weekdayOf(date)) && !noMeetingOn(schedule, troop, date)
+
 // The troop's programme on the day, in the order of SPEC §4.1:
-// { kind: 'meeting' } | { kind: 'trip', event } | { kind: 'otherTroop' } | { kind: 'free' }.
+// { kind: 'meeting' } | { kind: 'trip', event } | { kind: 'noMeeting', reason } |
+// { kind: 'otherTroop' } | { kind: 'free' }.
 // A trip is an event with registration (not the camp) for the troop or everyone, starting that day.
-export function troopDay(troop, date, events) {
-  const weekday = weekdayOf(date)
-  if (TROOP_MEETING_DAYS[troop].includes(weekday)) return { kind: 'meeting' }
+// `noMeeting` = a meeting day of the troop that falls into a no-meeting range.
+export function troopDay(troop, date, events, schedule = DEFAULT_MEETING_SCHEDULE) {
+  if (meetsOn(schedule, troop, date)) return { kind: 'meeting' }
   const trip = events.find(
     (e) =>
       e.startDate === date &&
@@ -40,8 +87,10 @@ export function troopDay(troop, date, events) {
       (e.audience === 'all' || e.audience === troop),
   )
   if (trip) return { kind: 'trip', event: trip }
-  const otherMeets = Object.entries(TROOP_MEETING_DAYS).some(
-    ([code, days]) => code !== troop && days.includes(weekday),
-  )
+  const range = noMeetingOn(schedule, troop, date)
+  if (range && schedule[troop].days.includes(weekdayOf(date))) {
+    return { kind: 'noMeeting', reason: range.reason ?? '' }
+  }
+  const otherMeets = ['vlc', 'ss'].some((code) => code !== troop && meetsOn(schedule, code, date))
   return { kind: otherMeets ? 'otherTroop' : 'free' }
 }

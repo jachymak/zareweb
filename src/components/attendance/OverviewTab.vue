@@ -1,13 +1,15 @@
 <script setup>
-import { meetsCampRequirement } from '@shared/attendance'
+import { computed } from 'vue'
+import { meetingsOk, meetsCampRequirement, tripsOk } from '@shared/attendance'
 import { campRequirementText, formatDay } from '@/components/parent/parentText'
 import { DOT_STATES, WEEKDAY_NAMES } from './attendanceText'
 
 // Overview: each child's meeting % and trips (red below the camp requirement)
 // and a dot per meeting date of their day this school year.
-defineProps({
+const props = defineProps({
   attendance: { type: Object, required: true }, // reactive(useAttendance())
 })
+const requirement = computed(() => props.attendance.settings[props.attendance.troop])
 
 const DOT_CLASSES = {
   present: 'border-green bg-green',
@@ -32,7 +34,7 @@ const DOT_CLASSES = {
       :key="row.member.id"
       :aria-label="row.member.nickname || row.member.firstName"
       class="mb-[9px] rounded-[3px] border-[1.5px] border-[#e2d9c2] bg-paper px-4 py-[13px] sm:px-[18px]"
-      :data-camp="meetsCampRequirement(row, attendance.settings) ? 'ok' : 'short'"
+      :data-camp="meetsCampRequirement(row, requirement) ? 'ok' : 'short'"
     >
       <div class="flex flex-wrap items-baseline gap-x-4 gap-y-1.5">
         <span class="flex min-w-0 flex-[1_1_200px] flex-wrap items-baseline gap-x-[9px] gap-y-0.5">
@@ -50,11 +52,7 @@ const DOT_CLASSES = {
           schůzky
           <b
             class="font-hand text-[21px] font-bold"
-            :class="
-              (row.percent ?? 0) >= attendance.settings.campMinMeetingPct
-                ? 'text-green'
-                : 'text-red'
-            "
+            :class="meetingsOk(row, requirement) ? 'text-green' : 'text-red'"
             data-testid="attendance"
           >
             {{ row.percent === null ? '—' : `${row.percent} %` }}
@@ -64,7 +62,7 @@ const DOT_CLASSES = {
           výpravy
           <b
             class="font-hand text-[21px] font-bold"
-            :class="row.trips >= attendance.settings.campMinTrips ? 'text-green' : 'text-red'"
+            :class="tripsOk(row, requirement) ? 'text-green' : 'text-red'"
             data-testid="trips"
           >
             {{ row.trips }}
@@ -84,7 +82,7 @@ const DOT_CLASSES = {
       </ul>
       <p v-else class="m-0 mt-2 text-[14px] text-[#8a7b5e]">
         {{
-          row.member.meetingDay
+          attendance.weekdays.includes(row.member.meetingDay)
             ? 'Letos ještě žádná schůzka nebyla.'
             : 'Nemá den schůzek — nastaví ho správce.'
         }}
@@ -95,7 +93,10 @@ const DOT_CLASSES = {
       po najetí se ukáže termín
     </p>
     <p class="m-0 mt-1 font-hand text-[20px] text-brown">
-      červeně to, co zatím nestačí na tábor ({{ campRequirementText(attendance.settings) }})
+      <template v-if="campRequirementText(requirement)">
+        červeně to, co zatím nestačí na tábor ({{ campRequirementText(requirement) }})
+      </template>
+      <template v-else>oddíl nemá žádnou podmínku na tábor</template>
     </p>
   </section>
 </template>

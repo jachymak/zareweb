@@ -1,5 +1,21 @@
 <script setup>
-import { TROOPS } from '@/constants/troops'
+import { onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
+import { meetingTimeLong } from '@shared/meetingDays'
+import { TROOPS, WEEKDAY_NAMES } from '@/constants/troops'
+import { useMeetingScheduleStore } from '@/stores/meetingSchedule'
+
+// Meeting days and times come from Administration (settings/meetings).
+const scheduleStore = useMeetingScheduleStore()
+const { schedule } = storeToRefs(scheduleStore)
+onMounted(() => scheduleStore.load())
+
+// „pondělí a čtvrtek · 17:00–19:00“
+function meetings(code) {
+  const troop = schedule.value[code]
+  const days = troop.days.map((d) => WEEKDAY_NAMES[d]).join(' a ')
+  return `${days} · ${meetingTimeLong(troop)}`
+}
 </script>
 
 <template>
@@ -15,7 +31,7 @@ import { TROOPS } from '@/constants/troops'
       </div>
       <div class="sm:text-right">
         <div class="text-base text-muted-2">{{ troop.ages }}</div>
-        <div class="text-[17px] leading-normal">{{ troop.meetings }}</div>
+        <div class="text-[17px] leading-normal">{{ meetings(troop.code) }}</div>
       </div>
     </li>
   </ul>

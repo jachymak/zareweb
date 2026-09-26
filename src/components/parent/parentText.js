@@ -36,6 +36,7 @@ export const MEETING_DAYS = {
   tue: 'v úterý',
   wed: 've středu',
   thu: 've čtvrtek',
+  fri: 'v pátek',
 }
 
 const parts = (iso) => iso.split('-').map(Number)
@@ -78,10 +79,13 @@ export function formatTimestamp(ts) {
 
 export const plural = (n, one, few, many) => (n === 1 ? one : n >= 2 && n <= 4 ? few : many)
 
-// „na tábor je potřeba 4 výpravy a 60 % schůzek“
-export function campRequirementText({ campMinTrips, campMinMeetingPct }) {
-  const trips = plural(campMinTrips, 'výprava', 'výpravy', 'výprav')
-  return `na tábor je potřeba ${campMinTrips} ${trips} a ${campMinMeetingPct} % schůzek`
+// „na tábor je potřeba 4 výpravy a 60 % schůzek“ — only the required parts;
+// '' when the troop requires nothing. `req` = campRequirements(…)[troop].
+export function campRequirementText({ trips, meetingPct }) {
+  const parts = []
+  if (trips !== null) parts.push(`${trips} ${plural(trips, 'výprava', 'výpravy', 'výprav')}`)
+  if (meetingPct !== null) parts.push(`${meetingPct} % schůzek`)
+  return parts.length ? `na tábor je potřeba ${parts.join(' a ')}` : ''
 }
 
 // Nickname of a leader, or of each organizer joined by commas.

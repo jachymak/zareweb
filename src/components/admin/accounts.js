@@ -9,12 +9,14 @@ export const ROLE_LABELS = {
   none: 'bez přístupu',
 }
 
-// Filter tabs; each role belongs to exactly one.
+// Filter tabs; each role belongs to exactly one. The last one lists children
+// instead of accounts: active children no parent account is paired with yet.
 export const FILTERS = [
   { id: 'pending', label: 'Čekající', roles: ['pending'] },
   { id: 'parents', label: 'Rodiče', roles: ['parent'] },
   { id: 'leaders', label: 'Vedoucí', roles: ['leader', 'admin'] },
   { id: 'none', label: 'Bez přístupu', roles: ['none'] },
+  { id: 'unpaired', label: 'Děti bez účtu', roles: [] },
 ]
 
 // Lowercase, no diacritics, only letters/digits separated by single spaces.

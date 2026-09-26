@@ -1,12 +1,23 @@
 <script setup>
+import { computed } from 'vue'
+import { troopByCode } from '@/constants/troops'
 import HandDrawnBox from '@/components/HandDrawnBox.vue'
 import AudienceTag from './AudienceTag.vue'
 import { MEETING_DAYS, campRequirementText } from './parentText'
 
 // One card per child: meeting day, attendance and trips this school year.
-defineProps({
+const props = defineProps({
   stats: { type: Array, required: true }, // [{ member, percent, trips }]
-  settings: { type: Object, required: true }, // settings/app
+  settings: { type: Object, required: true }, // camp requirement per troop
+})
+
+// The camp requirement of the children's troops — one line when it is the same,
+// else one per troop with its name.
+const requirementLines = computed(() => {
+  const troops = [...new Set(props.stats.map((s) => s.member.troop))]
+  const lines = troops.map((t) => ({ troop: t, text: campRequirementText(props.settings[t]) }))
+  if (new Set(lines.map((l) => l.text)).size <= 1) return lines[0]?.text ? [lines[0].text] : []
+  return lines.filter((l) => l.text).map((l) => `${troopByCode(l.troop).name}: ${l.text}`)
 })
 </script>
 
@@ -50,6 +61,12 @@ defineProps({
         </article>
       </HandDrawnBox>
     </div>
-    <p class="m-0 mt-2.5 font-hand text-[21px] text-brown">{{ campRequirementText(settings) }}</p>
+    <p
+      v-for="line in requirementLines"
+      :key="line"
+      class="m-0 mt-2.5 font-hand text-[21px] text-brown"
+    >
+      {{ line }}
+    </p>
   </div>
 </template>

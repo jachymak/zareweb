@@ -20,12 +20,16 @@ import { addDays, EVENTS } from '../scripts/seed-activity.js'
 import { schoolYearRange } from '../functions/src/shared/schoolYear.js'
 import { troopDay, weekdayOf } from '../functions/src/shared/meetingDays.js'
 import { canJoin, isOpenForSignUp } from '../functions/src/shared/events.js'
-import { meetingStats, meetsCampRequirement } from '../functions/src/shared/attendance.js'
+import {
+  DEFAULT_CAMP_REQUIREMENTS,
+  meetingStats,
+  meetsCampRequirement,
+} from '../functions/src/shared/attendance.js'
 
 const PASSWORD = 'heslo1234'
 const today = pragueToday()
 const { from: yearStart } = schoolYearRange(today)
-const SETTINGS = { campMinTrips: 4, campMinMeetingPct: 60 }
+const SETTINGS = DEFAULT_CAMP_REQUIREMENTS.vlc
 
 // Seeded events as Firestore holds them.
 const events = EVENTS.filter((e) => !e.deleted).map(({ registration, ...e }) => ({

@@ -7,7 +7,6 @@ export const TROOPS = [
     name: 'Vlčušky',
     tag: 'vlč',
     ages: '7–11 let',
-    meetings: 'pondělí a čtvrtek · 17:00–19:00',
   },
   {
     code: 'ss',
@@ -15,12 +14,20 @@ export const TROOPS = [
     name: 'Skauti a skautky',
     tag: 's&s',
     ages: '12–15 let',
-    meetings: 'úterý a středa · 17:00–19:00',
   },
 ]
 
 export const GROUP_EMAIL = 'zare@skaut.cz'
 export const FIND_OTHER_GROUP_URL = 'https://skautskyoddil.cz'
+
+// Meeting weekdays (SPEC §5 `weekday`); the troops' days are set in Administration.
+export const WEEKDAY_NAMES = {
+  mon: 'pondělí',
+  tue: 'úterý',
+  wed: 'středa',
+  thu: 'čtvrtek',
+  fri: 'pátek',
+}
 
 export const troopByCode = (code) => TROOPS.find((t) => t.code === code)
 

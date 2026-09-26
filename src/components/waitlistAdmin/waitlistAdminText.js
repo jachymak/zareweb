@@ -89,6 +89,6 @@ export const CSV_COLUMNS = [
 export const resetDoneText = ({ date, emailedCount }) =>
   `Listina resetována ${formatDate(date)} · e-mail s odkazem odešel ${emailedCount} ${plural(emailedCount, 'rodiči', 'rodičům', 'rodičům')}. Děti se vracejí na svá původní místa, jak rodiče potvrzují zájem.`
 
-export const RESET_STEPS = ['Jak to funguje', 'Nabrané děti', 'E-mail rodičům']
+export const RESET_STEPS = ['Nabrané děti', 'E-mail a odeslání']
 
 export const emailsLabel = (n) => `${n} ${plural(n, 'e-mail', 'e-maily', 'e-mailů')}`

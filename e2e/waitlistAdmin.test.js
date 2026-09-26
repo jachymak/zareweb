@@ -34,7 +34,8 @@ async function until(fn, timeout = 10000) {
   }
 }
 
-// vedouci@ is a leader, spravce@ an admin (only admins reset the list).
+// vedouci@ is a leader, spravce@ an admin (only admins reset the list, in
+// Administration → čekací listina; the leaders' page is the same for both).
 async function openWaitlist(browser, options, email = 'vedouci@zare.test') {
   const opened = await openPage(browser, '/prihlaseni', options)
   const { page } = opened
@@ -101,11 +102,20 @@ export default async function waitlistAdmin({ browser, check }) {
       stats.includes(name(youngest)) && stats.includes(name(bySignUp[0])),
     )
     check(
-      'header: leaders see the last reset date, no reset button',
+      'header: leaders see the last reset date, no reset button, no Administration link',
       (await page.getByTestId('last-reset').innerText()) ===
         'listina naposledy resetována 24. 8. 2026' &&
-        !(await page.getByRole('button', { name: 'Resetovat listinu na další rok' }).count()),
+        !(await page.getByRole('button', { name: 'Resetovat listinu na další rok' }).count()) &&
+        !(await page.getByRole('link', { name: 'resetovat v Administraci →' }).count()),
     )
+    await page.getByRole('button', { name: 'Jak funguje reset listiny' }).click()
+    const info = page.getByRole('region', { name: 'Jak funguje reset listiny' })
+    check(
+      'header: „i“ explains the reset (only when no more children are taken this year)',
+      (await info.innerText()).includes('nechce nabírat další děti') &&
+        (await info.innerText()).includes('Reset dělá správce oddílu v Administraci.'),
+    )
+    await info.getByRole('button', { name: 'Zavřít' }).click()
     const first = await rowOf(bySignUp[0]).innerText()
     const [y, m] = bySignUp[0].firstSignedUpAt.split('-').map(Number)
     check(
@@ -273,9 +283,12 @@ export default async function waitlistAdmin({ browser, check }) {
     await row.getByRole('button', { expanded: false }).first().click()
     await row.getByText('Kontakt na rodiče:').waitFor()
     if (!(await row.innerText()).includes('Rodič:')) problems.push('no parent in the card detail')
-    await page
-      .getByRole('button', { name: 'Resetovat listinu na další rok' })
-      .scrollIntoViewIfNeeded()
+    if (!(await page.getByRole('link', { name: 'resetovat v Administraci →' }).isVisible())) {
+      problems.push('admin has no link to the reset')
+    }
+    if (await page.getByRole('button', { name: 'Resetovat listinu na další rok' }).count()) {
+      problems.push('reset button on the leaders page')
+    }
     const overflow = await horizontalOverflow(page)
     if (overflow > 0) problems.push(`overflow ${overflow}`)
     const small = await page.evaluate(() =>
@@ -288,8 +301,11 @@ export default async function waitlistAdmin({ browser, check }) {
     )
     if (small.length) problems.push(`small ${small.join(', ')}`)
     await page.screenshot({ path: `${SCREENSHOTS}waitlist-admin-${width}.png`, fullPage: true })
+    await page.getByRole('link', { name: 'resetovat v Administraci →' }).click()
+    await page.waitForURL(/zalozka=cekaci-listina/)
+    await page.getByTestId('reset').locator('h3 > button').click()
     await page.getByRole('button', { name: 'Resetovat listinu na další rok' }).click()
-    await page.getByRole('button', { name: 'Začít' }).click()
+    await page.getByTestId('admitted-count').waitFor()
     if ((await horizontalOverflow(page)) > 0) problems.push('wizard overflow')
     await page.screenshot({ path: `${SCREENSHOTS}waitlist-reset-${width}.png` })
     if (errors.length) problems.push(errors.join(' | '))
@@ -307,14 +323,20 @@ export default async function waitlistAdmin({ browser, check }) {
     const rows = page.locator('[data-testid^="row-"]')
     const remaining = bySignUp.slice(2).length + 1 // bySignUp[1] was deleted
     const admitted = [bySignUp[0], bySignUp[3]]
-    await page.getByRole('button', { name: 'Resetovat listinu na další rok' }).click()
-    const dialog = page.getByRole('dialog', { name: 'Reset listiny na další rok' })
+    await page.goto(`${APP_URL}/vedouci/administrace?zalozka=cekaci-listina`, { waitUntil: 'load' })
+    const reset = page.getByTestId('reset')
+    await reset.locator('h3 > button').click()
+    const resetButton = reset.getByRole('button', { name: 'Resetovat listinu na další rok' })
+    await until(() => resetButton.isEnabled())
     const year = formatSchoolYear(recruitmentYears(today, today).doneYear)
     check(
-      'reset: explains, names the recruitment year',
-      (await dialog.innerText()).includes(`nováčky na školní rok ${year} už máme nabrané`),
+      'reset: Administration explains it, names the recruitment year and when to do it',
+      (await reset.innerText()).includes(`nováčky na školní rok ${year} už máme nabrané`) &&
+        (await reset.innerText()).includes('nechce nabírat další děti') &&
+        (await reset.getByTestId('summary').innerText()) === 'naposledy 24. 8. 2026',
     )
-    await dialog.getByRole('button', { name: 'Začít' }).click()
+    await resetButton.click()
+    const dialog = page.getByRole('dialog', { name: 'Reset listiny na další rok' })
     for (const e of admitted) {
       // search ignores case and diacritics
       const q = e.lastName
@@ -375,13 +397,22 @@ export default async function waitlistAdmin({ browser, check }) {
     )
     const [y, m, d] = today.split('-').map(Number)
     check(
-      'reset: banner, empty list, new reset date',
+      'reset: banner and the new reset date in Administration',
       (
         await page.getByRole('status').filter({ hasText: 'Listina resetována' }).innerText()
       ).includes(`e-mail s odkazem odešel ${emailed} rodičům`) &&
-        (await until(async () => (await rows.count()) === 0)) &&
+        (await reset.getByTestId('summary').innerText()) === `naposledy ${d}. ${m}. ${y}`,
+    )
+    await page.goto(`${APP_URL}/vedouci/cekaci-listina`, { waitUntil: 'load' })
+    await page.waitForFunction(
+      () => document.querySelector('main')?.getAttribute('aria-busy') === 'false',
+    )
+    check(
+      'reset: the leaders page shows an empty list and the new reset date',
+      (await until(async () => (await rows.count()) === 0)) &&
         (await page.getByText('Listina je teď prázdná').isVisible()) &&
-        (await page.getByTestId('last-reset').innerText()) === `naposledy ${d}. ${m}. ${y}`,
+        (await page.getByTestId('last-reset').innerText()) ===
+          `listina naposledy resetována ${d}. ${m}. ${y}`,
     )
     await page.screenshot({ path: `${SCREENSHOTS}waitlist-after-reset.png`, fullPage: true })
     check('reset: no console errors', !errors.length, errors.join(' | '))

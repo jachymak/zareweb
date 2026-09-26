@@ -120,7 +120,14 @@ async function uidsByEmail() {
 
 const uids = await uidsByEmail()
 const now = new Date()
-for (const { id, parents, pairedWith = [], active = true, meetingDay = null, ...child } of MEMBERS) {
+for (const {
+  id,
+  parents,
+  pairedWith = [],
+  active = true,
+  meetingDay = null,
+  ...child
+} of MEMBERS) {
   const parentUids = pairedWith.map((email) => uids[email]).filter(Boolean)
   await put(`members/${id}`, {
     skautisPersonId: Number(id),

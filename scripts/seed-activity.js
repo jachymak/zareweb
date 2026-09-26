@@ -8,7 +8,7 @@
 // Run after `seed-members.js`. Usage: npm run seed:activity. Writes bypass security rules.
 
 import { pragueToday, schoolYearRange } from '../functions/src/shared/schoolYear.js'
-import { meetingDates, TROOP_MEETING_DAYS } from '../functions/src/shared/meetingDays.js'
+import { DEFAULT_MEETING_SCHEDULE, meetingDates } from '../functions/src/shared/meetingDays.js'
 
 const PROJECT = process.env.VITE_FIREBASE_PROJECT_ID ?? 'demo-zareweb'
 const HOST = process.env.FIRESTORE_EMULATOR_HOST ?? '127.0.0.1:8080'
@@ -27,14 +27,78 @@ const daysAgo = (n) => new Date(Date.now() - n * 86400000)
 
 // id = skautIS person id.
 export const LEADERS = [
-  { id: '800001', nickname: 'Ondys', name: 'Ondřej Sýkora', roleTitle: 'rádce Bobrů', group: 'vlc', phone: '+420 608 117 442', email: 'ondys@example.cz' },
-  { id: '800002', nickname: 'Nina', name: 'Nina Bártová', roleTitle: 'zástupkyně vedoucího', group: 'vlc', phone: '+420 721 404 118', email: 'nina@example.cz' },
-  { id: '800003', nickname: 'Oskar', name: 'Oskar Beneš', roleTitle: 'rádce Veverek', group: 'vlc', phone: null, email: 'oskar@example.cz' },
-  { id: '800011', nickname: 'Hobit', name: 'Theodor Mikolajek', roleTitle: 'vedoucí oddílu', group: 'ss', phone: '+420 776 772 777', email: 'hobit@example.cz' },
-  { id: '800012', nickname: 'Jasmína', name: 'Jasmína Kolářová', roleTitle: 'zástupkyně vedoucího', group: 'ss', phone: '+420 608 213 900', email: 'jasmina@example.cz' },
-  { id: '800013', nickname: 'Kuba', name: 'Jakub Horský', roleTitle: 'rádce Rysů', group: 'ss', phone: '+420 776 330 128', email: 'kuba@example.cz' },
-  { id: '800021', nickname: 'Elina', name: 'Elina Procházková', roleTitle: 'hospodářka, vedoucí tábora', group: 'other', phone: '+420 704 889 210', email: 'elina@example.cz' },
-  { id: '800022', nickname: 'Quido', name: 'Quido Hanulík', roleTitle: 'správce klubovny', group: 'other', phone: '+420 735 305 823', email: 'quido@example.cz' },
+  {
+    id: '800001',
+    nickname: 'Ondys',
+    name: 'Ondřej Sýkora',
+    roleTitle: 'rádce Bobrů',
+    group: 'vlc',
+    phone: '+420 608 117 442',
+    email: 'ondys@example.cz',
+  },
+  {
+    id: '800002',
+    nickname: 'Nina',
+    name: 'Nina Bártová',
+    roleTitle: 'zástupkyně vedoucího',
+    group: 'vlc',
+    phone: '+420 721 404 118',
+    email: 'nina@example.cz',
+  },
+  {
+    id: '800003',
+    nickname: 'Oskar',
+    name: 'Oskar Beneš',
+    roleTitle: 'rádce Veverek',
+    group: 'vlc',
+    phone: null,
+    email: 'oskar@example.cz',
+  },
+  {
+    id: '800011',
+    nickname: 'Hobit',
+    name: 'Theodor Mikolajek',
+    roleTitle: 'vedoucí oddílu',
+    group: 'ss',
+    phone: '+420 776 772 777',
+    email: 'hobit@example.cz',
+  },
+  {
+    id: '800012',
+    nickname: 'Jasmína',
+    name: 'Jasmína Kolářová',
+    roleTitle: 'zástupkyně vedoucího',
+    group: 'ss',
+    phone: '+420 608 213 900',
+    email: 'jasmina@example.cz',
+  },
+  {
+    id: '800013',
+    nickname: 'Kuba',
+    name: 'Jakub Horský',
+    roleTitle: 'rádce Rysů',
+    group: 'ss',
+    phone: '+420 776 330 128',
+    email: 'kuba@example.cz',
+  },
+  {
+    id: '800021',
+    nickname: 'Elina',
+    name: 'Elina Procházková',
+    roleTitle: 'hospodářka, vedoucí tábora',
+    group: 'other',
+    phone: '+420 704 889 210',
+    email: 'elina@example.cz',
+  },
+  {
+    id: '800022',
+    nickname: 'Quido',
+    name: 'Quido Hanulík',
+    roleTitle: 'správce klubovny',
+    group: 'other',
+    phone: '+420 735 305 823',
+    email: 'quido@example.cz',
+  },
 ]
 
 // Full poster content, as the leaders' poster editor saves it (SPEC §5).
@@ -56,28 +120,158 @@ export const STREDOHORI_POSTER = {
 // `participants`: { memberId: fields }; `poster`: poster content (default for published ones). Children: 900102 Sojka (vlc), 900201 Bobr (ss).
 export const EVENTS = [
   // open for sign-up
-  { id: 'seed-stredohori', title: 'Výprava do Středohoří', audience: 'vlc', startDate: day(10), endDate: day(11), organizerIds: ['800001'], registration: day(5), posterStatus: 'published', price: 350, poster: STREDOHORI_POSTER, participants: { 900102: { signedUp: true } } },
-  { id: 'seed-kokorin', title: 'Podzimní výprava na Kokořín', audience: 'all', startDate: day(14), endDate: day(16), organizerIds: ['800012', '800002'], registration: day(8), posterStatus: 'missing' },
+  {
+    id: 'seed-stredohori',
+    title: 'Výprava do Středohoří',
+    audience: 'vlc',
+    startDate: day(10),
+    endDate: day(11),
+    organizerIds: ['800001'],
+    registration: day(5),
+    posterStatus: 'published',
+    price: 350,
+    poster: STREDOHORI_POSTER,
+    participants: { 900102: { signedUp: true } },
+  },
+  {
+    id: 'seed-kokorin',
+    title: 'Podzimní výprava na Kokořín',
+    audience: 'all',
+    startDate: day(14),
+    endDate: day(16),
+    organizerIds: ['800012', '800002'],
+    registration: day(8),
+    posterStatus: 'missing',
+  },
   // registration ended, not started yet
-  { id: 'seed-uzly', title: 'Uzlovací závody', audience: 'ss', startDate: day(3), endDate: day(3), organizerIds: ['800013'], registration: day(-1), posterStatus: 'published' },
+  {
+    id: 'seed-uzly',
+    title: 'Uzlovací závody',
+    audience: 'ss',
+    startDate: day(3),
+    endDate: day(3),
+    organizerIds: ['800013'],
+    registration: day(-1),
+    posterStatus: 'published',
+  },
   // upcoming without registration
-  { id: 'seed-okor', title: 'Jednodenní výprava na Okoř', audience: 'vlc', startDate: day(20), endDate: day(20), organizerIds: ['800001'], posterStatus: 'draft', cancelled: true },
-  { id: 'seed-blanik', title: 'Výprava na Blaník', audience: 'ss', startDate: day(30), endDate: day(32), organizerIds: ['800011'], posterStatus: 'draft', poster: { intro: 'Rozepsaný plakátek.', destination: 'Blaník', packingItems: ['spacák'] } },
-  { id: 'seed-hra', title: 'Oddílová hra po Praze', audience: 'all', startDate: day(40), endDate: day(40), organizerIds: ['800002'], posterStatus: 'missing' },
-  { id: 'seed-tabor', title: 'Letní tábor', audience: 'all', startDate: day(280), endDate: day(294), organizerIds: [], posterStatus: 'none' },
-  { id: 'seed-smazana', title: 'Smazaná akce', audience: 'all', startDate: day(12), endDate: day(12), organizerIds: ['800002'], posterStatus: 'missing', deleted: true },
+  {
+    id: 'seed-okor',
+    title: 'Jednodenní výprava na Okoř',
+    audience: 'vlc',
+    startDate: day(20),
+    endDate: day(20),
+    organizerIds: ['800001'],
+    posterStatus: 'draft',
+    cancelled: true,
+  },
+  {
+    id: 'seed-blanik',
+    title: 'Výprava na Blaník',
+    audience: 'ss',
+    startDate: day(30),
+    endDate: day(32),
+    organizerIds: ['800011'],
+    posterStatus: 'draft',
+    poster: { intro: 'Rozepsaný plakátek.', destination: 'Blaník', packingItems: ['spacák'] },
+  },
+  {
+    id: 'seed-hra',
+    title: 'Oddílová hra po Praze',
+    audience: 'all',
+    startDate: day(40),
+    endDate: day(40),
+    organizerIds: ['800002'],
+    posterStatus: 'missing',
+  },
+  {
+    id: 'seed-tabor',
+    title: 'Letní tábor',
+    audience: 'all',
+    startDate: day(280),
+    endDate: day(294),
+    organizerIds: [],
+    posterStatus: 'none',
+  },
+  {
+    id: 'seed-smazana',
+    title: 'Smazaná akce',
+    audience: 'all',
+    startDate: day(12),
+    endDate: day(12),
+    organizerIds: ['800002'],
+    posterStatus: 'missing',
+    deleted: true,
+  },
   // past
-  { id: 'seed-zahajovaci', title: 'Zahajovací výprava', audience: 'all', startDate: day(-12), endDate: day(-11), organizerIds: ['800011'], registration: day(-16), posterStatus: 'published', participants: { 900102: { signedUp: true, attended: true }, 900201: { signedUp: true, attended: false } } },
-  { id: 'seed-brdy', title: 'Výprava do Brd', audience: 'ss', startDate: day(-8), endDate: day(-7), organizerIds: ['800013'], registration: day(-11), posterStatus: 'published', participants: { 900201: { signedUp: true, attended: true } } },
-  { id: 'seed-sarka', title: 'Hry v Šárce', audience: 'vlc', startDate: day(-5), endDate: day(-5), organizerIds: ['800001'], registration: day(-8), posterStatus: 'published', participants: { 900102: { signedUp: true, attended: true } } },
-  { id: 'seed-odpoledne', title: 'Zahajovací odpoledne v klubovně', audience: 'all', startDate: day(-20), endDate: day(-20), organizerIds: ['800002'], posterStatus: 'none' },
+  {
+    id: 'seed-zahajovaci',
+    title: 'Zahajovací výprava',
+    audience: 'all',
+    startDate: day(-12),
+    endDate: day(-11),
+    organizerIds: ['800011'],
+    registration: day(-16),
+    posterStatus: 'published',
+    participants: {
+      900102: { signedUp: true, attended: true },
+      900201: { signedUp: true, attended: false },
+    },
+  },
+  {
+    id: 'seed-brdy',
+    title: 'Výprava do Brd',
+    audience: 'ss',
+    startDate: day(-8),
+    endDate: day(-7),
+    organizerIds: ['800013'],
+    registration: day(-11),
+    posterStatus: 'published',
+    participants: { 900201: { signedUp: true, attended: true } },
+  },
+  {
+    id: 'seed-sarka',
+    title: 'Hry v Šárce',
+    audience: 'vlc',
+    startDate: day(-5),
+    endDate: day(-5),
+    organizerIds: ['800001'],
+    registration: day(-8),
+    posterStatus: 'published',
+    participants: { 900102: { signedUp: true, attended: true } },
+  },
+  {
+    id: 'seed-odpoledne',
+    title: 'Zahajovací odpoledne v klubovně',
+    audience: 'all',
+    startDate: day(-20),
+    endDate: day(-20),
+    organizerIds: ['800002'],
+    posterStatus: 'none',
+  },
 ]
 
 // Packing list templates (managed in Administration later), id → name + items.
 export const PACKING_TEMPLATES = {
-  chata: { name: 'Věci na výpravu do chaty', items: ['spacák', 'přezůvky', 'hygienické potřeby', 'baterka', 'náhradní oblečení', 'lahev s pitím'] },
-  jednodenni: { name: 'Věci na jednodenní výpravu', items: ['svačina', 'lahev s pitím', 'pláštěnka', 'kartička pojišťovny'] },
-  celta: { name: 'Věci na výpravu pod celtou', items: ['spacák', 'karimatka', 'celta', 'ešus a lžíce', 'baterka', 'náhradní ponožky'] },
+  chata: {
+    name: 'Věci na výpravu do chaty',
+    items: [
+      'spacák',
+      'přezůvky',
+      'hygienické potřeby',
+      'baterka',
+      'náhradní oblečení',
+      'lahev s pitím',
+    ],
+  },
+  jednodenni: {
+    name: 'Věci na jednodenní výpravu',
+    items: ['svačina', 'lahev s pitím', 'pláštěnka', 'kartička pojišťovny'],
+  },
+  celta: {
+    name: 'Věci na výpravu pod celtou',
+    items: ['spacák', 'karimatka', 'celta', 'ešus a lžíce', 'baterka', 'náhradní ponožky'],
+  },
 }
 
 // Test leader accounts of `seed-users.js` linked to their skautIS person (users.personId),
@@ -86,11 +280,50 @@ export const LEADER_ACCOUNTS = { 'vedouci@zare.test': '800001', 'spravce@zare.te
 
 // Newest first as parents see them; `important` is pinned on top.
 export const NEWS = [
-  { id: 'seed-satky', title: 'Vlčušky mají nové šátky', body: 'Na schůzkách jsme rozdali nové šátky. Kdo ho ještě nemá, ať se ozve na nejbližší schůzce.', audience: 'vlc', author: 'Ondys', age: 2 },
-  { id: 'seed-piknik', title: 'Piknik s rodiči v Šárce', body: 'V sobotu odpoledne grilujeme a hrajeme s rodiči v Divoké Šárce. Přijďte, ať se poznáme.', audience: 'all', author: 'Nina', age: 4 },
-  { id: 'seed-zkousky', title: 'Skautské zkoušky na podzim', body: 'Starší družiny budou skládat zkoušky druhé třídy. Co se k nim učit, rozdáme na schůzce.', audience: 'ss', author: 'Jasmína', age: 6 },
-  { id: 'seed-prispevky', title: 'Členské příspěvky na školní rok', body: 'Prosíme o zaplacení 1 500 Kč na účet 2400123456/2010 do konce října, do zprávy napište přezdívku dítěte.', audience: 'all', author: 'Hobit', age: 10, important: true, linkLabel: 'platební údaje', linkUrl: 'https://example.cz/prispevky' },
-  { id: 'seed-stazena', title: 'Stažená zpráva', body: 'Tuhle zprávu rodiče neuvidí.', audience: 'all', author: 'Hobit', age: 1, withdrawn: true },
+  {
+    id: 'seed-satky',
+    title: 'Vlčušky mají nové šátky',
+    body: 'Na schůzkách jsme rozdali nové šátky. Kdo ho ještě nemá, ať se ozve na nejbližší schůzce.',
+    audience: 'vlc',
+    author: 'Ondys',
+    age: 2,
+  },
+  {
+    id: 'seed-piknik',
+    title: 'Piknik s rodiči v Šárce',
+    body: 'V sobotu odpoledne grilujeme a hrajeme s rodiči v Divoké Šárce. Přijďte, ať se poznáme.',
+    audience: 'all',
+    author: 'Nina',
+    age: 4,
+  },
+  {
+    id: 'seed-zkousky',
+    title: 'Skautské zkoušky na podzim',
+    body: 'Starší družiny budou skládat zkoušky druhé třídy. Co se k nim učit, rozdáme na schůzce.',
+    audience: 'ss',
+    author: 'Jasmína',
+    age: 6,
+  },
+  {
+    id: 'seed-prispevky',
+    title: 'Členské příspěvky na školní rok',
+    body: 'Prosíme o zaplacení 1 500 Kč na účet 2400123456/2010 do konce října, do zprávy napište přezdívku dítěte.',
+    audience: 'all',
+    author: 'Hobit',
+    age: 10,
+    important: true,
+    linkLabel: 'platební údaje',
+    linkUrl: 'https://example.cz/prispevky',
+  },
+  {
+    id: 'seed-stazena',
+    title: 'Stažená zpráva',
+    body: 'Tuhle zprávu rodiče neuvidí.',
+    audience: 'all',
+    author: 'Hobit',
+    age: 1,
+    withdrawn: true,
+  },
 ]
 
 // Past meeting dates of this school year per troop and weekday, oldest first.
@@ -99,13 +332,15 @@ export const NEWS = [
 export function buildMeetings(members) {
   const { from } = schoolYearRange(today)
   const meetings = []
-  for (const [troop, weekdays] of Object.entries(TROOP_MEETING_DAYS)) {
-    for (const weekday of weekdays) {
+  for (const troop of ['vlc', 'ss']) {
+    for (const weekday of DEFAULT_MEETING_SCHEDULE[troop].days) {
       const dates = meetingDates(weekday, from, addDays(today, -1))
       const kids = members.filter((m) => m.troop === troop && m.meetingDay === weekday)
       dates.slice(0, -1).forEach((date, i) => {
         const cancelled = i === 1
-        const presentIds = cancelled ? [] : kids.filter((_, k) => (i + k) % 3 !== 2).map((m) => m.id)
+        const presentIds = cancelled
+          ? []
+          : kids.filter((_, k) => (i + k) % 3 !== 2).map((m) => m.id)
         meetings.push({ troop, date, weekday, cancelled, presentIds })
       })
     }
@@ -151,7 +386,8 @@ const remove = (name) => fetch(`http://${HOST}/v1/${name}`, { method: 'DELETE', 
 async function clear(collection, subcollections = []) {
   for (const d of await list(collection)) {
     const path = d.name.split('/documents/')[1]
-    for (const sub of subcollections) for (const s of await list(`${path}/${sub}`)) await remove(s.name)
+    for (const sub of subcollections)
+      for (const s of await list(`${path}/${sub}`)) await remove(s.name)
     await remove(d.name)
   }
 }
@@ -166,7 +402,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     }))
     .filter((m) => m.active)
 
-  for (const c of ['skautisPeople', 'contacts', 'news', 'meetings', 'packingTemplates']) await clear(c)
+  for (const c of ['skautisPeople', 'contacts', 'news', 'meetings', 'packingTemplates'])
+    await clear(c)
   await clear('events', ['participants', 'poster'])
 
   const now = new Date()

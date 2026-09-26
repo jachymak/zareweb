@@ -53,7 +53,7 @@ const small =
         </button>
       </div>
       <span class="text-[14.5px] text-[#8a7b5e]">
-        schůzky {{ WEEKDAY_NAMES[weekday] }} · 17–19 h
+        schůzky {{ WEEKDAY_NAMES[weekday] }} · {{ a.meetingTime }}
       </span>
     </div>
 

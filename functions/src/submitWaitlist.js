@@ -2,6 +2,8 @@ import { createHash } from 'node:crypto'
 import { FieldValue } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/https'
 import { logger } from 'firebase-functions'
+import { sendEmails } from './mail.js'
+import { emailTemplate, renderEmail } from './shared/emails.js'
 import { db } from './admin.js'
 import { BASE_OPTIONS } from './options.js'
 import { gradeSchoolYear, pragueToday } from './shared/schoolYear.js'
@@ -88,7 +90,11 @@ export const submitWaitlist = onCall(
     }
 
     logger.info('Waitlist sign-up created', { id })
-    // TODO: confirmation e-mail to the parent (SMTP not set up yet, SPEC §7).
+    const stored = (await db.doc('settings/emails').get()).get('waitlistConfirmation')
+    const email = renderEmail(emailTemplate('waitlistConfirmation', stored), {
+      dite: `${clean(entry.firstName)} ${clean(entry.lastName)}`,
+    })
+    await sendEmails('Waitlist confirmation', [{ to: entry.email.trim().toLowerCase(), ...email }])
     return { status: 'created' }
   },
 )

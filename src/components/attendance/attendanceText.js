@@ -1,6 +1,6 @@
 // Czech texts of the attendance page (SPEC §4.2).
 
-export const WEEKDAY_NAMES = { mon: 'pondělí', tue: 'úterý', wed: 'středa', thu: 'čtvrtek' }
+export { WEEKDAY_NAMES } from '@/constants/troops'
 
 export const TABS = [
   { value: 'meetings', label: 'schůzky' },

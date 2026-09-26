@@ -12,7 +12,7 @@ Website of the scout group **Záře** (Dejvice, Prague), part of Junák – čes
 | `vlc` | 220. oddíl **Vlčušky**          | 7–11  | Monday, Thursday           |
 | `ss`  | 222. oddíl **Skauti a skautky** | 12–15 | Tuesday, Wednesday         |
 
-Meeting days and times are set in Administration (§4.8 Meetings) — the table shows the current values, which the code still hardcodes until that tab exists.
+Meeting days and times are set in Administration (§4.8 Meetings) — the table shows the defaults (`DEFAULT_MEETING_SCHEDULE` in `functions/src/shared/meetingDays.js`), used until the admin saves the schedule.
 
 Each child has a **fixed meeting day** — one of the two days of their troop, assigned manually in Administration — and attends one meeting per week.
 Events and news are targeted at an **audience**: `vlc`, `ss` or `all` (UI tags: „vlč“, „s&s“, „vši“).
@@ -152,7 +152,7 @@ Common header: „Skautský oddíl Záře — pro členy“, the user's e-mail, 
 ### 3.1 Parent home (`/clenove`)
 
 1. **Greeting** — „Ahoj!“, today's date, nearest upcoming relevant event (name + date).
-2. **Children cards** — one per paired child: nickname, troop tag, full name, meeting day, attendance % at meetings, number of trips attended (current school year). Below: camp requirement *„na tábor je potřeba {campMinTrips} výpravy a {campMinMeetingPct} % schůzek“*.
+2. **Children cards** — one per paired child: nickname, troop tag, full name, meeting day, attendance % at meetings, number of trips attended (current school year). Below: the camp requirement of the children's troop(s) (§6.3), only its required parts — *„na tábor je potřeba 4 výpravy a 60 % schůzek“*; one line when all children's troops have the same one, else one line per troop prefixed with the troop name; nothing when not required.
 3. **News (Aktuality)** — non-withdrawn news whose audience is `all` or one of the children's troops. The first item — **important** news pinned on top, otherwise the newest — is shown expanded and highlighted as a card (date, tag, author, title, text, optional link); the rest as an accordion (one open at a time).
 4. **Open for sign-up (Nejbližší akce)** — relevant events with registration enabled. Each row: date, tag, title, organizer, poster link („plakátek“ if published, otherwise disabled „plakátek se chystá“), sign-up toggles — one per child **whose troop matches the event audience** — and the deadline („přihlášky do 12. 3.“).
    - Before the deadline: toggling signs the child up / off immediately.
@@ -203,7 +203,9 @@ The troop-dependent parts (today card, attendance summary) follow the troop swit
    - today is a meeting day of the troop → „schůzka v klubovně, 17–19 h“ + „zapsat docházku →“ (opens that meeting: `/vedouci/dochazka?oddil={troop}&schuzka={date}`);
    - today is the first day of a trip (§6.3) for the troop (or `all`) → „první den výpravy — {name}“ + „zapsat účast a platby →“ (`/vedouci/dochazka?oddil={troop}&vyprava={eventId}`);
    - the other troop meets today → „dneska má schůzku druhý oddíl…“;
+   - today is a meeting day of the troop but falls into a range without meetings (§4.8 Meetings) → „dneska schůzka není — {reason}“;
    - otherwise → „dneska není schůzka ani výprava — klidný den“, link „zapsat jiný termín →“.
+   The meeting time („17–19 h“) comes from the schedule.
 4. **Nearest events** — upcoming events of both troops with registration started (as in §3.1, incl. those past the deadline): date, tag, title, organizer, **signed up / eligible** count (active children who can join, §6.4) with a progress bar, poster link („plakátek“ → poster page, or „vyplnit plakátek“ → editor `/vedouci/akce?akce={eventId}`), link „jmenný seznam a platby →“ (attendance → trips tab). Link „přidat akci nebo plakátek →“.
 5. **Troop attendance summary** — for the chosen troop: each child with meeting % and trips count; children not meeting the camp requirement highlighted red.
 
@@ -215,7 +217,7 @@ Troop switch (top right, §4 intro). Three tabs. The selection is kept in the UR
 
 **Meetings (schůzky)**
 
-- Choose weekday (the troop's two meeting days), then a date from the list of meeting dates of this school year up to today (newest first, horizontally scrollable, the selected one scrolled into view; cancelled dates marked „×“).
+- Choose weekday (the troop's two meeting days from §4.8 Meetings; the time is shown next to it), then a date from the list of meeting dates of this school year up to today — dates in ranges without meetings are left out unless a meeting was recorded on them anyway (newest first, horizontally scrollable, the selected one scrolled into view; cancelled dates marked „×“).
 - Header: „Schůzka {den} {datum}“, troop tag, „přišlo X z Y“.
 - Grid of children **whose meeting day is the selected weekday** (nickname + name) — click toggles present. Buttons „přišli všichni“, „zrušit výběr“, „schůzka nebyla“. Children of the troop without a meeting day are named below the grid (they are not in any meeting; the admin sets the day).
 - „Schůzka nebyla“ marks the meeting cancelled: it does not count towards anyone's attendance nor the number of meetings. Can be undone („schůzka přece byla“) — the recorded presence is kept.
@@ -306,12 +308,13 @@ Shows only `active` entries (archived ones are hidden, see reset below).
 
 **Export:** „Stáhnout CSV“ of the currently filtered rows. Columns: Zapsáno, Jméno dítěte, Pohlaví, Datum narození, Věk, Třída, Zná někoho, Rodič, E-mail, Telefon, Obnoveno, Poznámka. `;` separator, UTF-8 with BOM, file name `cekaci-listina-YYYY-MM-DD.csv`.
 
-**Annual reset wizard** („Resetovat listinu na další rok“, **admins only**; leaders see only „listina naposledy resetována {date}“ in its place). Done once a year after new members are chosen:
+**Last reset:** the page looks the same for leaders and admins: „jednou za rok · listina naposledy resetována {date}“ with an **„i“** button that expands how the reset works (the same explanation as in Administration, incl. that it is done only when the group takes no more children this year, and that the admin does it). Admins additionally get the link „resetovat v Administraci →“ (`/vedouci/administrace?zalozka=cekaci-listina`).
 
-1. *How it works* — explanation.
-2. *Admitted children* — list sorted by sign-up date, search by name ignoring diacritics; leader ticks the children admitted this year. Admitted children get no e-mail.
-3. *E-mail to parents* — preview (From: „Skautský oddíl Záře <zare@skaut.cz>“, Subject: „Máte stále zájem o náš oddíl?“, child's name filled in, renewal link). Text editable only in Administration. Counts: e-mails / admitted. „Odeslat N e-mailů“ → confirmation „Opravdu…? Tohle nejde vzít zpět.“
-4. *Sending* — progress bar „odesláno X z N“, then „Hotovo“.
+**Annual reset** (Administration → čekací listina, §4.8, **admins only**). Done once a year, when the new members are chosen and the group **doesn't plan to take any more children that year**. The tab explains it (the explanation used to be the wizard's first step); „Resetovat listinu na další rok“ opens the wizard:
+
+1. *Admitted children* — list sorted by sign-up date, search by name ignoring diacritics; the admin ticks the children admitted this year. Admitted children get no e-mail.
+2. *E-mail and sending* — preview (From: „Skautský oddíl Záře <zare@skaut.cz>“, the saved subject and text, child's name filled in, renewal link; the text is edited in the same tab). Counts: e-mails / admitted. „Odeslat N e-mailů“ → confirmation „Opravdu…? Tohle nejde vzít zpět.“
+3. *Sending* — progress bar „odesláno X z N“, then „Hotovo“.
 
 Effect (entries are **archived, not deleted**, to keep the original sign-up date and the previous answers for the renewal questionnaire):
 
@@ -319,11 +322,11 @@ Effect (entries are **archived, not deleted**, to keep the original sign-up date
 - All other active children → status `awaitingRenewal` (leave the list); each gets a renewal token and their parents get the e-mail. Confirming via §2.3 returns the entry to `active` at its original position.
 - `settings/public.lastWaitlistReset` = today → public site shows the new recruitment years.
 - A record is added to `waitlistResets` (reset log).
-- Banner with the reset date and number of e-mails sent.
+- Banner (in the Administration tab) with the reset date and number of e-mails sent.
 
 **Retention (GDPR):** the next reset deletes what the previous one archived: entries still `awaitingRenewal` (the parent did not respond for a whole year) and `admitted` ones (the child is in skautIS by then). Admitted children are chosen only in the reset wizard.
 
-**Renewal e-mail text:** `settings/emails.waitlistRenewal` `{ subject, body }` — paragraphs separated by a blank line, `{dite}` = child's name, `{odkaz}` = renewal link; default in `functions/src/shared/renewalEmail.js` until Administration can edit it. Until SMTP exists, `resetWaitlist` only logs the e-mails in the emulator.
+**Renewal e-mail text:** `settings/emails.waitlistRenewal` `{ subject, body }` — paragraphs separated by a blank line, `{dite}` = child's name, `{odkaz}` = renewal link; edited in Administration (§4.8 Čekací listina); default in `functions/src/shared/emails.js` while none is saved. Until SMTP exists, `resetWaitlist` only logs the e-mails in the emulator.
 
 **Narrow screens:** below `lg` the table becomes compact cards (name, age, grade, waiting time; the rest in the expanded detail) with a sort bar above them.
 
@@ -340,18 +343,22 @@ Effect (entries are **archived, not deleted**, to keep the original sign-up date
 
 ### 4.8 Administration („Administrace“, `/vedouci/administrace`, admin only)
 
-Tabs:
+Settings blocks (per-troop meeting days, ranges without meetings, the waiting-list reset, each e-mail text, waiting-list ages, camp requirement per troop, packing templates) start collapsed to a narrow full-width bar — title and a short summary (e.g. „pondělí a čtvrtek · 17:00–19:00“, the e-mail subject or „neposílá se“) — that opens into the block; a block with validation errors opens by itself.
+
+Tabs (only implemented ones are shown, in the order děti · účty a párování · schůzky · čekací listina · e-maily k akcím · šablony s sebou · nastavení; the open one is kept in the URL, `?zalozka=deti|ucty|schuzky|cekaci-listina|emaily-akce|sablony|nastaveni`, default účty):
 
 1. **skautIS** — „Synchronizovat ze skautISu“: the admin logs in to skautIS; a Cloud Function loads via the skautIS API: **children** of both troops (first name, last name, nickname, troop, date of birth), **their parents' contacts** (name, e-mail, phone) and **leaders** (name, nickname, phone, e-mail). People from the středisko are not imported. Shows a diff (new / changed / left) to confirm before applying. Shows date of last sync. Run once a year and after changes. The skautIS login is used only for this sync — logging in to the web itself is always Google or e-mail + password.
-2. **Children (děti)** — list of imported children by troop; the admin **clicks the meeting day** for each child (one of the troop's two days). Children without a meeting day are highlighted (they don't appear in any meeting's attendance). No design **[?]**.
-3. **Accounts & pairing (účty a párování)** — accounts: e-mail, status („potvrzený“ / „čeká na potvrzení“ / „bez přístupu“), the note from registration, **suggested children** (active children whose parent e-mail in skautIS matches the account e-mail, or whom the note names — first + last name or nickname, ignoring case and diacritics), assigned children as chips (nickname + troop, × to unassign), „+ přiřadit dítě“ (pick from imported `members`). **A parent can have several children, and a child can belong to several parent accounts** (e.g. mother and father separately); any of them can sign the child up. Unassigned children are not visible to parents. Pending accounts: „schválit“, „poslat dotaz“ (e-mail asking an unknown account to get in touch) and „zamítnout“ (role `none`); `none` accounts: „znovu aktivovat“ (back to pending) or „smazat“ (Auth account + profile). Accounts are filtered by status (čekající / rodiče / vedoucí / bez přístupu, with counts; opens on čekající) and update live. Pairing a child with a pending account approves it as a parent in the same write; unpairing a parent's last child returns the account to pending; „odebrat přístup“ / „zamítnout“ sets `none` and unpairs all children. Leader accounts can be switched between „vedoucí“ and „správce“ here too. The admin can't change their own account. „Pozvat nový rodičovský účet“ **(not implemented yet)** — e-mail (can be picked from parent contacts in skautIS) → invitation e-mail.
+2. **Children (děti)** — active children of the troop chosen in the troop switch (top right, shared with the leader pages; §4 intro) (nickname, name), with the number of children per meeting day and a link to the other troop when it has children without a day; the admin **clicks the meeting day** for each child (one of the troop's two days), saved at once and followed live; clicking the chosen day again clears it. Children without a valid meeting day (none, or a day the troop no longer meets on) are highlighted in red with a count on top and a filter „jen bez dne“ (they don't appear in any meeting's attendance).
+3. **Accounts & pairing (účty a párování)** — accounts: e-mail, status („potvrzený“ / „čeká na potvrzení“ / „bez přístupu“), the note from registration, **suggested children** (active children whose parent e-mail in skautIS matches the account e-mail, or whom the note names — first + last name or nickname, ignoring case and diacritics), assigned children as chips (nickname + troop, × to unassign), „+ přiřadit dítě“ (pick from imported `members`). **A parent can have several children, and a child can belong to several parent accounts** (e.g. mother and father separately); any of them can sign the child up. Unassigned children are not visible to parents. Pending accounts: „schválit“, „poslat dotaz“ (e-mail asking an unknown account to get in touch) and „zamítnout“ (role `none`); `none` accounts: „znovu aktivovat“ (back to pending) or „smazat“ (Auth account + profile). Accounts are filtered by status (čekající / rodiče / vedoucí / bez přístupu, with counts; opens on čekající) and update live. One more filter, **„děti bez účtu“** (with count), lists active children no parent account is paired with, with their parents' contacts from skautIS (name, e-mail as mailto, phone as tel) — whom to ask to create an account. Pairing a child with a pending account approves it as a parent in the same write; unpairing a parent's last child returns the account to pending; „odebrat přístup“ / „zamítnout“ sets `none` and unpairs all children. Leader accounts can be switched between „vedoucí“ and „správce“ here too. The admin can't change their own account. „Pozvat nový rodičovský účet“ **(not implemented yet)** — e-mail (can be picked from parent contacts in skautIS) → invitation e-mail.
 4. **Leader roles (role vedoucích)** — each leader (from `skautisPeople`): nickname, name, e-mail; role „vedoucí“ / „správce“ / „bez přístupu“; **home troop** and **role title** (used on the leader home page and in contacts); linked web account (matched by e-mail, or pending accounts can be linked manually).
 5. **Contacts (kontakty)** — the list shown to parents in „Vedoucí“, stored as its own collection. Each contact is **linked to a person from skautIS**: name, phone and e-mail come from skautIS and are read-only here; the admin edits only group (vlčušky / skauti a skautky / ostatní), photo and order. Contacts in the „ostatní“ group who are not in the import (e.g. středisko people) **[?]** — manual entry, or not shown. If the phone/e-mail is missing in skautIS, the contact shows a warning „doplň telefon ve skautISu“ and the phone isn't shown to parents until the leader updates skautIS and the next sync runs. „+ přidat kontakt“ (pick a skautIS person), „uložit kontakty“.
-6. **Packing list templates** — CRUD of templates („s sebou“). No design.
-7. **E-mail texts** — text of the waiting-list renewal e-mail (and other automated e-mails **[?]**). No design.
-8. **Settings** — camp requirement, waiting-list age limits. No design **[?]**.
-9. **Meetings (schůzky)** **(not implemented yet)** — per troop: the two meeting weekdays and the time from–to (now 17:00–19:00); dates without meetings in the school year (holidays, school breaks; per troop or both) with an optional reason. Replaces the hardcoded `TROOP_MEETING_DAYS` and „17–19 h“; used by Attendance (meeting dates — dates without meetings are left out), the leader home today card, the parent area and the clubhouse automat. Changing a troop's weekdays must be followed by re-assigning children's `meetingDay` (tab Children highlights children whose day is no longer valid). No design.
-10. **Clubhouse (klubovna)** — later (clubhouse is mock-only in v1): the automat rules (how long before a meeting to heat, target and setback temperatures, drying between meetings, …) applied to the meetings and events, and the **full log** of automatic and manual changes (filterable by date).
+6. **Packing list templates („šablony s sebou“)** — templates collapsed to name + items; open to edit the name and items (one per line, blank lines dropped; both required), „+ nová šablona“, „smazat šablonu“ with inline confirmation. Posters copy the items, so edits and deletes don't change existing posters.
+7. **Waiting list (čekací listina)** — the annual reset (§4.6: explanation, last reset date, „Resetovat listinu na další rok“ → wizard, banner after it); the texts of the **renewal e-mail** (sent by the reset, must contain `{odkaz}`) and the **confirmation e-mail** (sent by `submitWaitlist` to everyone who signs up; `{dite}`); **waiting-list ages** (`settings/public`: warning age < limit, both whole years 1–25).
+8. **E-mails about events (e-maily k akcím)** — texts of the automated e-mails to parents (§6.5, `onEventUpdated`), each can be switched off („posílat tenhle e-mail“): **registration started** (`{dite}`, `{akce}`, `{termin}`, `{uzaverka}`, `{odkaz}` = the parent page) and **poster published** (`{dite}`, `{akce}`, `{termin}`, `{prihlasovani}` = a sentence with the deadline and link while registration is open, else the paragraph is left out, `{odkaz}` = the poster). Both must contain `{odkaz}`.
+   E-mail texts (tabs 7 and 8) share one form: subject, text (paragraphs separated by a blank line), the list of placeholders, live preview with sample values, „vrátit původní text“; stored in `settings/emails.{key}`.
+9. **Settings (nastavení)** — the **camp requirement per troop** (`settings/app.campRequirements`): trips (0–30) and meeting % (0–100), each with a checkbox — an unticked part is not required (stored as `null`); the resulting text is shown per troop; one „uložit“.
+10. **Meetings (schůzky)** — per troop: exactly two meeting weekdays (Mon–Fri) and the time from–to (default 17:00–19:00); **ranges without meetings** (holidays, school breaks; from–to, one day = from only; vlčušky / skauti a skautky / všichni) with an optional reason. Ranges that are over disappear from the list (ones added in this visit stay until saved) but stay in the data until the school year ends, because attendance still leaves their dates out; ranges of earlier school years are deleted when the tab opens. Single cancelled meetings are not entered here; leaders mark them in Attendance („schůzka nebyla“). Everything is saved with one „uložit“ („neuložené změny“ until then) into `settings/meetings`. Used by the public home (troop days and times), Attendance (weekdays, time, meeting dates — dates without meetings are left out), the leader home today card and the clubhouse automat (later). Changing a troop's weekdays must be followed by re-assigning children's `meetingDay`: the tab warns how many children have a day the troop no longer has and links to Children. Old attendance records stay on their weekday and still count for those children.
+11. **Clubhouse (klubovna)** — later (clubhouse is mock-only in v1): the automat rules (how long before a meeting to heat, target and setback temperatures, drying between meetings, …) applied to the meetings and events, and the **full log** of automatic and manual changes (filterable by date).
 
 **Reads/Writes:** `users`, `members`, `contacts`, `packingTemplates`, `settings/*`; skautIS sync via Cloud Function.
 
@@ -359,7 +366,7 @@ Tabs:
 
 ## 5. Firestore data model
 
-Conventions: collection names in camelCase plural; points in time as `Timestamp`, calendar dates as `YYYY-MM-DD` strings — **all dates and „today“ are evaluated in the `Europe/Prague` time zone** (deadlines, meeting dates, school year); `troop` ∈ `"vlc" | "ss"`; `audience` ∈ `"vlc" | "ss" | "all"`; `weekday` ∈ `"mon" | "tue" | "wed" | "thu"`.
+Conventions: collection names in camelCase plural; points in time as `Timestamp`, calendar dates as `YYYY-MM-DD` strings — **all dates and „today“ are evaluated in the `Europe/Prague` time zone** (deadlines, meeting dates, school year); `troop` ∈ `"vlc" | "ss"`; `audience` ∈ `"vlc" | "ss" | "all"`; `weekday` ∈ `"mon" | "tue" | "wed" | "thu" | "fri"`.
 
 ### `users/{uid}`
 
@@ -437,7 +444,8 @@ Sync overwrites only the skautIS fields.
 | `deleted`                | boolean                                         | soft delete — hidden everywhere           |
 | `registrationOpen`       | boolean                                         | „spustit přihlašování“                    |
 | `registrationDeadline`   | string `YYYY-MM-DD`?                            | last day parents can sign up              |
-| `registrationNotifiedAt` | Timestamp?                                      | set by Cloud Function after e-mails sent  |
+| `registrationNotifiedAt` | Timestamp?                                      | set by `onEventUpdated` after the registration was announced (registration or poster e-mail) |
+| `posterNotifiedAt`       | Timestamp?                                      | set by `onEventUpdated` after the poster e-mail |
 | `posterStatus`           | `"none" \| "missing" \| "draft" \| "published"` | `none` = the camp                         |
 | `createdBy`, `updatedAt` | string, Timestamp                               |                                           |
 
@@ -513,19 +521,19 @@ Document id = first 24 hex chars of SHA-256 of `firstname|lastname|birthDate` (l
 
 ### `settings/app` (readable by logged-in users)
 
-`campMinTrips` (4), `campMinMeetingPct` (60).
+`campRequirements: { vlc: { trips, meetingPct }, ss: { trips, meetingPct } }` — number, or `null` = not required. Missing → `DEFAULT_CAMP_REQUIREMENTS` (4 trips, 60 %) in `functions/src/shared/attendance.js`.
 
 ### `settings/emails` (leaders only)
 
-`waitlistRenewal: { subject, body }`, other templates **[?]**.
+`waitlistRenewal`, `waitlistConfirmation`: `{ subject, body }`; `registrationOpened`, `posterPublished`: `{ subject, body, enabled }`. Defaults and placeholders in `functions/src/shared/emails.js` (`EMAILS`).
 
 ### `settings/skautis` (admin only)
 
 `lastSyncAt`.
 
-### `settings/meetings` (readable by logged-in users) — planned, §4.8 Meetings
+### `settings/meetings` (publicly readable) — §4.8 Meetings
 
-`vlc` / `ss`: `{ days: weekday[2], start: 'HH:mm', end: 'HH:mm' }`; `noMeetingDates: [{ date: 'YYYY-MM-DD', troop: 'vlc' | 'ss' | 'all', reason?: string }]`.
+`vlc` / `ss`: `{ days: weekday[2], start: 'HH:mm', end: 'HH:mm' }`; `noMeetings: [{ from: 'YYYY-MM-DD', to: 'YYYY-MM-DD', troop: 'vlc' | 'ss' | 'all', reason: string }]` (inclusive ranges, `reason` may be empty). Missing → `DEFAULT_MEETING_SCHEDULE`. Public because the public home shows the days and times.
 
 ### Clubhouse
 
@@ -537,6 +545,7 @@ Mock only in v1 — no collections yet. Later: clubhouse rules (settings) and th
 | --------------------------- | -------------------------- | ---------------- | -------------------------------------------------------- | ----------------- | ----- |
 | `settings/public`           | read                       | read             | read                                                     | read              | rw    |
 | `settings/app`              | —                          | read             | read                                                     | read              | rw    |
+| `settings/meetings`         | read                       | read             | read                                                     | read              | rw    |
 | `settings/emails`           | —                          | —                | —                                                        | read              | rw    |
 | `settings/skautis`          | —                          | —                | —                                                        | read              | rw    |
 | `skautisPeople`             | —                          | —                | read **[?]**                                             | read              | rw    |
@@ -575,7 +584,7 @@ Mock only in v1 — no collections yet. Later: clubhouse rules (settings) and th
 
 - Meeting %: present / **recorded** meetings (cancelled and unrecorded excluded) **on the child's meeting day**, within the current school year. A meeting counts only if a `meetings` doc exists and is not cancelled.
 - Trips: count of events **that had registration enabled**, except the camp (event without poster), with `attended = true`, in the current school year. The Attendance → trips tab lists the same events.
-- Camp requirement met when trips ≥ `campMinTrips` **and** meeting % ≥ `campMinMeetingPct`.
+- Camp requirement (per troop, §4.8 Settings) met when every required part holds: trips ≥ `trips`, meeting % ≥ `meetingPct`. A part that isn't required is never red and is left out of the text; with nothing required the pages say the troop has no camp requirement.
 
 ### 6.4 Relevance of events and news for a parent
 
@@ -585,7 +594,7 @@ Relevant if `audience == "all"` or `audience` is one of the troops of the parent
 
 - Parents can sign up / off while `registrationOpen` and today ≤ `registrationDeadline`.
 - After the deadline only leaders can change sign-ups.
-- Starting registration triggers one e-mail to parents of all eligible children (parent accounts + skautIS parent contacts, deduplicated).
+- Starting registration triggers one e-mail to parents of all eligible children (parent accounts + skautIS parent contacts, deduplicated; one e-mail per address naming their children). Publishing the poster for the first time triggers the poster e-mail, which reminds of a running registration; when both happen in one change only the poster e-mail goes out. Each is sent at most once per event, not for cancelled, deleted or past events, and not when switched off in Administration.
 
 ---
 
@@ -603,7 +612,7 @@ Firebase Blaze plan with Cloud Functions (region `europe-west3`, code in `functi
 | `queryAccount`              | callable (admin)                | e-mail to an unknown pending account asking who they are |
 | `deleteAccount`             | callable (admin)                | delete an account with role `none`: Auth account, profile, pairings |
 | `inviteParent`              | callable (admin)                | invitation e-mail                                        |
-| `onRegistrationOpened`      | Firestore update `events`       | e-mail parents that sign-up is open                      |
+| `onEventUpdated`            | Firestore update `events`       | e-mail parents that sign-up is open / the poster is out (§6.5) |
 | `syncSkautis`               | callable (admin)                | load members/leaders from skautIS API, return diff, apply |
 | photos **[?]**              | —                               | depends on the chosen photo solution                     |
 
@@ -623,7 +632,7 @@ E-mails are sent from `zare@skaut.cz` via **SMTP of the skaut.cz Google Workspac
 
 1. **skautIS API** — the app needs to be registered with skautIS (application ID); verify the API exposes the needed fields (nickname, parents' contacts).
 2. **Photos** — Zonerama most likely has no API; solution still open.
-3. **Administration extras** — children & meeting days, packing templates, e-mail texts and settings have no design; left open.
+3. **Administration extras** — children & meeting days, meetings, packing templates, e-mail texts and settings have no design; built in the visual language of `Zare - sprava`, to be reviewed.
 4. **Registration texts** — proposed labels in §3.1 and §4.3 need review.
 5. **Photo storage** — where to store leaders' photos for contacts (Firebase Storage?).
 6. **Contacts outside skautIS import** — how to show středisko people in the „ostatní“ group?

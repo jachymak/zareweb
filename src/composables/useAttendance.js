@@ -1,8 +1,8 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { pragueToday, schoolYearRange } from '@shared/schoolYear'
-import { isTrip, meetingStats, tripCount } from '@shared/attendance'
+import { campRequirements, isTrip, meetingStats, tripCount } from '@shared/attendance'
 import { canJoin } from '@shared/events'
-import { meetingDates, TROOP_MEETING_DAYS, weekdayOf } from '@shared/meetingDays'
+import { meetingDates, meetingTimeShort, noMeetingOn, weekdayOf } from '@shared/meetingDays'
 import { listEvents, setAttendance, subscribeParticipants } from '@/services/events'
 import {
   meetingId,
@@ -14,6 +14,7 @@ import {
 import { listMembers } from '@/services/members'
 import { getAppSettings } from '@/services/settings'
 import { useLeaderTroopStore } from '@/stores/leaderTroop'
+import { useMeetingScheduleStore } from '@/stores/meetingSchedule'
 
 const byNickname = (a, b) =>
   (a.nickname || a.firstName).localeCompare(b.nickname || b.firstName, 'cs')
@@ -23,6 +24,7 @@ const byNickname = (a, b) =>
 // recording at the same time see each other's changes.
 export function useAttendance() {
   const leaderTroop = useLeaderTroopStore()
+  const scheduleStore = useMeetingScheduleStore()
   const troop = computed({
     get: () => leaderTroop.troop,
     set: (value) => (leaderTroop.troop = value),
@@ -34,7 +36,7 @@ export function useAttendance() {
   const loadError = ref(false)
   const saveError = ref(false)
   const members = ref([])
-  const settings = ref({ campMinTrips: 4, campMinMeetingPct: 60 })
+  const settings = ref(campRequirements(null)) // camp requirement per troop
   const events = ref([])
   const meetingsByTroop = ref({ vlc: [], ss: [] })
   const participants = ref({}) // { eventId: { memberId: doc } }
@@ -54,14 +56,15 @@ export function useAttendance() {
 
   onMounted(async () => {
     try {
-      const [, memberList, appSettings, eventList] = await Promise.all([
+      const [, , memberList, appSettings, eventList] = await Promise.all([
         leaderTroop.init(),
+        scheduleStore.load(),
         listMembers(),
         getAppSettings(),
         listEvents({ fromDate: schoolYear.from }),
       ])
       members.value = memberList.sort(byNickname)
-      if (appSettings) settings.value = appSettings
+      settings.value = campRequirements(appSettings)
       events.value = eventList
       // Resolves with the first snapshot, so the page shows once everything is in.
       const follow = (subscribe, apply) =>
@@ -128,10 +131,16 @@ export function useAttendance() {
 
   // ---- meetings ----
 
-  const weekdays = computed(() => TROOP_MEETING_DAYS[troop.value])
+  const schedule = computed(() => scheduleStore.schedule)
+  const weekdays = computed(() => schedule.value[troop.value].days)
+  const meetingTime = computed(() => meetingTimeShort(schedule.value[troop.value]))
+
+  // Dates without meetings (Administration) are left out unless recorded anyway.
+  const skipDate = (date) => !!noMeetingOn(schedule.value, troop.value, date) && !meetingOn(date)
+  const pastDates = (weekday) => meetingDates(weekday, schoolYear.from, today, skipDate)
 
   // Past (and today's) meeting dates of the weekday this school year, newest first.
-  const datesOf = (weekday) => meetingDates(weekday, schoolYear.from, today).reverse()
+  const datesOf = (weekday) => pastDates(weekday).reverse()
 
   // Today, or the most recent meeting date of the troop.
   function defaultMeeting() {
@@ -149,8 +158,10 @@ export function useAttendance() {
     return meeting.cancelled ? 'cancelled' : 'recorded'
   }
 
+  // A day the troop no longer meets on counts as no day (the admin re-assigns it).
+  const hasMeetingDay = (m) => weekdays.value.includes(m.meetingDay)
   const childrenOn = (weekday) => troopMembers.value.filter((m) => m.meetingDay === weekday)
-  const withoutMeetingDay = computed(() => troopMembers.value.filter((m) => !m.meetingDay))
+  const withoutMeetingDay = computed(() => troopMembers.value.filter((m) => !hasMeetingDay(m)))
 
   const meetingKey = (date) => ({ troop: troop.value, date, weekday: weekdayOf(date) })
   const isPresent = (date, memberId) => !!meetingOn(date)?.presentIds?.includes(memberId)
@@ -201,8 +212,8 @@ export function useAttendance() {
       member,
       percent: meetingStats(member, meetings.value).percent,
       trips: tripCount(member, pastTrips, participantOf),
-      dots: member.meetingDay
-        ? meetingDates(member.meetingDay, schoolYear.from, today).map((date) => {
+      dots: hasMeetingDay(member)
+        ? pastDates(member.meetingDay).map((date) => {
             const state = meetingState(date)
             return {
               date,
@@ -223,6 +234,7 @@ export function useAttendance() {
     settings,
     // meetings
     weekdays,
+    meetingTime,
     datesOf,
     defaultMeeting,
     meetingState,

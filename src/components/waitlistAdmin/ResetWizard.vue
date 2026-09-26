@@ -2,17 +2,16 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { resetWaitlist } from '@/services/waitlist'
 import { getEmailSettings } from '@/services/settings'
-import { renewalEmailTemplate } from '@shared/renewalEmail'
-import { formatSchoolYear, recruitmentYears } from '@shared/schoolYear'
+import { EMAILS, emailTemplate } from '@shared/emails'
+import EmailPreview from '@/components/admin/EmailPreview.vue'
 import AdmittedPicker from './AdmittedPicker.vue'
-import RenewalEmailPreview from './RenewalEmailPreview.vue'
 import { emailsLabel, RESET_STEPS } from './waitlistAdminText'
 
-// „Resetovat listinu na další rok“ — SPEC §4.6: how it works → admitted
-// children → e-mail preview and confirmation → sending (resetWaitlist).
+// „Resetovat listinu na další rok“ — SPEC §4.6 (Administration → čekací
+// listina, which explains how it works): admitted children → e-mail preview
+// and confirmation → sending (resetWaitlist).
 const props = defineProps({
   rows: { type: Array, required: true }, // the whole active list
-  today: { type: String, required: true },
 })
 const emit = defineEmits(['close', 'done'])
 
@@ -21,16 +20,15 @@ const admitted = ref(new Set())
 const confirming = ref(false)
 const result = ref(null)
 const failed = ref(false)
-const sending = computed(() => step.value === 4 && !result.value && !failed.value)
+const sending = computed(() => step.value === 3 && !result.value && !failed.value)
 
-const recruitmentYear = formatSchoolYear(recruitmentYears(props.today, props.today).doneYear)
 const toEmail = computed(() => props.rows.filter((r) => !admitted.value.has(r.id)))
 
-// Text editable in Administration later; the default until then.
-const template = ref(renewalEmailTemplate(null))
+// The saved text (edited below the reset in Administration), else the default.
+const template = ref(emailTemplate('waitlistRenewal', null))
 onMounted(async () => {
   try {
-    template.value = renewalEmailTemplate((await getEmailSettings())?.waitlistRenewal)
+    template.value = emailTemplate('waitlistRenewal', (await getEmailSettings())?.waitlistRenewal)
   } catch (e) {
     console.error('Loading the e-mail template failed', e)
   }
@@ -38,7 +36,7 @@ onMounted(async () => {
 
 async function send() {
   confirming.value = false
-  step.value = 4
+  step.value = 3
   failed.value = false
   try {
     result.value = await resetWaitlist([...admitted.value])
@@ -67,7 +65,7 @@ onUnmounted(() => {
 })
 
 const stepStyle = (n) => {
-  const current = Math.min(step.value, 3)
+  const current = Math.min(step.value, 2)
   return {
     dot:
       n < current
@@ -126,45 +124,22 @@ const numeral = 'font-hand text-[24px] leading-none font-bold text-gold'
           <span
             class="text-[14px]"
             :class="stepStyle(i + 1).text"
-            :aria-current="Math.min(step, 3) === i + 1 ? 'step' : undefined"
+            :aria-current="Math.min(step, 2) === i + 1 ? 'step' : undefined"
             >{{ name }}</span
           >
         </li>
       </ol>
 
-      <div v-if="step === 1" class="flex flex-col gap-3 text-[16px] leading-[1.6]">
-        <p class="m-0">
-          Reset udělejte jednou ročně, až budete mít vybrané nováčky. Stane se tohle:
-        </p>
-        <div class="grid grid-cols-[28px_1fr] gap-x-2 gap-y-2.5">
-          <span :class="numeral">1</span>
-          <span>Nabrané děti, které označíte v dalším kroku, z listiny zmizí.</span>
-          <span :class="numeral">2</span>
-          <span
-            >Všechny ostatní děti z listiny zmizí a jejich rodičům přijde e-mail s odkazem. Kdo na
-            odkaz klikne, vrátí se na své původní místo v pořadí.</span
-          >
-          <span :class="numeral">3</span>
-          <span
-            >Na veřejném webu se ukáže, že nováčky na školní rok {{ recruitmentYear }} už máme
-            nabrané.</span
-          >
-        </div>
-        <p class="m-0 text-[14.5px] text-muted-2">
-          Díky tomu na listině zůstanou jen ti, kdo o oddíl pořád stojí. Z minulého resetu se smažou
-          úplně děti, jejichž rodiče na e-mail neodpověděli, i tehdy nabrané děti.
-        </p>
-      </div>
+      <AdmittedPicker v-if="step === 1" v-model="admitted" :rows="rows" />
 
-      <AdmittedPicker v-else-if="step === 2" v-model="admitted" :rows="rows" />
-
-      <div v-else-if="step === 3" class="flex flex-col gap-3.5">
-        <RenewalEmailPreview
+      <div v-else-if="step === 2" class="flex flex-col gap-3.5">
+        <EmailPreview
           :template="template"
-          :child-name="toEmail[0]?.name ?? 'jméno dítěte'"
+          :placeholders="EMAILS.waitlistRenewal.placeholders"
+          :samples="{ dite: toEmail[0]?.name ?? 'jméno dítěte', odkaz: 'odkaz na potvrzení' }"
         />
         <p class="m-0 text-[13.5px] text-muted-2">
-          Text e-mailu jde změnit jen v administraci systému.
+          Text e-mailu se upravuje v téhle záložce pod resetem.
         </p>
         <div class="grid grid-cols-2 gap-2.5">
           <div class="rounded-xl bg-paper px-3 py-2.5">
@@ -216,7 +191,7 @@ const numeral = 'font-hand text-[24px] leading-none font-bold text-gold'
 
       <div class="mt-[22px] flex flex-wrap items-center gap-x-4 gap-y-3">
         <button
-          v-if="step === 2 || step === 3"
+          v-if="step === 2"
           type="button"
           class="cursor-pointer border-0 bg-transparent px-0 py-2 text-[15.5px] text-green"
           @click="(step--, (confirming = false))"
@@ -224,7 +199,7 @@ const numeral = 'font-hand text-[24px] leading-none font-bold text-gold'
           ← zpět
         </button>
         <div
-          v-if="step === 3 && confirming"
+          v-if="step === 2 && confirming"
           role="alert"
           class="flex flex-[1_1_100%] flex-wrap items-center gap-x-3 gap-y-2.5 rounded-[14px] bg-red-light px-3.5 py-3"
         >
@@ -248,22 +223,20 @@ const numeral = 'font-hand text-[24px] leading-none font-bold text-gold'
           </button>
         </div>
         <button
-          v-if="step < 3 || (step === 3 && !confirming) || (step === 4 && !sending)"
+          v-if="step === 1 || (step === 2 && !confirming) || (step === 3 && !sending)"
           type="button"
           class="ml-auto cursor-pointer rounded-full border-0 px-6 py-3 text-[16px] font-medium text-cream"
-          :class="step === 3 ? 'bg-red hover:bg-[#a53d22]' : 'bg-green hover:bg-green-hover'"
-          @click="step === 3 ? (confirming = true) : step === 4 ? $emit('close') : step++"
+          :class="step === 2 ? 'bg-red hover:bg-[#a53d22]' : 'bg-green hover:bg-green-hover'"
+          @click="step === 2 ? (confirming = true) : step === 3 ? $emit('close') : step++"
         >
           {{
             step === 1
-              ? 'Začít'
+              ? 'Pokračovat na e-mail'
               : step === 2
-                ? 'Pokračovat na e-mail'
-                : step === 3
-                  ? `Odeslat ${emailsLabel(toEmail.length)}`
-                  : failed
-                    ? 'Zavřít'
-                    : 'Hotovo'
+                ? `Odeslat ${emailsLabel(toEmail.length)}`
+                : failed
+                  ? 'Zavřít'
+                  : 'Hotovo'
           }}
         </button>
       </div>

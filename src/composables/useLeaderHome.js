@@ -1,14 +1,15 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { pragueToday, schoolYearRange } from '@shared/schoolYear'
-import { isTrip, meetingStats, tripCount } from '@shared/attendance'
+import { campRequirements, isTrip, meetingStats, tripCount } from '@shared/attendance'
 import { canJoin, isOpenForSignUp } from '@shared/events'
-import { troopDay } from '@shared/meetingDays'
+import { meetingTimeShort, troopDay } from '@shared/meetingDays'
 import { listEvents, listParticipants } from '@/services/events'
 import { listMeetings } from '@/services/meetings'
 import { listMembers } from '@/services/members'
 import { listLeaders } from '@/services/skautisPeople'
 import { getAppSettings } from '@/services/settings'
 import { useLeaderTroopStore } from '@/stores/leaderTroop'
+import { useMeetingScheduleStore } from '@/stores/meetingSchedule'
 
 // Data of the leader home (SPEC §4.1). The troop-dependent parts (today card,
 // attendance summary) follow the troop picked on the page (shared with attendance).
@@ -16,6 +17,7 @@ export function useLeaderHome() {
   const today = pragueToday()
   const schoolYear = schoolYearRange(today)
   const leaderTroop = useLeaderTroopStore()
+  const scheduleStore = useMeetingScheduleStore()
   const troop = computed({
     get: () => leaderTroop.troop,
     set: (value) => (leaderTroop.troop = value),
@@ -24,7 +26,7 @@ export function useLeaderHome() {
   const loading = ref(true)
   const loadError = ref(false)
   const members = ref([])
-  const settings = ref({ campMinTrips: 4, campMinMeetingPct: 60 })
+  const settings = ref(campRequirements(null)) // camp requirement per troop
   const events = ref([])
   const meetings = ref([])
   const leaders = ref({}) // skautisPeople by id
@@ -35,8 +37,9 @@ export function useLeaderHome() {
 
   onMounted(async () => {
     try {
-      const [, memberList, appSettings, eventList, people, ...meetingLists] = await Promise.all([
+      const [, , memberList, appSettings, eventList, people, ...meetingLists] = await Promise.all([
         leaderTroop.init(),
+        scheduleStore.load(),
         listMembers(),
         getAppSettings(),
         listEvents({ fromDate: schoolYear.from }),
@@ -46,7 +49,7 @@ export function useLeaderHome() {
         ),
       ])
       members.value = memberList
-      if (appSettings) settings.value = appSettings
+      settings.value = campRequirements(appSettings)
       events.value = eventList
       leaders.value = Object.fromEntries(people.map((p) => [p.id, p]))
       meetings.value = meetingLists.flat()
@@ -75,7 +78,10 @@ export function useLeaderHome() {
 
   // ---- derived ----
 
-  const todayPlan = computed(() => troopDay(troop.value, today, events.value))
+  const todayPlan = computed(() =>
+    troopDay(troop.value, today, events.value, scheduleStore.schedule),
+  )
+  const meetingTime = computed(() => meetingTimeShort(scheduleStore.schedule[troop.value]))
 
   // Upcoming events with registration: signed up / eligible children.
   const upcomingEvents = computed(() =>
@@ -114,6 +120,7 @@ export function useLeaderHome() {
     troop,
     settings,
     todayPlan,
+    meetingTime,
     upcomingEvents,
     troopStats,
   }

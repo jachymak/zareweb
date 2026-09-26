@@ -1,6 +1,6 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { pragueToday, schoolYearRange } from '@shared/schoolYear'
-import { meetingStats, tripCount } from '@shared/attendance'
+import { campRequirements, meetingStats, tripCount } from '@shared/attendance'
 import { canJoin, isOpenForSignUp, isRelevant } from '@shared/events'
 import { getParticipant, listEvents, setSignedUp } from '@/services/events'
 import { listMeetings } from '@/services/meetings'
@@ -19,7 +19,7 @@ export function useParentArea(loadChildren) {
   const loading = ref(true)
   const loadError = ref(false)
   const children = ref([])
-  const settings = ref({ campMinTrips: 4, campMinMeetingPct: 60 })
+  const settings = ref(campRequirements(null)) // camp requirement per troop
   const events = ref([])
   const news = ref([])
   const meetings = ref([])
@@ -48,7 +48,7 @@ export function useParentArea(loadChildren) {
             listMeetings({ troop, fromDate: schoolYear.from, toDate: today }),
           ),
         ])
-      if (appSettings) settings.value = appSettings
+      settings.value = campRequirements(appSettings)
       events.value = eventList
       news.value = newsList
       contacts.value = contactList

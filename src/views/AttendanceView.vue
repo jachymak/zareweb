@@ -1,7 +1,7 @@
 <script setup>
 import { reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { TROOP_MEETING_DAYS, weekdayOf } from '@shared/meetingDays'
+import { weekdayOf } from '@shared/meetingDays'
 import { useAttendance } from '@/composables/useAttendance'
 import AreaFooter from '@/components/AreaFooter.vue'
 import MeetingsTab from '@/components/attendance/MeetingsTab.vue'
@@ -21,17 +21,16 @@ const router = useRouter()
 const a = reactive(useAttendance())
 
 const query = route.query
-if (TROOP_MEETING_DAYS[query.oddil]) a.troop = query.oddil
+if (['vlc', 'ss'].includes(query.oddil)) a.troop = query.oddil
 const tab = ref(query.vyprava ? 'trips' : 'prehled' in query ? 'overview' : 'meetings')
 const weekday = ref(null)
 const date = ref(null)
 const tripId = ref(null)
 
 function selectDefaults({ meeting = null, trip = null } = {}) {
-  const days = TROOP_MEETING_DAYS[a.troop]
   if (
     meeting &&
-    days.includes(weekdayOf(meeting)) &&
+    a.weekdays.includes(weekdayOf(meeting)) &&
     a.datesOf(weekdayOf(meeting)).includes(meeting)
   ) {
     weekday.value = weekdayOf(meeting)

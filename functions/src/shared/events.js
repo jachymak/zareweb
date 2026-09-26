@@ -21,3 +21,15 @@ export function registrationState(event, today) {
 export function isOpenForSignUp(event, today) {
   return registrationState(event, today) !== 'none' && !event.cancelled && event.startDate > today
 }
+
+// `2027-03-12` → „12. 3.“
+const shortDay = (iso) => `${Number(iso.slice(8))}. ${Number(iso.slice(5, 7))}.`
+
+// „12. 3. 2027“, „12.–14. 3. 2027“, „30. 3.–1. 4. 2027“ (e-mails).
+export function formatEventDates(start, end = start) {
+  const year = end.slice(0, 4)
+  if (start === end) return `${shortDay(start)} ${year}`
+  const from =
+    start.slice(5, 7) === end.slice(5, 7) ? `${Number(start.slice(8))}.` : shortDay(start)
+  return `${from}–${shortDay(end)} ${year}`
+}

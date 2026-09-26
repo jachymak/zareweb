@@ -1,5 +1,5 @@
 <script setup>
-import { meetsCampRequirement } from '@shared/attendance'
+import { meetingsOk, meetsCampRequirement, tripsOk } from '@shared/attendance'
 import SectionHeading from '@/components/parent/SectionHeading.vue'
 import { campRequirementText } from '@/components/parent/parentText'
 import { TROOP_GENITIVE } from './leaderText'
@@ -9,7 +9,7 @@ import { TROOP_GENITIVE } from './leaderText'
 defineProps({
   troop: { type: String, required: true },
   stats: { type: Array, required: true }, // [{ member, percent, trips }]
-  settings: { type: Object, required: true }, // settings/app
+  requirement: { type: Object, required: true }, // the troop's camp requirement
 })
 </script>
 
@@ -38,12 +38,12 @@ defineProps({
         :key="row.member.id"
         :aria-label="row.member.nickname || row.member.firstName"
         class="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-t border-[#e4d9be] py-2"
-        :data-camp="meetsCampRequirement(row, settings) ? 'ok' : 'short'"
+        :data-camp="meetsCampRequirement(row, requirement) ? 'ok' : 'short'"
       >
         <span class="flex min-w-0 flex-[1_1_140px] flex-wrap items-baseline gap-x-2 gap-y-0.5">
           <b
             class="font-hand text-[20px] font-bold"
-            :class="meetsCampRequirement(row, settings) ? 'text-ink' : 'text-red'"
+            :class="meetsCampRequirement(row, requirement) ? 'text-ink' : 'text-red'"
           >
             {{ row.member.nickname || row.member.firstName }}
           </b>
@@ -53,22 +53,25 @@ defineProps({
         </span>
         <span
           class="font-hand text-[20px] font-bold whitespace-nowrap"
-          :class="(row.percent ?? 0) >= settings.campMinMeetingPct ? 'text-green' : 'text-red'"
+          :class="meetingsOk(row, requirement) ? 'text-green' : 'text-red'"
           data-testid="attendance"
         >
           {{ row.percent === null ? '—' : `${row.percent} %` }}
         </span>
         <span
           class="text-[14px] whitespace-nowrap"
-          :class="row.trips >= settings.campMinTrips ? 'text-muted' : 'font-medium text-red'"
+          :class="tripsOk(row, requirement) ? 'text-muted' : 'font-medium text-red'"
           data-testid="trips"
         >
           {{ row.trips }} výpr.
         </span>
       </li>
     </ul>
-    <p class="m-0 mt-3 font-hand text-[20px] text-brown">
-      červeně ti, kdo zatím nesplňují podmínku na tábor ({{ campRequirementText(settings) }})
+    <p v-if="campRequirementText(requirement)" class="m-0 mt-3 font-hand text-[20px] text-brown">
+      červeně ti, kdo zatím nesplňují podmínku na tábor ({{ campRequirementText(requirement) }})
+    </p>
+    <p v-else class="m-0 mt-3 font-hand text-[20px] text-brown">
+      oddíl nemá žádnou podmínku na tábor
     </p>
   </section>
 </template>

@@ -6,11 +6,13 @@ import AudienceTag from '@/components/parent/AudienceTag.vue'
 import { formatShortDay, meetingLink, tripLink } from './leaderText'
 
 // What the troop has today (SPEC §4.1): a meeting or the first day of a trip
-// (with a link to record attendance), the other troop's meeting, or nothing.
+// (with a link to record attendance), a meeting day without a meeting (holidays
+// set in Administration), the other troop's meeting, or nothing.
 const props = defineProps({
   plan: { type: Object, required: true }, // troopDay(): { kind, event? }
   troop: { type: String, required: true },
   today: { type: String, required: true },
+  meetingTime: { type: String, required: true }, // „17–19 h“
 })
 
 const date = computed(() => formatShortDay(props.today, weekdayOf(props.today)))
@@ -19,7 +21,7 @@ const record = computed(() => {
   if (kind === 'meeting') {
     return {
       audience: props.troop,
-      text: 'schůzka v klubovně, 17–19 h',
+      text: `schůzka v klubovně, ${props.meetingTime}`,
       action: 'zapsat docházku →',
       to: meetingLink(props.troop, props.today),
     }
@@ -34,11 +36,13 @@ const record = computed(() => {
   }
   return null
 })
-const quietText = computed(() =>
-  props.plan.kind === 'otherTroop'
+const quietText = computed(() => {
+  const { kind, reason } = props.plan
+  if (kind === 'noMeeting') return `dneska schůzka není${reason ? ` — ${reason}` : ''}`
+  return kind === 'otherTroop'
     ? 'dneska má schůzku druhý oddíl — tvůj oddíl se neschází'
-    : 'dneska není schůzka ani výprava — klidný den',
-)
+    : 'dneska není schůzka ani výprava — klidný den'
+})
 </script>
 
 <template>

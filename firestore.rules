@@ -192,7 +192,8 @@ service cloud.firestore {
     }
 
     match /settings/{docId} {
-      allow read: if docId in ['emails', 'skautis'] && isLeader();
+      // meetings — the schedule is shown on the public home page too.
+      allow read: if docId == 'meetings' || (docId in ['emails', 'skautis'] && isLeader());
       allow write: if isAdmin();
     }
   }
