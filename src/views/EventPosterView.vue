@@ -4,6 +4,7 @@ import { useAuthStore } from '@/stores/auth'
 import { getEvent, getPoster } from '@/services/events'
 import { getPerson } from '@/services/skautisPeople'
 import AreaHeader from '@/components/AreaHeader.vue'
+import LeaderHeader from '@/components/leader/LeaderHeader.vue'
 import HandDrawnBox from '@/components/HandDrawnBox.vue'
 import PackingChecklist from '@/components/poster/PackingChecklist.vue'
 import PosterDetails from '@/components/poster/PosterDetails.vue'
@@ -63,7 +64,8 @@ const section = 'mx-auto max-w-[1040px] px-4 sm:px-6'
 </script>
 
 <template>
-  <AreaHeader :area="isLeader ? 'pro vedoucí' : 'pro členy'" />
+  <LeaderHeader v-if="isLeader" />
+  <AreaHeader v-else area="pro členy" />
   <main class="pb-12">
     <p :class="section" class="m-0 pt-[22px] text-[15px]">
       <RouterLink :to="back.to" class="inline-block py-1">← {{ back.label }}</RouterLink>

@@ -3,7 +3,7 @@
 // events with sign-ups and attendance, news, and recorded meetings of this
 // school year. Dates are relative to today, so the data always has upcoming,
 // open, closed and past events. Replaces `skautisPeople`, `contacts`, `events`
-// (incl. posters and participants), `news` and `meetings`, and links the test
+// (incl. posters and participants), `news`, `meetings` and `packingTemplates`, and links the test
 // leader accounts to their skautIS person.
 // Run after `seed-members.js`. Usage: npm run seed:activity. Writes bypass security rules.
 
@@ -42,8 +42,8 @@ export const STREDOHORI_POSTER = {
   intro: 'Vyrazíme na dva dny do Českého středohoří, vylezeme na Milešovku a přespíme na chatě.',
   destination: 'Milešov, České středohoří',
   mapUrl: 'https://mapy.cz/s/milesovka',
-  meetAtPamatnik: '8:00',
-  meetAtMainStation: '8:30',
+  meetAtPamatnik: '08:00',
+  meetAtMainStation: '08:30',
   meetElsewhere: '',
   returnAtMainStation: '16:40',
   returnAtPamatnik: '17:00',
@@ -72,6 +72,13 @@ export const EVENTS = [
   { id: 'seed-sarka', title: 'Hry v Šárce', audience: 'vlc', startDate: day(-5), endDate: day(-5), organizerIds: ['800001'], registration: day(-8), posterStatus: 'published', participants: { 900102: { signedUp: true, attended: true } } },
   { id: 'seed-odpoledne', title: 'Zahajovací odpoledne v klubovně', audience: 'all', startDate: day(-20), endDate: day(-20), organizerIds: ['800002'], posterStatus: 'none' },
 ]
+
+// Packing list templates (managed in Administration later), id → name + items.
+export const PACKING_TEMPLATES = {
+  chata: { name: 'Věci na výpravu do chaty', items: ['spacák', 'přezůvky', 'hygienické potřeby', 'baterka', 'náhradní oblečení', 'lahev s pitím'] },
+  jednodenni: { name: 'Věci na jednodenní výpravu', items: ['svačina', 'lahev s pitím', 'pláštěnka', 'kartička pojišťovny'] },
+  celta: { name: 'Věci na výpravu pod celtou', items: ['spacák', 'karimatka', 'celta', 'ešus a lžíce', 'baterka', 'náhradní ponožky'] },
+}
 
 // Test leader accounts of `seed-users.js` linked to their skautIS person (users.personId),
 // as the admin links them in „role vedoucích“.
@@ -159,7 +166,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     }))
     .filter((m) => m.active)
 
-  for (const c of ['skautisPeople', 'contacts', 'news', 'meetings']) await clear(c)
+  for (const c of ['skautisPeople', 'contacts', 'news', 'meetings', 'packingTemplates']) await clear(c)
   await clear('events', ['participants', 'poster'])
 
   const now = new Date()
@@ -216,6 +223,11 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     }
   }
   console.log(`${EVENTS.length} events`)
+
+  for (const [id, template] of Object.entries(PACKING_TEMPLATES)) {
+    await put(`packingTemplates/seed-${id}`, template)
+  }
+  console.log(`${Object.keys(PACKING_TEMPLATES).length} packing list templates`)
 
   for (const { id, author, age, important = false, withdrawn = false, ...news } of NEWS) {
     await put(`news/${id}`, {

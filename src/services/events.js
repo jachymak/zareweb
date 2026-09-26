@@ -35,6 +35,17 @@ export async function listEvents({ fromDate, toDate } = {}) {
   return fromQuery(await getDocs(query(events, ...filters, orderBy('startDate'))))
 }
 
+// Live events (not deleted) starting on or after the date.
+export function subscribeEvents({ fromDate }, callback, onError) {
+  const q = query(
+    events,
+    where('deleted', '==', false),
+    where('startDate', '>=', fromDate),
+    orderBy('startDate'),
+  )
+  return onSnapshot(q, (snap) => callback(fromQuery(snap)), onError)
+}
+
 export async function getEvent(eventId) {
   return fromDoc(await getDoc(doc(events, eventId)))
 }

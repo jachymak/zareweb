@@ -238,7 +238,9 @@ Troop switch (top right, §4 intro). Three tabs. The selection is kept in the UR
 
 ### 4.3 Events & posters (`/vedouci/akce`)
 
-Left: button „+ přidat akci“, list of planned events (date, tag, title, organizer, status chips). Poster status:
+Two columns (stacked on narrow screens; selecting an event scrolls to its detail). What the right column shows is kept in the URL: `?akce={id}` (detail), `?akce={id}&upravit` (edit details), `?nova` (new event) — the home page's „vyplnit plakátek“ links there. Events are followed live.
+
+Left: button „+ přidat akci“, list of planned events (not ended yet; „i proběhlé akce“ shows this school year's past ones too): date, tag, title, organizers, status chips. Poster status:
 
 | Status      | Label               |
 | ----------- | ------------------- |
@@ -248,25 +250,26 @@ Left: button „+ přidat akci“, list of planned events (date, tag, title, org
 | `none`      | bez plakátku        |
 | (cancelled) | akce zrušená        |
 
-Plus a registration chip (proposed labels): „přihlašování nespuštěné“ / „přihlašování do 12. 3.“ / „přihlašování skončilo“.
+Plus a registration chip (not for the camp): „přihlašování nespuštěné“ / „přihlašování do 12. 3.“ / „přihlašování skončilo“.
 
 **Add / edit event** form:
 
-- Title, audience (vlčušky / skauti a skautky / všichni), organizers (one or more leaders picked from `skautisPeople`; the first is the main organizer — optional for events without poster), checkbox „akce bez plakátku (např. tábor)“.
+- Title, audience (vlčušky / skauti a skautky / všichni), organizers (active leaders from `skautisPeople` as toggles, in the order clicked; the first is the main organizer, whose contact is on the poster; a new event starts with the signed-in leader; required except for events without poster), checkbox „akce bez plakátku (např. tábor)“.
 - **Event without poster = the camp**: shown only in the calendar (výpravník); no registration, attendance or payments on the web — information goes to parents by e-mail, no single organizer.
-- Date: month calendar; click first day, then last day for multi-day events.
+- Date: month calendar; click first day, then last day for multi-day events (one click = one-day event).
 - „přidat akci“ / „uložit změny“, „zrušit“.
-- New event gets poster status `missing` (or `none` if without poster).
+- New event gets poster status `missing` (or `none` if without poster). Unticking „bez plakátku“ later gives `missing`; ticking it keeps no poster editor.
 
 **Selected event — detail:**
 
-- Actions: „upravit údaje akce“, „zrušit akci“ / „obnovit akci“ (cancelled events are shown struck through to parents), „smazat akci“ (soft delete — sign-ups and payments are kept, the event disappears everywhere).
-- **Registration** (analogous to publishing the poster): checkbox „spustit přihlašování“ + deadline date. When registration is started, a Cloud Function e-mails the parents of eligible children that sign-up is open — **all known parent e-mails**: parent accounts paired to the child **and** parent contacts from skautIS, deduplicated. After the deadline parents can't sign up (§3.1); leaders can still sign children up or off at any time **in the event detail**: list of eligible children with signed-up / not-signed-up toggles (no design).
-- **Poster editor:** intro text; destination; map URL; meeting time at Památník, at Hlavní nádraží (Hlavák), meeting elsewhere (text); return time at Hlavák, at Památník, return elsewhere (text); **price** (number in CZK — entered when the poster is created, which may be after registration opened; shown as „Peněz“ on the poster and used as the default amount on Attendance → trips); food.
-- Packing list: choose a template („Věci na výpravu do chaty“, „…jednodenní výpravu“, „…pod celtou“, „bez hotového seznamu“) → items copied into the event, then remove (×) or add (Enter). Templates are managed in Administration.
-- „uložit“ + checkbox „zveřejnit plakátek rodičům“: `draft` (parents don't see) or `published` (parents see immediately). Link „náhled plakátku“.
+- Actions: „upravit údaje akce“, „zrušit akci“ / „obnovit akci“ (cancelled events are shown struck through to parents), „smazat akci“ with inline confirmation (soft delete — sign-ups and payments are kept, the event disappears everywhere; the page closes it, also when another leader deletes it).
+- The camp shows only the actions and a note.
+- **Registration** („Přihlašování“, analogous to publishing the poster): checkbox „spustit přihlašování“ + deadline date (at the latest the event's first day), „uložit přihlašování“. When registration is started, a Cloud Function e-mails the parents of eligible children that sign-up is open — **all known parent e-mails**: parent accounts paired to the child **and** parent contacts from skautIS, deduplicated **(not implemented yet)**. After the deadline parents can't sign up (§3.1); leaders can still sign children up or off at any time **in the event detail** („Kdo je přihlášený“, shown once registration was started): every active child who can join (§6.4; for `all` with a troop tag) as a toggle, „X z Y“.
+- **Poster editor** („Plakátek“): intro text; destination; map URL (must start with http(s)://); meeting time at Památník, at Hlavní nádraží (Hlavák), meeting elsewhere (text); return time at Hlavák, at Památník, return elsewhere (text); times stored as `HH:mm`, shown on the poster without a leading zero; **price** (whole CZK — entered when the poster is created, which may be after registration opened; shown as „Peněz“ on the poster and used as the default amount on Attendance → trips); food.
+- Packing list: choose a template („Věci na výpravu do chaty“, „…jednodenní výpravu“, „…pod celtou“, „bez hotového seznamu“) → items copied into the event (replacing a non-empty list asks first), then remove (×) or add (Enter). Templates are managed in Administration.
+- „uložit“ + checkbox „zveřejnit plakátek rodičům“: `draft` (parents don't see) or `published` (parents see immediately). Not autosaved; unsaved changes are shown („neuložené změny“) and switching to another event or leaving the page asks first. Link „náhled plakátku“ opens the poster page (§3.2) in a new tab, showing the saved version.
 
-**Reads:** `events`, `packingTemplates`, `members` (eligible count). **Writes:** `events`, `events/{id}/participants`.
+**Reads:** `events`, `events/{id}/poster/content`, `events/{id}/participants`, `packingTemplates`, `members` (eligible children), `skautisPeople`. **Writes:** `events`, `events/{id}/poster/content`, `events/{id}/participants` (sign-up fields).
 
 ### 4.4 News (`/vedouci/aktuality`)
 
