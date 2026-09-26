@@ -25,12 +25,18 @@ const router = createRouter({
       component: () => import('@/views/LoginView.vue'),
       meta: { auth: true },
     },
-    // Signed-in areas — placeholders until their pages exist.
     {
       path: '/clenove',
       name: 'parent-home',
+      component: () => import('@/views/ParentHomeView.vue'),
+      meta: { auth: true, roles: ['parent'] },
+    },
+    // Placeholders until their pages exist.
+    {
+      path: '/clenove/akce/:eventId',
+      name: 'event-poster',
       component: () => import('@/views/AreaComingSoonView.vue'),
-      props: { area: 'pro členy', title: 'Stránka pro členy' },
+      props: { area: 'pro členy', title: 'Plakátek akce' },
       meta: { auth: true, roles: ['parent'] },
     },
     {

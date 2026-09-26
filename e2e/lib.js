@@ -213,3 +213,14 @@ export function czechAge({ years, months }, lead) {
   if (months || !years) parts.push(`${months} ${plural(months, 'měsíc', 'měsíce', 'měsíců')}`)
   return `${lead} ${parts.join(' a ')}`
 }
+
+// Commits writes as a signed-in user (security rules apply); returns the HTTP status.
+// `writes` in Firestore REST format, e.g. with `updateTransforms` for server timestamps.
+export async function commitAs(idToken, writes) {
+  const res = await fetch(`${FIRESTORE.replace(/\/documents$/, '/documents:commit')}`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${idToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ writes }),
+  })
+  return res.status
+}

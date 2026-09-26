@@ -154,14 +154,15 @@ Common header: „Skautský oddíl Záře — pro členy“, the user's e-mail, 
 3. **News (Aktuality)** — non-withdrawn news whose audience is `all` or one of the children's troops. The first item — **important** news pinned on top, otherwise the newest — is shown expanded and highlighted as a card (date, tag, author, title, text, optional link); the rest as an accordion (one open at a time).
 4. **Open for sign-up (Nejbližší akce)** — relevant events with registration enabled. Each row: date, tag, title, organizer, poster link („plakátek“ if published, otherwise disabled „plakátek se chystá“), sign-up toggles — one per child **whose troop matches the event audience** — and the deadline („přihlášky do 12. 3.“).
    - Before the deadline: toggling signs the child up / off immediately.
+   - The poster link leads to page 6 (currently a placeholder).
    - After the deadline (event stays listed until it starts): toggles are locked; deadline text changes to „přihlašování skončilo“ and clicking a child shows *„Přihlašování už skončilo. Pokud chcete {přezdívka} ještě přihlásit nebo odhlásit, napište prosím přímo {organizátor} ({telefon}, {e-mail}) — pokud to půjde, zapíše ho.“* (proposed text).
 5. **Výpravník (calendar)** — events grouped by month.
    - Toggle „co nás čeká“ (upcoming) / „proběhlo“ (past).
-   - Toggle „i akce druhé družiny“ / „jen naše akce“ — by default only events for the children's troops + `all`.
+   - Toggle „i akce druhého oddílu“ / „jen naše akce“ — by default only events for the children's troops + `all`. Hidden when the children are in both troops.
    - Shows first 2 months, button „zobrazit celý rok“ expands.
    - Row: date, tag, title, organizer; cancelled events struck through with „zrušeno“.
-   - In „proběhlo“ mode each relevant child shows ✓/✗ attendance.
-6. **Photos (Fotky)** — 4 latest albums (cover, title, detail like „únor · 31 fotek“), each linking to the group's Zonerama; link „všechna alba →“. **[?] Data source still open** — Zonerama most likely has no API; solution to be decided.
+   - „proběhlo“ lists past events of the current school year, newest first; each child who could join shows ✓/✗ attendance, only for trips (events with registration, not the camp).
+6. **Photos (Fotky)** — 4 latest albums (cover, title, detail like „únor · 31 fotek“), each linking to the group's Zonerama; link „všechna alba →“. **[?] Data source still open** — Zonerama most likely has no API; solution to be decided. Until then the section shows four empty album frames linking to the gallery.
 7. **Leaders (Vedoucí)** — contact cards (photo, nickname, name · role, phone, e-mail) filtered by tabs „vlčušky“ / „skauti a skautky“ / „ostatní“.
 
 **Reads:** own `users/{uid}`, `members` (own children), `meetings` (attendance), `events` + own children's `participants`, `news`, `albums`, `contacts`, `settings/app`.

@@ -14,7 +14,8 @@
     "seed:renewal": "node --env-file-if-exists=.env scripts/seed-renewal.js",
     "postinstall": "npm --prefix functions install",
     "seed:users": "node --env-file-if-exists=.env scripts/seed-users.js",
-    "seed:members": "node --env-file-if-exists=.env scripts/seed-members.js"
+    "seed:members": "node --env-file-if-exists=.env scripts/seed-members.js",
+    "seed:activity": "node --env-file-if-exists=.env scripts/seed-activity.js"
   },
   "dependencies": {
     "firebase": "^12.19.0",

@@ -44,3 +44,9 @@ export function gradeSchoolYear(lastWaitlistReset, today = pragueToday()) {
   if (lastWaitlistReset) return recruitmentYears(lastWaitlistReset, today).nextYear
   return schoolYearStart(today) + 1
 }
+
+// First and last day (`YYYY-MM-DD`) of the school year containing the date.
+export function schoolYearRange(isoDate) {
+  const start = schoolYearStart(isoDate)
+  return { from: `${start}-09-01`, to: `${start + 1}-08-31` }
+}

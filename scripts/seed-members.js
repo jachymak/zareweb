@@ -1,5 +1,6 @@
 // Seeds the Firestore emulator with children (as the skautIS sync will import
-// them) and their parents' contacts. Pairs `rodic@zare.test` with one child.
+// them) and their parents' contacts. Pairs `rodic@zare.test` with two children
+// (one per troop) and sets some meeting days (normally set in Administration).
 // Run after `seed-users.js`. Usage: npm run seed:members. Writes bypass security rules.
 
 const PROJECT = process.env.VITE_FIREBASE_PROJECT_ID ?? 'demo-zareweb'
@@ -8,6 +9,7 @@ const DOCS = `http://${HOST}/v1/projects/${PROJECT}/databases/(default)/document
 const OWNER = { Authorization: 'Bearer owner', 'Content-Type': 'application/json' }
 
 // id = skautIS person id. `pairedWith`: e-mails of seeded accounts to pair.
+// `meetingDay`: web data, not from skautIS.
 export const MEMBERS = [
   {
     id: '900101',
@@ -25,6 +27,7 @@ export const MEMBERS = [
     nickname: 'Sojka',
     troop: 'vlc',
     birthDate: '2016-11-02',
+    meetingDay: 'thu',
     parents: [{ name: 'Rodič Testovací', email: 'rodic@zare.test', phone: '+420 602 333 444' }],
     pairedWith: ['rodic@zare.test'],
   },
@@ -35,6 +38,7 @@ export const MEMBERS = [
     nickname: 'Liška',
     troop: 'vlc',
     birthDate: '2018-02-20',
+    meetingDay: 'mon',
     parents: [
       { name: 'Tomáš Dub', email: 'dub.tomas@example.cz', phone: '+420 777 555 666' },
       { name: 'Petra Dubová', email: 'petra.dubova@example.cz', phone: null },
@@ -56,7 +60,12 @@ export const MEMBERS = [
     nickname: 'Bobr',
     troop: 'ss',
     birthDate: '2013-04-08',
-    parents: [{ name: 'Tomáš Dub', email: 'dub.tomas@example.cz', phone: '+420 777 555 666' }],
+    meetingDay: 'tue',
+    parents: [
+      { name: 'Tomáš Dub', email: 'dub.tomas@example.cz', phone: '+420 777 555 666' },
+      { name: 'Rodič Testovací', email: 'rodic@zare.test', phone: '+420 602 333 444' },
+    ],
+    pairedWith: ['rodic@zare.test'],
   },
   {
     id: '900202',
@@ -65,6 +74,7 @@ export const MEMBERS = [
     nickname: 'Vydra',
     troop: 'ss',
     birthDate: '2012-12-12',
+    meetingDay: 'tue',
     parents: [{ name: 'Jiří Pokorný', email: 'pokorny.j@example.cz', phone: '+420 608 777 888' }],
   },
   {
@@ -110,12 +120,12 @@ async function uidsByEmail() {
 
 const uids = await uidsByEmail()
 const now = new Date()
-for (const { id, parents, pairedWith = [], active = true, ...child } of MEMBERS) {
+for (const { id, parents, pairedWith = [], active = true, meetingDay = null, ...child } of MEMBERS) {
   const parentUids = pairedWith.map((email) => uids[email]).filter(Boolean)
   await put(`members/${id}`, {
     skautisPersonId: Number(id),
     ...child,
-    meetingDay: null,
+    meetingDay,
     parentUids,
     active,
     syncedAt: now,
