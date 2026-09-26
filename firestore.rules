@@ -50,15 +50,24 @@ service cloud.firestore {
     match /users/{uid} {
       allow read: if (signedIn() && request.auth.uid == uid) || isLeader();
 
+      function validNote(note) {
+        return note == null || (note is string && note.size() <= 1000);
+      }
+
       // Self-registration always starts as pending.
       allow create: if signedIn() && request.auth.uid == uid
         && request.resource.data.role == 'pending'
         && request.resource.data.email == request.auth.token.email
-        && request.resource.data.keys().hasOnly(['email', 'displayName', 'role', 'pairingRequest', 'createdAt']);
+        && request.resource.data.createdAt == request.time
+        && validNote(request.resource.data.note)
+        && request.resource.data.keys().hasOnly(['email', 'displayName', 'role', 'note', 'createdAt']);
 
+      // A pending user may fill in the note for the admin (e.g. after a Google login).
       allow update: if isAdmin()
         || (signedIn() && request.auth.uid == uid
-            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'pairingRequest']));
+            && resource.data.role == 'pending'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'note'])
+            && validNote(request.resource.data.note));
 
       allow delete: if isAdmin();
     }

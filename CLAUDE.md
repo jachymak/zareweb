@@ -15,7 +15,8 @@
 - `npm run format` – format `src/` with Prettier (config in `.prettierrc.json`)
 - `npm run emulators` – Firebase Auth + Firestore + Functions emulators (UI at http://127.0.0.1:4000); data persisted in `emulator-data/`. Changing a function's options (e.g. region) needs an emulator restart.
 - `npm run seed` – write `settings/public` and `settings/app` into the running Firestore emulator
-- `npm run test:e2e [-- public waitlist renewal]` – end-to-end tests in `e2e/` (playwright-core + system Chrome, desktop and 360/390 px, checks Firestore over the emulator REST API). Needs `npm run emulators` and `npm run dev` running; resets `settings/*` and clears `waitlist` in the emulator. Add a suite per new page; expected values derive from today's date via `functions/src/shared/`.
+- `npm run test:e2e [-- public waitlist renewal login]` – end-to-end tests in `e2e/` (playwright-core + system Chrome, desktop and 360/390 px, checks Firestore over the emulator REST API). Needs `npm run emulators` and `npm run dev` running; resets `settings/*`, clears `waitlist`, and the `login` suite replaces all Auth accounts and `users` with the seeded test accounts. Add a suite per new page; expected values derive from today's date via `functions/src/shared/`.
+- `npm run seed:users` – create test accounts in the emulators, one per role (`spravce@`, `vedouci@`, `rodic@`, `cekajici@`, `zamitnuty@zare.test`), password `heslo1234`
 - `npm run seed:renewal` – create a waiting-list entry awaiting renewal and print its renewal link (`-- --too-old` for a child past the age limit); stands in for the annual reset until it exists
 
 ## Sources of truth
@@ -31,12 +32,12 @@
 - Initialization in `src/services/firebase.js`. Database access only through `src/services/`. No direct Firebase calls in components or stores.
 - Firestore security rules live in `firestore.rules`, composite indexes in `firestore.indexes.json` (repo root).
 - When the data model changes, update `firestore.rules`, `firestore.indexes.json` (new queries) and the data model description in `docs/SPEC.md`.
-- Cloud Functions live in `functions/` (own `package.json`, installed by the root `postinstall`), region `europe-west3`. Implemented: `submitWaitlist`, `getRenewal`, `confirmRenewal`, `withdrawRenewal`. Not yet: waitlist reset (creates renewal tokens), e-mails, skautIS sync, App Check enforcement.
+- Cloud Functions live in `functions/` (own `package.json`, installed by the root `postinstall`), region `europe-west3`. Implemented: `submitWaitlist`, `getRenewal`, `confirmRenewal`, `withdrawRenewal`. Not yet: waitlist reset (creates renewal tokens), e-mails (incl. admin notification of new accounts), skautIS sync, App Check enforcement.
 - Pure logic shared by the web and Cloud Functions (validation, school years) lives in `functions/src/shared/` and is imported in the web as `@shared/...`. It must stay dependency-free.
 
 ## State
 
-- Pinia stores (`src/stores/`) for shared state (e.g. the current auth user).
+- Pinia stores (`src/stores/`) for shared state, e.g. `auth` (current user + live `users/{uid}` profile, role, sign-in actions). Route access via `meta.roles` in `src/router/`.
 - Component-local state stays in the component.
 - Stores call `src/services/` for data; they do not talk to Firebase directly.
 

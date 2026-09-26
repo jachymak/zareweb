@@ -39,7 +39,10 @@ export default async function renewal({ browser, check }) {
   const confirmBtn = (page) => page.getByRole('button', { name: 'Potvrdit zájem' })
   const open = async (path, options) => {
     const opened = await openPage(browser, path, options)
-    await opened.page.waitForFunction(() => !document.querySelector('main[aria-busy="true"]'))
+    // The view is lazy-loaded: wait for its <main> to exist and finish loading.
+    await opened.page.waitForFunction(
+      () => document.querySelector('main')?.getAttribute('aria-busy') === 'false',
+    )
     return opened
   }
 

@@ -15,7 +15,7 @@ export function onAuthChange(callback) {
   return onAuthStateChanged(auth, callback)
 }
 
-// Creates the pending profile on the first Google login.
+// Creates the pending profile (without a note) on the first Google login.
 export async function signInWithGoogle() {
   const { user } = await signInWithPopup(auth, new GoogleAuthProvider())
   if (!(await getUser(user.uid))) {
@@ -29,15 +29,11 @@ export async function signInWithEmail(email, password) {
   return user
 }
 
-// Parent self-registration (SPEC §2.4): account + pending profile with a pairing request.
-export async function registerParent({ name, email, password, childName, troopText }) {
+// Self-registration (SPEC §2.4): account + pending profile with a note for the admin.
+export async function register({ name, email, password, note }) {
   const { user } = await createUserWithEmailAndPassword(auth, email, password)
   await updateProfile(user, { displayName: name })
-  await createUserProfile(user.uid, {
-    email,
-    displayName: name,
-    pairingRequest: { childName, troopText },
-  })
+  await createUserProfile(user.uid, { email: user.email, displayName: name, note })
   return user
 }
 

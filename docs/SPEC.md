@@ -28,10 +28,11 @@ The site has three parts:
 | Role            | How obtained                                      | Access                                          |
 | --------------- | ------------------------------------------------- | ----------------------------------------------- |
 | Anonymous       | —                                                 | Public pages, waiting-list sign-up and renewal  |
-| Parent, pending | Self-registration                                 | Only the "waiting for approval" screen          |
+| Pending         | Self-registration (anyone)                        | Only the "waiting for approval" screen          |
 | Parent          | Admin pairs at least one child to the account    | Parent area, only data of **their** children    |
 | Leader          | Admin assigns role „vedoucí“                      | Leader area (everything except Administration)  |
 | Admin           | Admin assigns role „správce“                      | Leader area + Administration                    |
+| No access       | Admin rejects or deactivates the account (`none`) | Only the "no access" screen                     |
 
 A leader who is also a parent of a member is not handled (does not occur in practice).
 
@@ -130,12 +131,13 @@ One entry point for parents and leaders. Four states:
 
 1. **Login** — „Přihlásit se Googlem“, or e-mail + password. Links: forgotten password, registration.
 2. **Forgotten password** — e-mail field → Firebase password-reset e-mail (link valid 60 min). Confirmation „mrkni do e-mailu (i do spamu)“. Note that Google users don't need a password.
-3. **Parent registration** — name, e-mail, password (min. 8 chars), child's name (nickname helps), patrol/day the child attends (free text, e.g. „vlčušky, čtvrtek“). Creates a Firebase Auth account and a pending user profile with the pairing request.
-4. **Waiting for approval** — shown to any logged-in user without an assigned role/child. Status steps: account created ✓, pairing request sent ✓, leader confirmation … . Contacts of troop leaders (mailto). Button „odhlásit se“.
+3. **Registration** („Založení účtu“) — anyone can create an account (parents and leaders alike); the admin decides who gets access. Explains how approval works (create account → the admin verifies you belong to the group, e.g. by the parent e-mail in skautIS, and pairs your children → e-mail, then access). Fields: name, e-mail, password (min. 8 chars), **note for the admin** („Koho u nás máš?“ — children's names/nicknames and troop, or the leader's nickname; required, max. 1000 chars). Or „Založit účet přes Google“. Creates a Firebase Auth account and a pending user profile with the note.
+4. **Waiting for approval** — shown to any logged-in `pending` user. Status steps: account created ✓, note written ✓ / …, approval by the admin … . Shows the saved note with „upravit poznámku“; a Google user who has no note yet fills it in here (required). No contacts — the user is not expected to write to anyone; the admin gets in touch if needed. The page follows the profile live and moves on as soon as the account is approved. Button „odhlásit se“.
+5. **No access** — a logged-in user with role `none`: short message with `zare@skaut.cz` in case of a mistake, „odhlásit se“.
 
-**After login, redirect by role:** admin/leader → `/vedouci`, parent → `/clenove`, pending → waiting screen.
+**After login, redirect by role:** admin/leader → `/vedouci`, parent → `/clenove`, pending → waiting screen, none → no-access screen. Protected pages send signed-out users to `/prihlaseni?next=…` and back after login; a user whose role doesn't fit is sent to their home (or the status screen). A role change takes effect live on open pages.
 
-When the admin approves (pairs a child), a Cloud Function e-mails the parent.
+**Approval flow:** a new pending account triggers an e-mail to the admins (Cloud Function `onUserCreated`). In Administration (§4.8, „účty a párování“) the admin sees the note and suggested children (parent e-mail matches skautIS) and either approves (pairs children → role `parent`, or sets a leader role), sends a query to an unknown account („nevíme, komu účet patří, ozvěte se“), or rejects it (role `none`). A `none` account can later be reactivated or deleted. When the admin approves, a Cloud Function e-mails the user.
 
 **Reads:** own `users/{uid}`. **Writes:** Auth account; `users/{uid}` (create on registration / first Google login).
 
@@ -320,7 +322,7 @@ Tabs:
 
 1. **skautIS** — „Synchronizovat ze skautISu“: the admin logs in to skautIS; a Cloud Function loads via the skautIS API: **children** of both troops (first name, last name, nickname, troop, date of birth), **their parents' contacts** (name, e-mail, phone) and **leaders** (name, nickname, phone, e-mail). People from the středisko are not imported. Shows a diff (new / changed / left) to confirm before applying. Shows date of last sync. Run once a year and after changes. The skautIS login is used only for this sync — logging in to the web itself is always Google or e-mail + password.
 2. **Children (děti)** — list of imported children by troop; the admin **clicks the meeting day** for each child (one of the troop's two days). Children without a meeting day are highlighted (they don't appear in any meeting's attendance). No design **[?]**.
-3. **Accounts & pairing (účty a párování)** — parent accounts: e-mail, status („potvrzený“ / „čeká na potvrzení“), pairing request text from registration, **suggested children** (children whose parent e-mail in skautIS matches the account e-mail), assigned children as chips (nickname + troop, × to unassign), „+ přiřadit dítě“ (pick from imported `members`). **A parent can have several children, and a child can belong to several parent accounts** (e.g. mother and father separately); any of them can sign the child up. Unassigned children are not visible to parents. „Pozvat nový rodičovský účet“ — e-mail (can be picked from parent contacts in skautIS) → invitation e-mail.
+3. **Accounts & pairing (účty a párování)** — accounts: e-mail, status („potvrzený“ / „čeká na potvrzení“ / „bez přístupu“), the note from registration, **suggested children** (children whose parent e-mail in skautIS matches the account e-mail), assigned children as chips (nickname + troop, × to unassign), „+ přiřadit dítě“ (pick from imported `members`). **A parent can have several children, and a child can belong to several parent accounts** (e.g. mother and father separately); any of them can sign the child up. Unassigned children are not visible to parents. Pending accounts: „schválit“, „poslat dotaz“ (e-mail asking an unknown account to get in touch) and „zamítnout“ (role `none`); `none` accounts: „znovu aktivovat“ (back to pending) or „smazat“ (Auth account + profile). „Pozvat nový rodičovský účet“ — e-mail (can be picked from parent contacts in skautIS) → invitation e-mail.
 4. **Leader roles (role vedoucích)** — each leader (from `skautisPeople`): nickname, name, e-mail; role „vedoucí“ / „správce“ / „bez přístupu“; **home troop** and **role title** (used on the leader home page and in contacts); linked web account (matched by e-mail, or pending accounts can be linked manually).
 5. **Contacts (kontakty)** — the list shown to parents in „Vedoucí“, stored as its own collection. Each contact is **linked to a person from skautIS**: name, phone and e-mail come from skautIS and are read-only here; the admin edits only group (vlčušky / skauti a skautky / ostatní), photo and order. Contacts in the „ostatní“ group who are not in the import (e.g. středisko people) **[?]** — manual entry, or not shown. If the phone/e-mail is missing in skautIS, the contact shows a warning „doplň telefon ve skautISu“ and the phone isn't shown to parents until the leader updates skautIS and the next sync runs. „+ přidat kontakt“ (pick a skautIS person), „uložit kontakty“.
 6. **Packing list templates** — CRUD of templates („s sebou“). No design.
@@ -343,7 +345,7 @@ Conventions: collection names in camelCase plural; points in time as `Timestamp`
 | `email`          | string                                                   |                                       |
 | `displayName`    | string                                                   |                                       |
 | `role`           | `"pending" \| "parent" \| "leader" \| "admin" \| "none"` | set by admin                          |
-| `pairingRequest` | `{ childName, troopText }` \| null                       | from registration                     |
+| `note`           | string \| null                                           | for the admin — who they are, which children; null after a first Google login until filled in |
 | `personId`       | string?                                                  | leaders — `skautisPeople` id          |
 | `createdAt`      | Timestamp                                                |                                       |
 
@@ -512,7 +514,7 @@ Mock only in v1 — no collections yet.
 | `members/*/private/*`       | —                          | —                | —                                                        | read              | rw    |
 | `waitlist`                  | — (via `submitWaitlist`)   | —                | —                                                        | rw                | rw    |
 | `waitlistResets`            | —                          | —                | —                                                        | read              | read  |
-| `users/{uid}`               | —                          | own: create/read | own: read                                                | read all          | rw    |
+| `users/{uid}`               | —                          | own: create/read, update `note`/`displayName` | own: read                   | read all          | rw    |
 | `members`                   | —                          | —                | read own children (`uid in parentUids`)                  | read              | rw    |
 | `meetings`                  | —                          | —                | read                                                     | rw                | rw    |
 | `events`                    | —                          | —                | read (not deleted)                                       | rw                | rw    |
@@ -567,7 +569,9 @@ Firebase Blaze plan with Cloud Functions (region `europe-west3`, code in `functi
 | `submitWaitlist`            | callable (public, App Check)    | validate, dedupe, create entry, confirmation e-mail      |
 | `resetWaitlist`             | callable (leader)               | archive entries, create tokens, send renewal e-mails, log |
 | `getRenewal` / `confirmRenewal` / `withdrawRenewal` | callable (public) | load entry by token (null if unknown/used), save questionnaire and reactivate, delete entry |
-| `onParentApproved`          | Firestore update `users`        | e-mail when a child is paired                            |
+| `onUserCreated`             | Firestore create `users`        | e-mail to admins: a new account awaits approval          |
+| `onParentApproved`          | Firestore update `users`        | e-mail when the account is approved / a child is paired  |
+| `queryAccount`              | callable (admin)                | e-mail to an unknown pending account asking who they are |
 | `inviteParent`              | callable (admin)                | invitation e-mail                                        |
 | `onRegistrationOpened`      | Firestore update `events`       | e-mail parents that sign-up is open                      |
 | `syncSkautis`               | callable (admin)                | load members/leaders from skautIS API, return diff, apply |

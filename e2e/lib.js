@@ -15,6 +15,7 @@ const PROJECT = process.env.VITE_FIREBASE_PROJECT_ID ?? 'demo-zareweb'
 export const APP_URL = process.env.APP_URL ?? 'http://localhost:5173'
 export const FIRESTORE = `http://127.0.0.1:8080/v1/projects/${PROJECT}/databases/(default)/documents`
 export const FUNCTIONS = `http://127.0.0.1:5001/${PROJECT}/europe-west3`
+const AUTH = 'http://127.0.0.1:9099'
 const CHROME =
   process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
 
@@ -104,6 +105,46 @@ export function fieldValue(f) {
   return f.stringValue ?? f.integerValue ?? f.booleanValue ?? f.timestampValue ?? f.doubleValue
 }
 
+// ---- Auth emulator ----
+
+// Deletes every account in the Auth emulator.
+export async function clearAuthAccounts() {
+  await fetch(`${AUTH}/emulator/v1/projects/${PROJECT}/accounts`, { method: 'DELETE' })
+}
+
+// E-mail action codes the emulator "sent" (password reset, …).
+export async function listOobCodes() {
+  const res = await fetch(`${AUTH}/emulator/v1/projects/${PROJECT}/oobCodes`)
+  return (await res.json()).oobCodes ?? []
+}
+
+// Signs in over REST; returns { uid, idToken } for requests as that user.
+export async function signInRest(email, password) {
+  const res = await fetch(
+    `${AUTH}/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=demo`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, returnSecureToken: true }),
+    },
+  )
+  const data = await res.json()
+  return { uid: data.localId, idToken: data.idToken }
+}
+
+// Updates fields of a document as a signed-in user (security rules apply); returns the HTTP status.
+export async function patchDocAs(idToken, path, fields) {
+  const mask = Object.keys(fields)
+    .map((f) => `updateMask.fieldPaths=${f}`)
+    .join('&')
+  const res = await fetch(`${FIRESTORE}/${path}?${mask}`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${idToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fields }),
+  })
+  return res.status
+}
+
 // Calls a callable function directly (bypassing the web form).
 export async function callFunction(name, data) {
   const res = await fetch(`${FUNCTIONS}/${name}`, {
@@ -125,6 +166,7 @@ export async function assertRunning() {
     'dev server (npm run dev)': APP_URL,
     'Firestore emulator (npm run emulators)': 'http://127.0.0.1:8080',
     'Functions emulator (npm run emulators)': 'http://127.0.0.1:5001',
+    'Auth emulator (npm run emulators)': AUTH,
   }
   for (const [name, url] of Object.entries(targets)) {
     try {

@@ -1,5 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 import PublicHomeView from '@/views/PublicHomeView.vue'
+
+const LEADERS = ['leader', 'admin']
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -16,12 +19,26 @@ const router = createRouter({
       component: () => import('@/views/WaitlistRenewalView.vue'),
       props: true,
     },
-    // Not implemented yet — placeholder so public links don't dead-end.
     {
       path: '/prihlaseni',
       name: 'login',
-      component: () => import('@/views/ComingSoonView.vue'),
-      props: { title: 'Přihlášení' },
+      component: () => import('@/views/LoginView.vue'),
+      meta: { auth: true },
+    },
+    // Signed-in areas — placeholders until their pages exist.
+    {
+      path: '/clenove',
+      name: 'parent-home',
+      component: () => import('@/views/AreaComingSoonView.vue'),
+      props: { area: 'pro členy', title: 'Stránka pro členy' },
+      meta: { auth: true, roles: ['parent'] },
+    },
+    {
+      path: '/vedouci',
+      name: 'leader-home',
+      component: () => import('@/views/AreaComingSoonView.vue'),
+      props: { area: 'pro vedoucí', title: 'Stránka pro vedoucí' },
+      meta: { auth: true, roles: LEADERS },
     },
   ],
   scrollBehavior(to, from, savedPosition) {
@@ -29,6 +46,23 @@ const router = createRouter({
     if (to.hash) return { el: to.hash, behavior: 'smooth' }
     return { top: 0 }
   },
+})
+
+// Where a user may not be on `to`, or null. Signed-out users go to login
+// (and come back after it); signed-in ones go to their home, or to login,
+// which shows their account status.
+export function redirectFor(to, auth) {
+  const roles = to.meta.roles
+  if (!roles || roles.includes(auth.role)) return null
+  if (!auth.user) return { name: 'login', query: { next: to.fullPath } }
+  return auth.homeRoute ?? { name: 'login' }
+}
+
+router.beforeEach(async (to) => {
+  if (!to.meta.auth) return
+  const auth = useAuthStore()
+  await auth.init()
+  return redirectFor(to, auth) ?? undefined
 })
 
 export default router

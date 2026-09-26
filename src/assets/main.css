@@ -80,6 +80,15 @@
   @apply inline-flex cursor-pointer items-center justify-center rounded-full border-0 bg-green px-8 py-4 text-[17px] font-medium text-cream no-underline hover:bg-green-hover hover:text-cream disabled:cursor-wait disabled:opacity-70;
 }
 
+@utility btn-outline {
+  @apply inline-flex cursor-pointer items-center justify-center gap-3 rounded-full border-2 border-ink bg-cream px-5 py-[13px] text-[16.5px] font-medium text-ink transition-transform hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-70 disabled:hover:translate-y-0;
+}
+
+/* A text link that is a button (switches screens, signs out). */
+@utility btn-link {
+  @apply cursor-pointer border-0 bg-transparent px-0 py-1.5 text-[15px] text-green underline decoration-[#9ec0a8] underline-offset-4 hover:text-red;
+}
+
 @utility note-warm {
   @apply rounded-[10px] bg-[#F7EBCB] px-3 py-2 text-[14.5px] leading-[1.55] text-[#8A5A2B];
 }

@@ -17,19 +17,24 @@ export async function getUser(uid) {
   return fromDoc(await getDoc(doc(users, uid)))
 }
 
-export function subscribeUser(uid, callback) {
-  return onSnapshot(doc(users, uid), (snap) => callback(fromDoc(snap)))
+export function subscribeUser(uid, callback, onError) {
+  return onSnapshot(doc(users, uid), (snap) => callback(fromDoc(snap)), onError)
 }
 
 // New accounts always start as pending (enforced by firestore.rules).
-export function createUserProfile(uid, { email, displayName, pairingRequest = null }) {
+export function createUserProfile(uid, { email, displayName, note = null }) {
   return setDoc(doc(users, uid), {
     email,
     displayName,
     role: 'pending',
-    pairingRequest,
+    note,
     createdAt: serverTimestamp(),
   })
+}
+
+// The pending user's note for the admin (who they are, which children).
+export function setUserNote(uid, note) {
+  return updateDoc(doc(users, uid), { note })
 }
 
 export async function listUsers() {
