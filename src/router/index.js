@@ -69,17 +69,20 @@ const router = createRouter({
       component: () => import('@/views/ClubhouseView.vue'),
       meta: { auth: true, roles: LEADERS },
     },
-    // Placeholders until their pages exist.
-    ...[
-      ['/vedouci/cekaci-listina', 'leader-waitlist', 'Čekací listina'],
-      ['/vedouci/nahled', 'leader-preview', 'Náhled pro rodiče'],
-    ].map(([path, name, title]) => ({
-      path,
-      name,
-      component: () => import('@/views/LeaderComingSoonView.vue'),
-      props: { title },
+    {
+      path: '/vedouci/cekaci-listina',
+      name: 'leader-waitlist',
+      component: () => import('@/views/WaitlistAdminView.vue'),
       meta: { auth: true, roles: LEADERS },
-    })),
+    },
+    // Placeholder until the page exists.
+    {
+      path: '/vedouci/nahled',
+      name: 'leader-preview',
+      component: () => import('@/views/LeaderComingSoonView.vue'),
+      props: { title: 'Náhled pro rodiče' },
+      meta: { auth: true, roles: LEADERS },
+    },
     {
       path: '/vedouci/administrace',
       name: 'admin',

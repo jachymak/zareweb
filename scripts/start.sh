@@ -4,7 +4,7 @@
 # dev server. Ctrl+C stops everything; emulator data is saved to emulator-data/.
 #
 # Usage: npm start              (or: bash scripts/start.sh)
-#        npm start -- --seed    re-seed test data (replaces accounts, members, activity)
+#        npm start -- --seed    re-seed test data (replaces accounts, members, activity, waiting list)
 #
 # Keep this in sync with what a normal local run needs (new seeds, services, …).
 #
@@ -81,6 +81,7 @@ if $SEED; then
   npm run --silent seed:users
   npm run --silent seed:members
   npm run --silent seed:activity
+  npm run --silent seed:waitlist
 fi
 
 cat <<'EOF'

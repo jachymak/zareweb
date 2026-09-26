@@ -306,7 +306,7 @@ Shows only `active` entries (archived ones are hidden, see reset below).
 
 **Export:** „Stáhnout CSV“ of the currently filtered rows. Columns: Zapsáno, Jméno dítěte, Pohlaví, Datum narození, Věk, Třída, Zná někoho, Rodič, E-mail, Telefon, Obnoveno, Poznámka. `;` separator, UTF-8 with BOM, file name `cekaci-listina-YYYY-MM-DD.csv`.
 
-**Annual reset wizard** („Resetovat listinu na další rok“, shows date of last reset). Done once a year after new members are chosen:
+**Annual reset wizard** („Resetovat listinu na další rok“, **admins only**; leaders see only „listina naposledy resetována {date}“ in its place). Done once a year after new members are chosen:
 
 1. *How it works* — explanation.
 2. *Admitted children* — list sorted by sign-up date, search by name ignoring diacritics; leader ticks the children admitted this year. Admitted children get no e-mail.
@@ -321,7 +321,11 @@ Effect (entries are **archived, not deleted**, to keep the original sign-up date
 - A record is added to `waitlistResets` (reset log).
 - Banner with the reset date and number of e-mails sent.
 
-**Retention (GDPR):** entries still `awaitingRenewal` at the next reset are deleted (the parent did not respond for a whole year); `admitted` entries are deleted **manually** by a leader once the child is registered in skautIS (filter „nabraní“ on this page with a delete action — no design).
+**Retention (GDPR):** the next reset deletes what the previous one archived: entries still `awaitingRenewal` (the parent did not respond for a whole year) and `admitted` ones (the child is in skautIS by then). Admitted children are chosen only in the reset wizard.
+
+**Renewal e-mail text:** `settings/emails.waitlistRenewal` `{ subject, body }` — paragraphs separated by a blank line, `{dite}` = child's name, `{odkaz}` = renewal link; default in `functions/src/shared/renewalEmail.js` until Administration can edit it. Until SMTP exists, `resetWaitlist` only logs the e-mails in the emulator.
+
+**Narrow screens:** below `lg` the table becomes compact cards (name, age, grade, waiting time; the rest in the expanded detail) with a sort bar above them.
 
 **Reads:** `waitlist`, `waitlistResets`, `settings/public`. **Writes:** `waitlist` (note, delete), reset via Cloud Function (statuses, tokens, e-mails, `settings/public`, `waitlistResets`).
 
@@ -496,7 +500,7 @@ Document id = first 24 hex chars of SHA-256 of `firstname|lastname|birthDate` (l
 
 ### `waitlistResets/{resetId}`
 
-`at`, `byUid`, `admittedCount`, `emailedCount`, `recruitmentYear`.
+`at`, `byUid`, `admittedCount`, `emailedCount`, `deletedCount` (unanswered entries from the previous reset), `recruitmentYear` (school year whose newcomers were chosen).
 
 ### `settings/public` (publicly readable)
 
@@ -587,7 +591,7 @@ Firebase Blaze plan with Cloud Functions (region `europe-west3`, code in `functi
 | Function                    | Trigger                         | Purpose                                                  |
 | --------------------------- | ------------------------------- | -------------------------------------------------------- |
 | `submitWaitlist`            | callable (public, App Check)    | validate, dedupe, create entry, confirmation e-mail      |
-| `resetWaitlist`             | callable (leader)               | archive entries, create tokens, send renewal e-mails, log |
+| `resetWaitlist`             | callable (admin)                | archive entries, create tokens, send renewal e-mails, log |
 | `getRenewal` / `confirmRenewal` / `withdrawRenewal` | callable (public) | load entry by token (null if unknown/used), save questionnaire and reactivate, delete entry |
 | `onUserCreated`             | Firestore create `users`        | e-mail to admins: a new account awaits approval          |
 | `onParentApproved`          | Firestore update `users`        | e-mail when the account is approved / a child is paired  |

@@ -111,3 +111,13 @@ export function dedupeKey({ firstName, lastName, birthDate }) {
     ).join(' ')
   return `${norm(firstName)}|${norm(lastName)}|${birthDate}`
 }
+
+// Grade in the school year starting in `schoolYearStart`, moved on from the
+// grade the parent gave for `entry.gradeSchoolYear`. A child not in school yet
+// gets the suggestion from the date of birth.
+export function gradeInYear({ grade, gradeSchoolYear, birthDate }, schoolYearStart) {
+  const years = schoolYearStart - gradeSchoolYear
+  if (years <= 0) return grade
+  if (grade === GRADE_NONE) return suggestGrade(birthDate, schoolYearStart)
+  return Math.min(GRADE_SECONDARY, grade + years)
+}

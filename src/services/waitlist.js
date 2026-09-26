@@ -3,6 +3,7 @@ import {
   deleteDoc,
   doc,
   getDocs,
+  onSnapshot,
   orderBy,
   query,
   updateDoc,
@@ -44,13 +45,17 @@ export async function withdrawRenewal(token) {
   await withdrawRenewalCallable({ token })
 }
 
-// Leader-side access below. Renewal and the annual reset go through
-// Cloud Functions (not implemented yet).
+// Leader-side access below (SPEC §4.6).
 
+// Entries of one status, oldest sign-up first, followed live (leaders see each
+// other's notes and deletions). Returns the unsubscribe function.
 // status: 'active' | 'awaitingRenewal' | 'admitted'
-export async function listWaitlist(status = 'active') {
-  const q = query(waitlist, where('status', '==', status), orderBy('firstSignedUpAt'))
-  return fromQuery(await getDocs(q))
+export function subscribeWaitlist(status, callback, onError) {
+  return onSnapshot(
+    query(waitlist, where('status', '==', status), orderBy('firstSignedUpAt')),
+    (snap) => callback(fromQuery(snap)),
+    onError,
+  )
 }
 
 export function updateLeaderNote(entryId, leaderNote) {
@@ -63,4 +68,13 @@ export function deleteWaitlistEntry(entryId) {
 
 export async function listResets() {
   return fromQuery(await getDocs(query(collection(db, 'waitlistResets'), orderBy('at', 'desc'))))
+}
+
+// Annual reset through the `resetWaitlist` Cloud Function: the admitted
+// entries leave the list, the others await renewal and their parents get the
+// e-mail. Resolves to { date, admittedCount, emailedCount, deletedCount }.
+const resetWaitlistCallable = httpsCallable(functions, 'resetWaitlist')
+
+export async function resetWaitlist(admittedIds) {
+  return (await resetWaitlistCallable({ admittedIds })).data
 }

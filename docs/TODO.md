@@ -10,3 +10,6 @@ Stránka pro členy
 - footer u plakátku nebude
 - rodiče nemohou vidět rozdělané plakátky
 
+Klubovna
+- dodělat otroka
+- rámečky
