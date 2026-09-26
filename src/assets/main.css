@@ -68,3 +68,18 @@
 @utility prose-body {
   @apply text-[17px] leading-[1.7] text-pretty sm:text-[18px] sm:leading-[1.75];
 }
+
+/* Form controls */
+@utility field-input {
+  @apply w-full rounded-xl border-[1.5px] border-line bg-paper px-[15px] py-[13px] text-[17px] text-ink outline-none placeholder:text-faint;
+  @apply focus:border-green focus:shadow-[0_0_0_3px_rgba(47,107,79,.15)];
+  @apply aria-invalid:border-red;
+}
+
+@utility btn-primary {
+  @apply inline-flex cursor-pointer items-center justify-center rounded-full border-0 bg-green px-8 py-4 text-[17px] font-medium text-cream no-underline hover:bg-green-hover hover:text-cream disabled:cursor-wait disabled:opacity-70;
+}
+
+@utility note-warm {
+  @apply rounded-[10px] bg-[#F7EBCB] px-3 py-2 text-[14.5px] leading-[1.55] text-[#8A5A2B];
+}

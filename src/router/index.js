@@ -5,13 +5,18 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     { path: '/', name: 'home', component: PublicHomeView },
-    // Not implemented yet — placeholders so public links don't dead-end.
     {
       path: '/cekaci-listina',
       name: 'waitlist',
-      component: () => import('@/views/ComingSoonView.vue'),
-      props: { title: 'Čekací listina' },
+      component: () => import('@/views/WaitlistView.vue'),
     },
+    {
+      path: '/cekaci-listina/obnovit/:token',
+      name: 'waitlist-renewal',
+      component: () => import('@/views/WaitlistRenewalView.vue'),
+      props: true,
+    },
+    // Not implemented yet — placeholder so public links don't dead-end.
     {
       path: '/prihlaseni',
       name: 'login',

@@ -1,7 +1,8 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { getPublicSettings } from '@/services/settings'
-import { formatSchoolYear, recruitmentYears } from '@/utils/schoolYear'
+import { formatSchoolYear, gradeSchoolYear, recruitmentYears } from '@shared/schoolYear'
+import { DEFAULT_MAX_AGE, DEFAULT_WARN_AGE } from '@shared/waitlistRules'
 
 // settings/public — recruitment years and waiting-list age limits (SPEC §5, §6.1).
 export const usePublicSettingsStore = defineStore('publicSettings', () => {
@@ -35,5 +36,16 @@ export const usePublicSettingsStore = defineStore('publicSettings', () => {
     return { doneYear: formatSchoolYear(doneYear), nextYear: formatSchoolYear(nextYear) }
   })
 
-  return { settings, loaded, error, load, recruitment }
+  // Waiting-list form parameters; defaults apply until (or unless) settings load.
+  const waitlistForm = computed(() => {
+    const schoolYear = gradeSchoolYear(settings.value?.lastWaitlistReset)
+    return {
+      schoolYear,
+      schoolYearLabel: formatSchoolYear(schoolYear),
+      warnAge: settings.value?.waitlistWarnAge ?? DEFAULT_WARN_AGE,
+      maxAge: settings.value?.waitlistMaxAge ?? DEFAULT_MAX_AGE,
+    }
+  })
+
+  return { settings, loaded, error, load, recruitment, waitlistForm }
 })

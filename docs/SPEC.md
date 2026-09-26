@@ -104,7 +104,7 @@ Validation errors appear only after the first submit attempt: red borders per fi
 **On submit**
 
 - The form calls the Cloud Function `submitWaitlist` (no direct Firestore write), protected by **Firebase App Check** (invisible reCAPTCHA). The function validates the data with the same rules as the form.
-- **Duplicate check:** if an entry with the same first name, last name and date of birth already exists (any status), no new entry is created and the form shows *„{Jméno} už na čekací listině je.“* **[?] wording**; the leaders are not notified.
+- **Duplicate check:** if an entry with the same first name, last name and date of birth (ignoring case, diacritics and extra spaces) already exists (any status), no new entry is created and the form shows *„{Jméno} už na čekací listině je.“* **[?] wording**; the leaders are not notified.
 - Otherwise creates a `waitlist` entry (status `active`, `firstSignedUpAt = now`) and sends a confirmation e-mail to the parent.
 - Success screen: „{Jméno} je na čekací listině“, info about the annual renewal e-mail, honest note (~150 children, 5–7 admitted per year) with link to find another group, buttons „Zpět na stránku oddílu“ and „Zapsat další dítě“ (clears child fields, **keeps parent contact**).
 
@@ -120,7 +120,9 @@ Target of the link in the annual renewal e-mail (§4.6). No design — built fro
 - „Potvrdit zájem“ → the entry becomes `active` again **keeping its original `firstSignedUpAt`** (so it returns to its original place in the order); the renewal date is appended to `renewalDates`.
 - „O místo už nemáme zájem“ → the entry is deleted (with confirmation).
 
-Reading and updating by token goes through a Cloud Function (the client has no direct access to `waitlist`).
+- The grade is pre-filled from the previous answer, moved forward by the number of school years since then (clamped to 0–10).
+- A child who has reached `waitlistMaxAge` in the meantime cannot be renewed (same rule as sign-up); only „O místo už nemáme zájem“ is offered.
+- Reading and updating by token goes through Cloud Functions `getRenewal` / `confirmRenewal` / `withdrawRenewal` (the client has no direct access to `waitlist`). The token is single-use: confirming clears it, withdrawing deletes the entry.
 
 ### 2.4 Login / registration (`/prihlaseni`)
 
@@ -452,6 +454,8 @@ Poster content in a separate doc so parents can read it **only when `posterStatu
 
 ### `waitlist/{entryId}`
 
+Document id = first 24 hex chars of SHA-256 of `firstname|lastname|birthDate` (lower-cased, without diacritics) — `submitWaitlist` detects duplicates atomically by `create()` failing.
+
 | Field             | Type                                                 | Notes                                  |
 | ----------------- | ---------------------------------------------------- | -------------------------------------- |
 | `firstName`       | string                                               |                                        |
@@ -469,7 +473,7 @@ Poster content in a separate doc so parents can read it **only when `posterStatu
 | `status`          | `"active" \| "awaitingRenewal" \| "admitted"` |                                |
 | `statusChangedAt` | Timestamp                                            |                                        |
 | `renewalDates`    | Timestamp[]                                          | confirmed renewals („N×“)              |
-| `renewalTokenHash`| string?                                              | set on reset; cleared after use        |
+| `renewalTokenHash`| string?                                              | SHA-256 (hex) of the random token in the renewal link; set on reset, cleared after use |
 | `leaderNote`      | string                                               | team only                              |
 
 ### `waitlistResets/{resetId}`
@@ -556,13 +560,13 @@ Relevant if `audience == "all"` or `audience` is one of the troops of the parent
 
 ## 7. Backend (Cloud Functions)
 
-Firebase Blaze plan with Cloud Functions. Functions:
+Firebase Blaze plan with Cloud Functions (region `europe-west3`, code in `functions/`). Validation rules are shared with the web form (`functions/src/shared/`). Functions:
 
 | Function                    | Trigger                         | Purpose                                                  |
 | --------------------------- | ------------------------------- | -------------------------------------------------------- |
 | `submitWaitlist`            | callable (public, App Check)    | validate, dedupe, create entry, confirmation e-mail      |
 | `resetWaitlist`             | callable (leader)               | archive entries, create tokens, send renewal e-mails, log |
-| `getRenewal` / `confirmRenewal` | callable / HTTPS (public)   | load entry by token, save questionnaire, reactivate      |
+| `getRenewal` / `confirmRenewal` / `withdrawRenewal` | callable (public) | load entry by token (null if unknown/used), save questionnaire and reactivate, delete entry |
 | `onParentApproved`          | Firestore update `users`        | e-mail when a child is paired                            |
 | `inviteParent`              | callable (admin)                | invitation e-mail                                        |
 | `onRegistrationOpened`      | Firestore update `events`       | e-mail parents that sign-up is open                      |

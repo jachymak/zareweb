@@ -13,8 +13,9 @@
 - `npm run build` – production build
 - `npm run preview` – preview the production build
 - `npm run format` – format `src/` with Prettier (config in `.prettierrc.json`)
-- `npm run emulators` – Firebase Auth + Firestore emulators (UI at http://127.0.0.1:4000); data persisted in `emulator-data/`
+- `npm run emulators` – Firebase Auth + Firestore + Functions emulators (UI at http://127.0.0.1:4000); data persisted in `emulator-data/`. Changing a function's options (e.g. region) needs an emulator restart.
 - `npm run seed` – write `settings/public` and `settings/app` into the running Firestore emulator
+- `npm run seed:renewal` – create a waiting-list entry awaiting renewal and print its renewal link (`-- --too-old` for a child past the age limit); stands in for the annual reset until it exists
 
 ## Sources of truth
 
@@ -29,7 +30,8 @@
 - Initialization in `src/services/firebase.js`. Database access only through `src/services/`. No direct Firebase calls in components or stores.
 - Firestore security rules live in `firestore.rules`, composite indexes in `firestore.indexes.json` (repo root).
 - When the data model changes, update `firestore.rules`, `firestore.indexes.json` (new queries) and the data model description in `docs/SPEC.md`.
-- Cloud Functions (waitlist sign-up/renewal/reset, e-mails, skautIS sync) are not set up yet.
+- Cloud Functions live in `functions/` (own `package.json`, installed by the root `postinstall`), region `europe-west3`. Implemented: `submitWaitlist`, `getRenewal`, `confirmRenewal`, `withdrawRenewal`. Not yet: waitlist reset (creates renewal tokens), e-mails, skautIS sync, App Check enforcement.
+- Pure logic shared by the web and Cloud Functions (validation, school years) lives in `functions/src/shared/` and is imported in the web as `@shared/...`. It must stay dependency-free.
 
 ## State
 

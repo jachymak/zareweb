@@ -37,3 +37,10 @@ export function recruitmentYears(lastWaitlistReset, today = pragueToday()) {
   const nextYear = Math.max(doneYear + 1, schoolYearStart(today) + 1)
   return { doneYear, nextYear }
 }
+
+// School year that waitlist grades refer to: the next recruitment year,
+// or the upcoming school year when no reset has happened yet.
+export function gradeSchoolYear(lastWaitlistReset, today = pragueToday()) {
+  if (lastWaitlistReset) return recruitmentYears(lastWaitlistReset, today).nextYear
+  return schoolYearStart(today) + 1
+}
