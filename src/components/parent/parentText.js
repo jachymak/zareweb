@@ -94,8 +94,8 @@ export function lateSignUpText(nickname, organizer) {
     ? `organizátorovi akce — ${organizer.nickname}${reach ? ` (${reach})` : ''}`
     : 'organizátorovi akce'
   return (
-    `Přihlašování už skončilo. Pokud chcete ${nickname} ještě přihlásit nebo odhlásit, ` +
-    `napište prosím přímo ${whom} — pokud to půjde, zapíše to.`
+    `Přihlašování už skončilo, takže tady ${nickname} přihlásit ani odhlásit nejde. ` +
+    `Napište prosím ${whom}. Pokud to ještě půjde, změnu zařídí.`
   )
 }
 

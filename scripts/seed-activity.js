@@ -35,16 +35,32 @@ export const LEADERS = [
   { id: '800022', nickname: 'Quido', name: 'Quido Hanulík', roleTitle: 'správce klubovny', group: 'other', phone: '+420 735 305 823', email: 'quido@example.cz' },
 ]
 
-// `participants`: { memberId: fields }. Children: 900102 Sojka (vlc), 900201 Bobr (ss).
+// Full poster content, as the leaders' poster editor saves it (SPEC §5).
+export const STREDOHORI_POSTER = {
+  intro: 'Vyrazíme na dva dny do Českého středohoří, vylezeme na Milešovku a přespíme na chatě.',
+  destination: 'Milešov, České středohoří',
+  mapUrl: 'https://mapy.cz/s/milesovka',
+  meetAtPamatnik: '8:00',
+  meetAtMainStation: '8:30',
+  meetElsewhere: '',
+  returnAtMainStation: '16:40',
+  returnAtPamatnik: '17:00',
+  returnElsewhere: '',
+  food: 'svačina na sobotu, zbytek vaříme',
+  packingTemplateId: null,
+  packingItems: ['spacák', 'karimatka', 'hygienické potřeby', 'náhradní tričko', 'lahev s pitím'],
+}
+
+// `participants`: { memberId: fields }; `poster`: poster content (default for published ones). Children: 900102 Sojka (vlc), 900201 Bobr (ss).
 export const EVENTS = [
   // open for sign-up
-  { id: 'seed-stredohori', title: 'Výprava do Středohoří', audience: 'vlc', startDate: day(10), endDate: day(11), organizerIds: ['800001'], registration: day(5), posterStatus: 'published', price: 350, participants: { 900102: { signedUp: true } } },
+  { id: 'seed-stredohori', title: 'Výprava do Středohoří', audience: 'vlc', startDate: day(10), endDate: day(11), organizerIds: ['800001'], registration: day(5), posterStatus: 'published', price: 350, poster: STREDOHORI_POSTER, participants: { 900102: { signedUp: true } } },
   { id: 'seed-kokorin', title: 'Podzimní výprava na Kokořín', audience: 'all', startDate: day(14), endDate: day(16), organizerIds: ['800012', '800002'], registration: day(8), posterStatus: 'missing' },
   // registration ended, not started yet
   { id: 'seed-uzly', title: 'Uzlovací závody', audience: 'ss', startDate: day(3), endDate: day(3), organizerIds: ['800013'], registration: day(-1), posterStatus: 'published' },
   // upcoming without registration
   { id: 'seed-okor', title: 'Jednodenní výprava na Okoř', audience: 'vlc', startDate: day(20), endDate: day(20), organizerIds: ['800001'], posterStatus: 'draft', cancelled: true },
-  { id: 'seed-blanik', title: 'Výprava na Blaník', audience: 'ss', startDate: day(30), endDate: day(32), organizerIds: ['800011'], posterStatus: 'missing' },
+  { id: 'seed-blanik', title: 'Výprava na Blaník', audience: 'ss', startDate: day(30), endDate: day(32), organizerIds: ['800011'], posterStatus: 'draft', poster: { intro: 'Rozepsaný plakátek.', destination: 'Blaník', packingItems: ['spacák'] } },
   { id: 'seed-hra', title: 'Oddílová hra po Praze', audience: 'all', startDate: day(40), endDate: day(40), organizerIds: ['800002'], posterStatus: 'missing' },
   { id: 'seed-tabor', title: 'Letní tábor', audience: 'all', startDate: day(280), endDate: day(294), organizerIds: [], posterStatus: 'none' },
   { id: 'seed-smazana', title: 'Smazaná akce', audience: 'all', startDate: day(12), endDate: day(12), organizerIds: ['800002'], posterStatus: 'missing', deleted: true },
@@ -157,7 +173,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   }
   console.log(`${LEADERS.length} leaders and contacts`)
 
-  for (const { id, registration, participants = {}, ...event } of EVENTS) {
+  for (const { id, registration, participants = {}, poster, ...event } of EVENTS) {
     await put(`events/${id}`, {
       price: null,
       cancelled: false,
@@ -168,11 +184,14 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       createdBy: 'seed',
       updatedAt: now,
     })
-    if (event.posterStatus === 'published') {
-      await put(`events/${id}/poster/content`, {
-        intro: `Pojeďte s námi — ${event.title}.`,
-        packingItems: ['spacák', 'karimatka', 'pláštěnka'],
-      })
+    if (poster || event.posterStatus === 'published') {
+      await put(
+        `events/${id}/poster/content`,
+        poster ?? {
+          intro: `Pojeďte s námi — ${event.title}.`,
+          packingItems: ['spacák', 'karimatka', 'pláštěnka'],
+        },
+      )
     }
     for (const [memberId, fields] of Object.entries(participants)) {
       await put(`events/${id}/participants/${memberId}`, {

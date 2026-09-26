@@ -194,7 +194,9 @@ export default async function parent({ browser, check }) {
     const notice = await uzly.getByText('Přihlašování už skončilo').innerText()
     check(
       'deadline: click explains whom to write to',
-      notice.includes('Kuba') && notice.includes('+420 776 330 128'),
+      notice.includes('Bobr přihlásit ani odhlásit nejde') &&
+        notice.includes('Kuba') &&
+        notice.includes('+420 776 330 128'),
       notice,
     )
     await new Promise((r) => setTimeout(r, 500))

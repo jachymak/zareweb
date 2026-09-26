@@ -1,4 +1,6 @@
 <script setup>
+import { nextTick, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { listChildrenOfParent } from '@/services/members'
 import { useParentArea } from '@/composables/useParentArea'
@@ -35,6 +37,14 @@ const {
   signUpErrors,
   toggleSignUp,
 } = area
+
+// Scroll to the anchor (e.g. #vypravnik from the poster) once the page has content.
+const route = useRoute()
+watch(loading, async (isLoading) => {
+  if (isLoading || !route.hash) return
+  await nextTick()
+  document.querySelector(route.hash)?.scrollIntoView()
+})
 
 const section = 'mx-auto max-w-[960px] px-4 sm:px-6'
 </script>
@@ -96,7 +106,7 @@ const section = 'mx-auto max-w-[960px] px-4 sm:px-6'
         </div>
       </div>
 
-      <div :class="section" class="pt-[34px]">
+      <div id="vypravnik" :class="section" class="pt-[34px]">
         <EventCalendar
           :events="events"
           :children="children"

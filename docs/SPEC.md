@@ -47,7 +47,7 @@ Routes are in Czech (they are user-visible).
 | 3  | Waiting-list renewal        | `/cekaci-listina/obnovit/:token`    | public  | — (derived from page 2)           |
 | 4  | Login / registration        | `/prihlaseni`                       | public  | `Zare - prihlaseni`               |
 | 5  | Parent home                 | `/clenove`                          | parent  | `_Zare - pro cleny`               |
-| 6  | Event poster                | `/clenove/akce/:eventId`            | parent  | `Zare - plakatek`                 |
+| 6  | Event poster                | `/clenove/akce/:eventId`            | parent, leader | `Zare - plakatek`                 |
 | 7  | Leader home                 | `/vedouci`                          | leader  | `_Zare - pro vedouci`             |
 | 8  | Attendance                  | `/vedouci/dochazka`                 | leader  | `Zare - vedouci dochazka`         |
 | 9  | Events & posters            | `/vedouci/akce`                     | leader  | `Zare - vedouci akce`             |
@@ -145,7 +145,7 @@ One entry point for parents and leaders. Four states:
 
 ## 3. Parent area
 
-Common header: „Skautský oddíl Záře — pro členy“, the user's e-mail, „odhlásit“. Footer with link to the public site.
+Common header: „Skautský oddíl Záře — pro členy“, the user's e-mail, „odhlásit“. Footer with link to the public site (not on the poster page).
 
 ### 3.1 Parent home (`/clenove`)
 
@@ -154,8 +154,8 @@ Common header: „Skautský oddíl Záře — pro členy“, the user's e-mail, 
 3. **News (Aktuality)** — non-withdrawn news whose audience is `all` or one of the children's troops. The first item — **important** news pinned on top, otherwise the newest — is shown expanded and highlighted as a card (date, tag, author, title, text, optional link); the rest as an accordion (one open at a time).
 4. **Open for sign-up (Nejbližší akce)** — relevant events with registration enabled. Each row: date, tag, title, organizer, poster link („plakátek“ if published, otherwise disabled „plakátek se chystá“), sign-up toggles — one per child **whose troop matches the event audience** — and the deadline („přihlášky do 12. 3.“).
    - Before the deadline: toggling signs the child up / off immediately.
-   - The poster link leads to page 6 (currently a placeholder).
-   - After the deadline (event stays listed until it starts): toggles are locked; deadline text changes to „přihlašování skončilo“ and clicking a child shows *„Přihlašování už skončilo. Pokud chcete {přezdívka} ještě přihlásit nebo odhlásit, napište prosím přímo {organizátor} ({telefon}, {e-mail}) — pokud to půjde, zapíše ho.“* (proposed text).
+   - The poster link leads to page 6.
+   - After the deadline (event stays listed until it starts): toggles are locked; deadline text changes to „přihlašování skončilo“ and clicking a child shows *„Přihlašování už skončilo, takže tady {přezdívka} přihlásit ani odhlásit nejde. Napište prosím organizátorovi akce — {přezdívka organizátora} ({telefon}, {e-mail}). Pokud to ještě půjde, změnu zařídí.“* Signing off after the deadline also goes through the organizer.
 5. **Výpravník (calendar)** — events grouped by month.
    - Toggle „co nás čeká“ (upcoming) / „proběhlo“ (past).
    - Toggle „i akce druhého oddílu“ / „jen naše akce“ — by default only events for the children's troops + `all`. Hidden when the children are in both troops.
@@ -170,18 +170,18 @@ Common header: „Skautský oddíl Záře — pro členy“, the user's e-mail, 
 
 ### 3.2 Event poster (`/clenove/akce/:eventId`)
 
-Read-only page generated from the event's poster data (only when published):
+Read-only page generated from the event's poster data. Parents see it only when published (otherwise „plakátek se ještě chystá“; the camp: „k téhle akci plakátek není“; deleted/unknown event: not found). Leaders see every poster; an unpublished one is marked as a preview („rodiče tenhle plakátek zatím nevidí“) — this is the „náhled plakátku“ of §4.3. A cancelled event shows „Akce je zrušená.“ above the poster. Lines without a value are left out.
 
 - Tag, title, date.
 - Intro text.
 - **Kam** (destination) + map link.
 - **Sraz**, **Návrat** — composed from the Památník / Hlavní nádraží times or the „jinde“ free text.
-- **Peněz** (cost), **S sebou** (packing list as a sentence), **Jídlo** (food).
+- **Peněz** (cost, from the event's `price`), **S sebou** (the packing items joined into a sentence), **Jídlo** (food).
 - Signature: „Těší se na vás {organizers' nicknames}“ (derived from the event's organizers).
-- **„sbaleno?“ checklist** of packing items — ticking is local only (not sent anywhere; may be remembered in `localStorage`).
-- Footer: „Něco není jasné? Napište {organizer}…“, back to calendar.
+- **„sbaleno?“ checklist** of packing items — ticking is local only (not sent anywhere; remembered in `localStorage` per event).
+- Footer: „Něco není jasné? Ozvěte se organizátorovi — {nickname} ({phone}, {e-mail})“ (main organizer), back to the calendar (`/clenove#vypravnik`; leaders: back to `/vedouci`).
 
-**Reads:** `events/{id}`.
+**Reads:** `events/{id}`, `events/{id}/poster/content`, `skautisPeople` (organizers).
 
 ---
 

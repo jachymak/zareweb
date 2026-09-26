@@ -29,7 +29,7 @@ function click({ member }) {
 </script>
 
 <template>
-  <HandDrawnBox class="mb-3.5 px-4 pt-4 pb-[17px] sm:px-5">
+  <HandDrawnBox class="mb-4 px-5 pt-5 pb-5 sm:px-8 sm:pt-6 sm:pb-6">
     <article :aria-label="event.title">
       <div
         class="flex flex-wrap items-center gap-x-3.5 gap-y-1 sm:grid sm:grid-cols-[108px_42px_minmax(0,1fr)_auto]"

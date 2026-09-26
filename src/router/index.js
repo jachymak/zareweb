@@ -31,14 +31,15 @@ const router = createRouter({
       component: () => import('@/views/ParentHomeView.vue'),
       meta: { auth: true, roles: ['parent'] },
     },
-    // Placeholders until their pages exist.
+    // Leaders see every poster, unpublished ones as a preview.
     {
       path: '/clenove/akce/:eventId',
       name: 'event-poster',
-      component: () => import('@/views/AreaComingSoonView.vue'),
-      props: { area: 'pro členy', title: 'Plakátek akce' },
-      meta: { auth: true, roles: ['parent'] },
+      component: () => import('@/views/EventPosterView.vue'),
+      props: true,
+      meta: { auth: true, roles: ['parent', ...LEADERS] },
     },
+    // Placeholders until their pages exist.
     {
       path: '/vedouci',
       name: 'leader-home',
@@ -55,7 +56,8 @@ const router = createRouter({
   ],
   scrollBehavior(to, from, savedPosition) {
     if (savedPosition) return savedPosition
-    if (to.hash) return { el: to.hash, behavior: 'smooth' }
+    // Pages that load their content later scroll to the hash themselves.
+    if (to.hash && document.querySelector(to.hash)) return { el: to.hash, behavior: 'smooth' }
     return { top: 0 }
   },
 })
