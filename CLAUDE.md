@@ -15,6 +15,7 @@
 - `npm run format` – format `src/` with Prettier (config in `.prettierrc.json`)
 - `npm run emulators` – Firebase Auth + Firestore + Functions emulators (UI at http://127.0.0.1:4000); data persisted in `emulator-data/`. Changing a function's options (e.g. region) needs an emulator restart.
 - `npm run seed` – write `settings/public` and `settings/app` into the running Firestore emulator
+- `npm run test:e2e [-- public waitlist renewal]` – end-to-end tests in `e2e/` (playwright-core + system Chrome, desktop and 360/390 px, checks Firestore over the emulator REST API). Needs `npm run emulators` and `npm run dev` running; resets `settings/*` and clears `waitlist` in the emulator. Add a suite per new page; expected values derive from today's date via `functions/src/shared/`.
 - `npm run seed:renewal` – create a waiting-list entry awaiting renewal and print its renewal link (`-- --too-old` for a child past the age limit); stands in for the annual reset until it exists
 
 ## Sources of truth
