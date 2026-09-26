@@ -70,6 +70,8 @@ Password reset uses Firebase's default hosted page.
 
 Mostly static content. Sections (anchor nav in header): Kdo jsme, Oddíly, Co děláme, (Proč skauting), Jak to chodí, Klubovna, Tábor, Pro rodiče (FAQ), link „pro členy“ → login.
 
+**Intro:** every fresh load of `/` (also a reload) first shows a full-screen painting (a forest camp with teepees, `background-size: cover`, contrast raised to 1.35) with the logo, „Skautský oddíl Záře“, a gold hand-drawn line and the button „hurá na web →“ in the bottom left corner. Only the button leaves it (clicking the painting does nothing): the painting fades out while zooming in and moving up and the text fades out (0.7 s), revealing the page, which is already rendered underneath and doesn't scroll until then. No intro when coming back to `/` within the site or for a link to a section (`/#tabor`). Design: `design-reference/design_handoff_intro/`, painting `design-reference/final.png`; it is served as WebP in three widths (1280 / 1920 / 2560 px).
+
 Decorative: a hand-drawn trail connecting drawings along the page, opening and closing verse. Recommended mobile variant is **M2** from the design study (trail winds across the full width, drawings alternate left/right).
 
 **Dynamic content**

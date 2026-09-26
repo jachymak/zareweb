@@ -1,6 +1,8 @@
 <script setup>
 import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
+import { useRoute } from 'vue-router'
+import { isFirstPage } from '@/router'
 import { usePublicSettingsStore } from '@/stores/publicSettings'
 import { FAQ } from '@/content/faq'
 import PublicHeader from '@/components/public/PublicHeader.vue'
@@ -12,6 +14,7 @@ import PolaroidPhoto from '@/components/public/PolaroidPhoto.vue'
 import TroopList from '@/components/public/TroopList.vue'
 import JoinCard from '@/components/public/JoinCard.vue'
 import FaqAccordion from '@/components/public/FaqAccordion.vue'
+import IntroScreen from '@/components/public/IntroScreen.vue'
 import sketchScouts from '@/assets/sketches/skica-skautici.svg'
 import sketchHouses from '@/assets/sketches/skica-domy.svg'
 import sketchClubhouse from '@/assets/sketches/skica-klubovna.svg'
@@ -27,10 +30,15 @@ const settingsStore = usePublicSettingsStore()
 const { recruitment } = storeToRefs(settingsStore)
 
 onMounted(() => settingsStore.load())
+
+// The intro greets every fresh load of the home page, but not in-app returns
+// or links to a section.
+const showIntro = isFirstPage() && !useRoute().hash
 </script>
 
 <template>
   <div class="overflow-x-clip">
+    <IntroScreen v-if="showIntro" />
     <PublicHeader />
 
     <main class="relative">

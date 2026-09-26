@@ -1,5 +1,5 @@
-// Public home page (SPEC §2.1): content, trail, FAQ, mobile menu, and the
-// recruitment years read from settings/public.
+// Public home page (SPEC §2.1): the intro, content, trail, FAQ, mobile menu,
+// and the recruitment years read from settings/public.
 
 import { formatSchoolYear, recruitmentYears } from '../functions/src/shared/schoolYear.js'
 import {
@@ -18,6 +18,35 @@ function expectedYears(reset) {
   return [formatSchoolYear(doneYear), formatSchoolYear(nextYear)]
 }
 
+const introButton = (page) => page.getByRole('button', { name: 'hurá na web' })
+
+// Checks the intro covering the page and leaves it; the page is usable afterwards.
+async function passIntro(page, check, label) {
+  const button = introButton(page)
+  await button.waitFor({ timeout: 10000 })
+  const intro = await page.evaluate(() => {
+    const layer = document.querySelector('.fixed.inset-0.z-50')
+    const img = layer?.querySelector('img')
+    const title = [...layer.querySelectorAll('p')].find((p) => p.textContent.includes('Záře'))
+    const r = title.parentElement.getBoundingClientRect()
+    return {
+      covers: layer.getBoundingClientRect().height === innerHeight,
+      webp: img?.currentSrc.endsWith('.webp'),
+      titleInside: r.left >= 0 && r.right <= innerWidth,
+      locked: getComputedStyle(document.documentElement).overflow === 'hidden',
+    }
+  })
+  check(`${label}: intro covers the screen with the painting`, intro.covers && intro.webp)
+  check(`${label}: intro title fits the screen`, intro.titleInside)
+  check(`${label}: page under the intro doesn't scroll`, intro.locked)
+  await button.click()
+  await button.waitFor({ state: 'detached', timeout: 3000 })
+  check(
+    `${label}: „hurá na web“ reveals the page`,
+    await page.evaluate(() => getComputedStyle(document.documentElement).overflow !== 'hidden'),
+  )
+}
+
 export default async function publicPage({ browser, check }) {
   const note = (page) => page.locator('[data-testid=recruitment-note]')
   const RESET = '2026-08-24'
@@ -30,6 +59,7 @@ export default async function publicPage({ browser, check }) {
     const firestoreRequests = []
     page.on('request', (r) => r.url().includes('127.0.0.1:8080') && firestoreRequests.push(r))
     await page.reload({ waitUntil: 'load' })
+    await passIntro(page, check, 'desktop')
     await note(page).waitFor({ timeout: 10000 })
     const text = (await note(page).innerText()).replace(/\s+/g, ' ')
     check('desktop: Firestore emulator was queried', firestoreRequests.length > 0)
@@ -72,7 +102,14 @@ export default async function publicPage({ browser, check }) {
     const OTHER_RESET = '2025-03-10'
     const [done2, next2] = expectedYears(OTHER_RESET)
     await setReset(OTHER_RESET)
-    await page.goto(page.url().replace('/cekaci-listina', '/'), { waitUntil: 'load' })
+    await page.getByRole('link', { name: '← Zpět na stránku oddílu' }).click()
+    await page.waitForURL(/\/$/)
+    check(
+      'desktop: no intro when coming back within the site',
+      (await introButton(page).count()) === 0,
+    )
+    await page.reload({ waitUntil: 'load' })
+    check('desktop: intro again after reload', await introButton(page).isVisible())
     await note(page).waitFor()
     const text2 = (await note(page).innerText()).replace(/\s+/g, ' ')
     check(
@@ -91,6 +128,8 @@ export default async function publicPage({ browser, check }) {
   // ---- mobile ----
   for (const width of [360, 390]) {
     const { ctx, page, errors } = await openPage(browser, '/', { width, height: 800, mobile: true })
+    await page.screenshot({ path: `${SCREENSHOTS}public-intro-${width}.png` })
+    await passIntro(page, check, `mobile ${width}`)
     await note(page).waitFor({ timeout: 10000 })
     check(`mobile ${width}: recruitment note shown`, (await note(page).innerText()).includes(next))
     check(`mobile ${width}: no horizontal overflow`, (await horizontalOverflow(page)) <= 0)
@@ -119,6 +158,15 @@ export default async function publicPage({ browser, check }) {
       `top=${Math.round(faqTop)}`,
     )
     check(`mobile ${width}: no console errors`, errors.length === 0, errors.join(' | '))
+    await ctx.close()
+  }
+
+  // ---- a link to a section skips the intro ----
+  {
+    const { ctx, page } = await openPage(browser, '/#tabor')
+    await page.locator('#tabor').waitFor()
+    await page.waitForTimeout(500)
+    check('link to a section: no intro', (await introButton(page).count()) === 0)
     await ctx.close()
   }
 

@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, START_LOCATION } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import PublicHomeView from '@/views/PublicHomeView.vue'
 
@@ -112,5 +112,13 @@ router.beforeEach(async (to) => {
   await auth.init()
   return redirectFor(to, auth) ?? undefined
 })
+
+// Whether the current page is the first one after the page (re)load, not an
+// in-app navigation. Set before the new page's components are created.
+let firstPage = true
+router.afterEach((to, from) => {
+  firstPage = from === START_LOCATION
+})
+export const isFirstPage = () => firstPage
 
 export default router
