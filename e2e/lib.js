@@ -118,19 +118,22 @@ export async function listOobCodes() {
   return (await res.json()).oobCodes ?? []
 }
 
-// Signs in over REST; returns { uid, idToken } for requests as that user.
-export async function signInRest(email, password) {
-  const res = await fetch(
-    `${AUTH}/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=demo`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, returnSecureToken: true }),
-    },
-  )
+async function identityToolkit(method, body) {
+  const res = await fetch(`${AUTH}/identitytoolkit.googleapis.com/v1/accounts:${method}?key=demo`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...body, returnSecureToken: true }),
+  })
   const data = await res.json()
   return { uid: data.localId, idToken: data.idToken }
 }
+
+// Signs in over REST; returns { uid, idToken } (undefined when it fails).
+export const signInRest = (email, password) =>
+  identityToolkit('signInWithPassword', { email, password })
+
+// Creates an Auth account over REST; returns { uid, idToken }.
+export const signUpRest = (email, password) => identityToolkit('signUp', { email, password })
 
 // Updates fields of a document as a signed-in user (security rules apply); returns the HTTP status.
 export async function patchDocAs(idToken, path, fields) {
@@ -150,6 +153,16 @@ export async function callFunction(name, data) {
   const res = await fetch(`${FUNCTIONS}/${name}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ data }),
+  })
+  return res.json()
+}
+
+// Calls a callable function as a signed-in user; returns the parsed response.
+export async function callFunctionAs(idToken, name, data) {
+  const res = await fetch(`${FUNCTIONS}/${name}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
     body: JSON.stringify({ data }),
   })
   return res.json()

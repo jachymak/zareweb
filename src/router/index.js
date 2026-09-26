@@ -40,6 +40,12 @@ const router = createRouter({
       props: { area: 'pro vedoucí', title: 'Stránka pro vedoucí' },
       meta: { auth: true, roles: LEADERS },
     },
+    {
+      path: '/vedouci/administrace',
+      name: 'admin',
+      component: () => import('@/views/AdminView.vue'),
+      meta: { auth: true, roles: ['admin'] },
+    },
   ],
   scrollBehavior(to, from, savedPosition) {
     if (savedPosition) return savedPosition

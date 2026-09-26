@@ -5,15 +5,18 @@ import {
   doc,
   getDoc,
   getDocs,
+  onSnapshot,
   query,
   updateDoc,
   where,
+  writeBatch,
 } from 'firebase/firestore'
 import { db } from './firebase'
 import { fromDoc, fromQuery } from './utils'
 
 // Children imported from skautIS; document id = skautIS person id.
 const members = collection(db, 'members')
+const users = collection(db, 'users')
 
 export async function getMember(memberId) {
   return fromDoc(await getDoc(doc(members, memberId)))
@@ -26,6 +29,11 @@ export async function listMembers({ troop, activeOnly = true } = {}) {
   return fromQuery(await getDocs(query(members, ...filters)))
 }
 
+// All members, including inactive ones (Administration).
+export function subscribeMembers(callback, onError) {
+  return onSnapshot(members, (snap) => callback(fromQuery(snap)), onError)
+}
+
 export async function listChildrenOfParent(uid) {
   return fromQuery(await getDocs(query(members, where('parentUids', 'array-contains', uid))))
 }
@@ -34,17 +42,31 @@ export function setMeetingDay(memberId, meetingDay) {
   return updateDoc(doc(members, memberId), { meetingDay })
 }
 
-// Pairing is stored only in members.parentUids (SPEC §5).
-export function pairParent(memberId, uid) {
-  return updateDoc(doc(members, memberId), { parentUids: arrayUnion(uid) })
+// Pairing is stored only in members.parentUids (SPEC §5). Pairing a child with
+// a pending account approves it as a parent in the same write.
+export function pairParent(memberId, uid, { approve = false } = {}) {
+  const batch = writeBatch(db)
+  batch.update(doc(members, memberId), { parentUids: arrayUnion(uid) })
+  if (approve) batch.update(doc(users, uid), { role: 'parent' })
+  return batch.commit()
 }
 
-export function unpairParent(memberId, uid) {
-  return updateDoc(doc(members, memberId), { parentUids: arrayRemove(uid) })
+// Unpairing a parent's last child sends the account back to pending.
+export function unpairParent(memberId, uid, { backToPending = false } = {}) {
+  const batch = writeBatch(db)
+  batch.update(doc(members, memberId), { parentUids: arrayRemove(uid) })
+  if (backToPending) batch.update(doc(users, uid), { role: 'pending' })
+  return batch.commit()
 }
 
 // Parents' contacts from skautIS — leaders only.
 export async function getParentContacts(memberId) {
   const snap = await getDoc(doc(members, memberId, 'private', 'contacts'))
   return snap.exists() ? snap.data().parents : []
+}
+
+// { memberId: parents[] } for the given members.
+export async function getParentContactsOf(memberIds) {
+  const entries = await Promise.all(memberIds.map(async (id) => [id, await getParentContacts(id)]))
+  return Object.fromEntries(entries)
 }
