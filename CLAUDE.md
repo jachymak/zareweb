@@ -13,6 +13,7 @@
 - `npm run build` – production build
 - `npm run preview` – preview the production build
 - `npm run format` – format `src/` with Prettier (config in `.prettierrc.json`)
+- `npm run emulators` – Firebase Auth + Firestore emulators (UI at http://127.0.0.1:4000); data persisted in `emulator-data/`
 
 ## Sources of truth
 
@@ -22,10 +23,12 @@
 
 ## Firebase
 
-- Config lives in `.env` (`VITE_FIREBASE_*`). Never hardcode it.
-- Database access only through `src/services/`. No direct Firebase calls in components or stores.
-- Firestore security rules live in `firestore.rules` in the repo root.
-- When the data model changes, update both `firestore.rules` and the data model description in `docs/SPEC.md`.
+- Config lives in `.env` (`VITE_FIREBASE_*`, template in `.env.example`). Never hardcode it. `.env` is gitignored.
+- Local development runs against emulators with the demo project `demo-zareweb` (`VITE_USE_EMULATORS=true`); no real Firebase project exists yet.
+- Initialization in `src/services/firebase.js`. Database access only through `src/services/`. No direct Firebase calls in components or stores.
+- Firestore security rules live in `firestore.rules`, composite indexes in `firestore.indexes.json` (repo root).
+- When the data model changes, update `firestore.rules`, `firestore.indexes.json` (new queries) and the data model description in `docs/SPEC.md`.
+- Cloud Functions (waitlist sign-up/renewal/reset, e-mails, skautIS sync) are not set up yet.
 
 ## State
 

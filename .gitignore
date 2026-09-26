@@ -39,3 +39,15 @@ __screenshots__/
 *.timestamp-*-*.mjs
 
 design-reference/
+
+# Environment (Firebase config) — see .env.example
+.env
+.env.*
+!.env.example
+
+# Firebase
+.firebase/
+emulator-data/
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*

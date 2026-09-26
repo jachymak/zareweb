@@ -1,0 +1,182 @@
+rules_version = '2';
+
+// Access rules — see docs/SPEC.md §5.1.
+// Roles live in users/{uid}.role: pending | parent | leader | admin | none.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userPath() {
+      return /databases/$(database)/documents/users/$(request.auth.uid);
+    }
+
+    function hasRole(roles) {
+      return signedIn() && exists(userPath()) && get(userPath()).data.role in roles;
+    }
+
+    function isAdmin() {
+      return hasRole(['admin']);
+    }
+
+    function isLeader() {
+      return hasRole(['leader', 'admin']);
+    }
+
+    function isApproved() {
+      return hasRole(['parent', 'leader', 'admin']);
+    }
+
+    function member(memberId) {
+      return get(/databases/$(database)/documents/members/$(memberId)).data;
+    }
+
+    function isParentOf(memberId) {
+      return hasRole(['parent']) && request.auth.uid in member(memberId).parentUids;
+    }
+
+    // End of the deadline day in Europe/Prague, approximated as 22:00 UTC
+    // (midnight CEST; one hour early in winter).
+    function beforeDeadline(deadline) {
+      return request.time < timestamp.date(
+        int(deadline[0:4]), int(deadline[5:7]), int(deadline[8:10])
+      ) + duration.value(22, 'h');
+    }
+
+    // ---- users ----
+
+    match /users/{uid} {
+      allow read: if (signedIn() && request.auth.uid == uid) || isLeader();
+
+      // Self-registration always starts as pending.
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.resource.data.role == 'pending'
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.keys().hasOnly(['email', 'displayName', 'role', 'pairingRequest', 'createdAt']);
+
+      allow update: if isAdmin()
+        || (signedIn() && request.auth.uid == uid
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'pairingRequest']));
+
+      allow delete: if isAdmin();
+    }
+
+    // ---- members (children, imported from skautIS) ----
+
+    match /members/{memberId} {
+      allow read: if isLeader() || (hasRole(['parent']) && request.auth.uid in resource.data.parentUids);
+      allow write: if isAdmin();
+
+      match /private/{docId} {
+        allow read: if isLeader();
+        allow write: if isAdmin();
+      }
+    }
+
+    match /skautisPeople/{personId} {
+      allow read: if isApproved();
+      allow write: if isAdmin();
+    }
+
+    // ---- attendance ----
+
+    match /meetings/{meetingId} {
+      allow read: if isApproved();
+      allow write: if isLeader();
+    }
+
+    // ---- events ----
+
+    match /events/{eventId} {
+      allow read: if isLeader() || (isApproved() && resource.data.deleted == false);
+      allow create, update: if isLeader();
+      // Soft delete only (deleted flag), sign-ups and payments are kept.
+      allow delete: if false;
+
+      match /poster/{docId} {
+        allow read: if isLeader()
+          || (isApproved() && get(/databases/$(database)/documents/events/$(eventId)).data.posterStatus == 'published');
+        allow write: if isLeader();
+      }
+
+      match /participants/{memberId} {
+        function event() {
+          return get(/databases/$(database)/documents/events/$(eventId)).data;
+        }
+
+        function parentMaySignUp() {
+          return isParentOf(memberId)
+            && event().deleted == false
+            && event().cancelled == false
+            && event().registrationOpen == true
+            && beforeDeadline(event().registrationDeadline)
+            && (event().audience == 'all' || event().audience == member(memberId).troop)
+            && request.resource.data.signedUpBy == request.auth.uid
+            && request.resource.data.signedUpAt == request.time;
+        }
+
+        allow read: if isLeader() || isParentOf(memberId);
+        allow write: if isLeader();
+        allow create: if parentMaySignUp()
+          && request.resource.data.keys().hasOnly(['signedUp', 'signedUpBy', 'signedUpAt']);
+        allow update: if parentMaySignUp()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['signedUp', 'signedUpBy', 'signedUpAt']);
+      }
+    }
+
+    // ---- news, contacts, templates, albums ----
+
+    match /news/{newsId} {
+      allow read: if isLeader() || (isApproved() && resource.data.withdrawn == false);
+      allow create, update: if isLeader();
+      allow delete: if false;
+    }
+
+    match /contacts/{contactId} {
+      allow read: if isApproved();
+      allow write: if isAdmin();
+    }
+
+    match /packingTemplates/{templateId} {
+      allow read: if isLeader();
+      allow write: if isAdmin();
+    }
+
+    match /albums/{albumId} {
+      allow read: if isApproved();
+      allow write: if isAdmin();
+    }
+
+    // ---- waiting list ----
+    // Public sign-up, renewal and the annual reset go through Cloud Functions.
+
+    match /waitlist/{entryId} {
+      allow read, delete: if isLeader();
+      allow update: if isLeader()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['leaderNote']);
+    }
+
+    match /waitlistResets/{resetId} {
+      allow read: if isLeader();
+    }
+
+    // ---- settings ----
+
+    match /settings/public {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /settings/app {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /settings/{docId} {
+      allow read: if docId in ['emails', 'skautis'] && isLeader();
+      allow write: if isAdmin();
+    }
+  }
+}
