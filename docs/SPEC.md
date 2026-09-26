@@ -331,7 +331,12 @@ Effect (entries are **archived, not deleted**, to keep the original sign-up date
 
 ### 4.7 Parent preview (`/vedouci/nahled`)
 
-„Náhled pro rodiče“: the leader picks any child and sees the parent home (§3.1) exactly as that child's parent would, **read-only** (sign-up toggles disabled).
+„Náhled pro rodiče“: the leader picks any active child (select grouped by troop; kept in the URL as `?dite=<memberId>`) and sees the parent home (§3.1) exactly as that child's parent would — parent header, the child **and its siblings** (all children paired with any of its parents; just the child when it has no parent account), real sign-ups and attendance. A green bar on top says it is the preview, holds the child picker and „← zpět do sekce pro vedoucí“.
+
+- Sign-up toggles look and behave like for the parent but **save nothing**: a click shows „Tohle je jen náhled, tady se nic neuloží. Rodič tímhle tlačítkem {přezdívka} rovnou přihlásí / odhlásí…“ (hover: „v náhledu se nic neuloží“); after the deadline the parent's notice is shown.
+- The poster link keeps the preview (`/clenove/akce/:eventId?nahled=<memberId>`): the poster is shown as to the parent (unpublished → „plakátek se ještě chystá“), with the preview bar, and „zpět do výpravníku“ returns to the preview.
+
+**Reads:** `members` (+ everything of §3.1). **Writes:** nothing.
 
 ### 4.8 Administration („Administrace“, `/vedouci/administrace`, admin only)
 

@@ -38,6 +38,17 @@ export async function listChildrenOfParent(uid) {
   return fromQuery(await getDocs(query(members, where('parentUids', 'array-contains', uid))))
 }
 
+// The child and its siblings — every child paired with any of its parents
+// (leaders' preview of the parent home). Just the child when it has no parent.
+export async function listChildrenSeenWith(memberId) {
+  const member = await getMember(memberId)
+  if (!member) return []
+  const parentUids = (member.parentUids ?? []).slice(0, 30) // array-contains-any limit
+  if (!parentUids.length) return [member]
+  const q = query(members, where('parentUids', 'array-contains-any', parentUids))
+  return fromQuery(await getDocs(q))
+}
+
 export function setMeetingDay(memberId, meetingDay) {
   return updateDoc(doc(members, memberId), { meetingDay })
 }

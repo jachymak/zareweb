@@ -1,9 +1,9 @@
 // End-to-end tests against the dev server and Firebase emulators.
-// Usage: npm run test:e2e [-- public waitlist renewal login admin parent poster leader attendance events news clubhouse waitlistadmin]   (default: all)
+// Usage: npm run test:e2e [-- public waitlist renewal login admin parent poster preview leader attendance events news clubhouse waitlistadmin]   (default: all)
 // Needs `npm run emulators` and `npm run dev` running. Modifies emulator data:
 // resets settings/*, clears the `waitlist` collection, and (login) replaces all
 // accounts and `users` with the test accounts of `seed-users.js`, (admin, parent,
-// poster, leader, attendance, events, news) also `members` with the children of `seed-members.js`, and (parent, poster, leader, attendance, events, news) leaders,
+// poster, preview, leader, attendance, events, news) also `members` with the children of `seed-members.js`, and (parent, poster, preview, leader, attendance, events, news) leaders,
 // contacts, events, news and meetings with `seed-activity.js`; clubhouse replaces the
 // accounts too; waitlistadmin replaces the accounts and the whole `waitlist` with
 // `seed-waitlist.js` and runs the annual reset.
@@ -18,6 +18,7 @@ const SUITES = {
   admin: () => import('./admin.test.js'),
   parent: () => import('./parent.test.js'),
   poster: () => import('./poster.test.js'),
+  preview: () => import('./preview.test.js'),
   leader: () => import('./leader.test.js'),
   attendance: () => import('./attendance.test.js'),
   events: () => import('./events.test.js'),

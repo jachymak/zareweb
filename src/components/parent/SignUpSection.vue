@@ -12,7 +12,8 @@ const props = defineProps({
   participantOf: { type: Function, required: true },
   saving: { type: Set, required: true }, // `eventId/memberId`
   errors: { type: Object, required: true }, // { eventId: true }
-  readOnly: { type: Boolean, default: false },
+  preview: { type: Boolean, default: false }, // leaders' preview: nothing is saved
+  posterQuery: { type: Object, default: () => ({}) },
 })
 defineEmits(['toggle'])
 
@@ -40,7 +41,8 @@ const childrenFor = (event) =>
       :organizers="organizersOf(event)"
       :children="childrenFor(event)"
       :error="!!errors[event.id]"
-      :read-only="readOnly"
+      :preview="preview"
+      :poster-query="posterQuery"
       @toggle="(member) => $emit('toggle', event, member)"
     />
   </section>

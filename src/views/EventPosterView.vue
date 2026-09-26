@@ -1,23 +1,33 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { getEvent, getPoster } from '@/services/events'
 import { getPerson } from '@/services/skautisPeople'
 import AreaHeader from '@/components/AreaHeader.vue'
 import LeaderHeader from '@/components/leader/LeaderHeader.vue'
 import HandDrawnBox from '@/components/HandDrawnBox.vue'
+import PreviewBar from '@/components/parent/PreviewBar.vue'
 import PackingChecklist from '@/components/poster/PackingChecklist.vue'
 import PosterDetails from '@/components/poster/PosterDetails.vue'
 import { LOAD_ERROR } from '@/components/parent/parentText'
 
 // Event poster — SPEC §3.2. Parents see published posters only; leaders see
-// every poster, unpublished ones marked as a preview.
+// every poster, unpublished ones marked as a preview. Opened from the leaders'
+// parent preview (`?nahled=<memberId>`, §4.7) it looks exactly as for the parent.
 const props = defineProps({
   eventId: { type: String, required: true },
 })
 
 const auth = useAuthStore()
-const isLeader = computed(() => ['leader', 'admin'].includes(auth.role))
+const route = useRoute()
+const previewOf = computed(() =>
+  ['leader', 'admin'].includes(auth.role) && typeof route.query.nahled === 'string'
+    ? route.query.nahled
+    : '',
+)
+// Leader view of the poster; in the parent preview the leader sees the parent's.
+const isLeader = computed(() => ['leader', 'admin'].includes(auth.role) && !previewOf.value)
 
 // loading | ready | notFound | noPoster | notPublished | error
 const status = ref('loading')
@@ -54,16 +64,19 @@ watch(() => props.eventId, load, { immediate: true })
 
 const preview = computed(() => event.value?.posterStatus !== 'published')
 const organizer = computed(() => organizers.value[0])
-const back = computed(() =>
-  isLeader.value
-    ? { to: '/vedouci', label: 'zpět na vedoucovskou stránku' }
-    : { to: { name: 'parent-home', hash: '#vypravnik' }, label: 'zpět do výpravníku' },
-)
+const back = computed(() => {
+  if (isLeader.value) return { to: '/vedouci', label: 'zpět na vedoucovskou stránku' }
+  const home = previewOf.value
+    ? { name: 'leader-preview', query: { dite: previewOf.value } }
+    : { name: 'parent-home' }
+  return { to: { ...home, hash: '#vypravnik' }, label: 'zpět do výpravníku' }
+})
 
 const section = 'mx-auto max-w-[1040px] px-4 sm:px-6'
 </script>
 
 <template>
+  <PreviewBar v-if="previewOf" :model-value="previewOf" />
   <LeaderHeader v-if="isLeader" />
   <AreaHeader v-else area="pro členy" />
   <main class="pb-12">

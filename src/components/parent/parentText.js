@@ -101,3 +101,8 @@ export function lateSignUpText(nickname, organizer) {
 
 export const SAVE_ERROR = 'Nepodařilo se to uložit. Zkuste to prosím znovu.'
 export const LOAD_ERROR = 'Stránku se nepodařilo načíst. Zkuste ji prosím obnovit.'
+
+// Leaders' preview (SPEC §4.7): clicking a sign-up toggle saves nothing.
+export const previewSignUpText = (nickname, signedUp) =>
+  `Tohle je jen náhled, tady se nic neuloží. Rodič tímhle tlačítkem ${nickname} rovnou ` +
+  `${signedUp ? 'odhlásí' : 'přihlásí'} — a vy to pak uvidíte v přihláškách akce.`

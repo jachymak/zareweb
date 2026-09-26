@@ -75,12 +75,10 @@ const router = createRouter({
       component: () => import('@/views/WaitlistAdminView.vue'),
       meta: { auth: true, roles: LEADERS },
     },
-    // Placeholder until the page exists.
     {
       path: '/vedouci/nahled',
       name: 'leader-preview',
-      component: () => import('@/views/LeaderComingSoonView.vue'),
-      props: { title: 'Náhled pro rodiče' },
+      component: () => import('@/views/LeaderPreviewView.vue'),
       meta: { auth: true, roles: LEADERS },
     },
     {
