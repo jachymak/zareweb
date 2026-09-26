@@ -6,6 +6,7 @@ import { formatToday } from '@/components/parent/parentText'
 import { ADMIN_TOOL, TOOLS } from './leaderText'
 
 // „Ahoj, {přezdívka}!“, role and troop, today's date and links to the tools.
+// The slot sits top right (troop switch).
 const props = defineProps({
   person: { type: Object, default: null }, // the leader's skautisPeople doc, if linked
   today: { type: String, required: true },
@@ -28,12 +29,17 @@ const tool =
 
 <template>
   <div>
-    <h1 class="m-0 mb-0.5 font-hand text-[34px] leading-none font-bold text-ink sm:text-[44px]">
-      {{ name ? `Ahoj, ${name}!` : 'Ahoj!' }}
-    </h1>
-    <p class="m-0 mb-[18px] text-[16.5px] text-muted" data-testid="leader-role">
-      {{ role }} · dneska je {{ formatToday(today) }}
-    </p>
+    <div class="mb-[18px] flex flex-wrap items-start gap-x-5 gap-y-3">
+      <div class="mr-auto">
+        <h1 class="m-0 mb-0.5 font-hand text-[34px] leading-none font-bold text-ink sm:text-[44px]">
+          {{ name ? `Ahoj, ${name}!` : 'Ahoj!' }}
+        </h1>
+        <p class="m-0 text-[16.5px] text-muted" data-testid="leader-role">
+          {{ role }} · dneska je {{ formatToday(today) }}
+        </p>
+      </div>
+      <slot />
+    </div>
     <nav aria-label="Nástroje" class="flex flex-wrap gap-2.5">
       <RouterLink
         v-for="item in TOOLS"

@@ -3,6 +3,7 @@ import { useLeaderHome } from '@/composables/useLeaderHome'
 import AreaFooter from '@/components/AreaFooter.vue'
 import LeaderGreeting from '@/components/leader/LeaderGreeting.vue'
 import LeaderHeader from '@/components/leader/LeaderHeader.vue'
+import TroopSwitch from '@/components/leader/TroopSwitch.vue'
 import TodayCard from '@/components/leader/TodayCard.vue'
 import TroopAttendance from '@/components/leader/TroopAttendance.vue'
 import UpcomingEvents from '@/components/leader/UpcomingEvents.vue'
@@ -33,7 +34,9 @@ const section = 'mx-auto max-w-[1000px] px-4 sm:px-6'
     </p>
     <template v-else>
       <div :class="section" class="pt-7">
-        <LeaderGreeting :person="person" :today="today" />
+        <LeaderGreeting :person="person" :today="today">
+          <TroopSwitch v-model="troop" />
+        </LeaderGreeting>
       </div>
 
       <div :class="section" class="pt-[22px]">

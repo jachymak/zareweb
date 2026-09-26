@@ -110,9 +110,11 @@ export async function listParticipants(eventId) {
   return fromQuery(await getDocs(collection(events, eventId, 'participants')))
 }
 
-export function subscribeParticipants(eventId, callback) {
-  return onSnapshot(collection(events, eventId, 'participants'), (snap) =>
-    callback(fromQuery(snap)),
+export function subscribeParticipants(eventId, callback, onError) {
+  return onSnapshot(
+    collection(events, eventId, 'participants'),
+    (snap) => callback(fromQuery(snap)),
+    onError,
   )
 }
 

@@ -10,7 +10,7 @@ const tab = ref('accounts')
 </script>
 
 <template>
-  <LeaderHeader :troop-switch="false" />
+  <LeaderHeader />
   <main class="mx-auto max-w-[1040px] px-4 pt-6 pb-20 sm:px-6">
     <p class="m-0 mb-2.5 text-[15px]">
       <RouterLink to="/vedouci">← zpět na vedoucovskou stránku</RouterLink>

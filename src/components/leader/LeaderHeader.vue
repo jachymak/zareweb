@@ -1,18 +1,12 @@
 <script setup>
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { useLeaderTroopStore } from '@/stores/leaderTroop'
 import ZareLogo from '@/components/ZareLogo.vue'
-import TroopSwitch from './TroopSwitch.vue'
 
-// Header of the leader area: home link, the troop switch, parent preview, e-mail, sign out.
-defineProps({
-  troopSwitch: { type: Boolean, default: true }, // off on pages not tied to a troop
-})
+// Header of the leader area (no menu — pages are reached from the leader home):
+// home link, parent preview, e-mail, sign out.
 
 const auth = useAuthStore()
-const leaderTroop = useLeaderTroopStore()
-leaderTroop.init()
 const router = useRouter()
 
 async function signOut() {
@@ -38,7 +32,6 @@ async function signOut() {
       >
         pro vedoucí
       </span>
-      <TroopSwitch v-if="troopSwitch" v-model="leaderTroop.troop" />
       <div class="flex flex-wrap items-center gap-x-3.5 gap-y-1 sm:ml-auto">
         <RouterLink
           to="/vedouci/nahled"

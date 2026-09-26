@@ -187,13 +187,15 @@ Read-only page generated from the event's poster data. Parents see it only when 
 
 ## 4. Leader area
 
-Common header (as in the design, no menu): „Skautský oddíl Záře“ (→ leader home) with the badge „pro vedoucí“, the **troop switch** — the troop tags „vlč“ / „s&s“ as toggles (not on Administration) — then „náhled pro rodiče“, user's e-mail (hidden on narrow screens), „odhlásit“. Pages are reached from the tools on the leader home; each subpage has „← zpět na vedoucovskou stránku“. Footer: „vedoucovská část — vidí ji jen tým“, „náhled rodičovské stránky →“.
+Common header (as in the design, no menu): „Skautský oddíl Záře“ (→ leader home) with the badge „pro vedoucí“, then „náhled pro rodiče“, user's e-mail (hidden on narrow screens), „odhlásit“. Pages are reached from the tools on the leader home; each subpage has „← zpět na vedoucovskou stránku“. Footer: „vedoucovská část — vidí ji jen tým“, „náhled rodičovské stránky →“ (subpages: „zpět na vedoucovskou stránku →“).
+
+**Troop switch** (leader home, attendance): top right of the page, „Oddíl“ above a two-way switch „vlčušky“ / „skauti a skautky“, each with its troop tag. It starts with the leader's home troop (`skautisPeople.troop` of the linked person), or vlčušky for a leader without one (not linked yet, or „ostatní“); the leader's choice is remembered in the browser and shared by the pages.
 
 ### 4.1 Leader home (`/vedouci`)
 
 1. **Greeting** — „Ahoj, {nickname}!“, role title + troop, today's date.
 2. **Tools** — links to Docházka, Akce a plakátky, Aktuality, Klubovna, Čekací listina; **Administrace** only for admin.
-The troop-dependent parts (today card, attendance summary) follow the troop switch in the header: it starts with the leader's home troop (`skautisPeople.troop` of the linked person), or vlčušky for a leader without one (not linked yet, or „ostatní“); the leader's choice is remembered in the browser. The greeting uses the linked person's nickname and role title, otherwise the account's first name and „vedoucí“ / „správce“.
+The troop-dependent parts (today card, attendance summary) follow the troop switch. The greeting uses the linked person's nickname and role title, otherwise the account's first name and „vedoucí“ / „správce“.
 
 3. **Today card** (based on the chosen troop and today's date):
    - today is a meeting day of the troop → „schůzka v klubovně, 17–19 h“ + „zapsat docházku →“ (opens that meeting: `/vedouci/dochazka?oddil={troop}&schuzka={date}`);
@@ -207,31 +209,32 @@ The troop-dependent parts (today card, attendance summary) follow the troop swit
 
 ### 4.2 Attendance (`/vedouci/dochazka`)
 
-Troop switch: „vlčušky“ / „skauti a skautky“. Three tabs:
+Troop switch (top right, §4 intro). Three tabs. The selection is kept in the URL: `?oddil={troop}&schuzka={date}` (meetings), `&vyprava={eventId}` (trips), `&prehled` (overview) — links from the leader home use it. Without a selection the page opens today's meeting if today is a meeting day, else the troop's most recent meeting date.
 
 **Meetings (schůzky)**
 
-- Choose weekday (the troop's two meeting days), then a date from the list of past meeting dates (newest first, horizontally scrollable; cancelled dates marked „×“).
+- Choose weekday (the troop's two meeting days), then a date from the list of meeting dates of this school year up to today (newest first, horizontally scrollable, the selected one scrolled into view; cancelled dates marked „×“).
 - Header: „Schůzka {den} {datum}“, troop tag, „přišlo X z Y“.
-- Grid of children **whose meeting day is the selected weekday** (nickname + name) — click toggles present. Buttons „přišli všichni“, „zrušit výběr“, „schůzka nebyla“.
-- „Schůzka nebyla“ marks the meeting cancelled: it does not count towards anyone's attendance nor the number of meetings. Can be undone („schůzka přece byla“).
-- **Autosave** („ukládá se samo“). A meeting is **recorded** once its attendance is saved (or it is marked „schůzka nebyla“).
+- Grid of children **whose meeting day is the selected weekday** (nickname + name) — click toggles present. Buttons „přišli všichni“, „zrušit výběr“, „schůzka nebyla“. Children of the troop without a meeting day are named below the grid (they are not in any meeting; the admin sets the day).
+- „Schůzka nebyla“ marks the meeting cancelled: it does not count towards anyone's attendance nor the number of meetings. Can be undone („schůzka přece byla“) — the recorded presence is kept.
+- **Autosave** („ukládá se samo“). A meeting is **recorded** once its attendance is saved (or it is marked „schůzka nebyla“). Clicking a child changes only that child (`arrayUnion` / `arrayRemove`), and the page follows the meetings live, so two leaders can record the same meeting at once.
 - Past meeting dates that have not been recorded are flagged („nezapsáno“) so the leader can catch up; they don't count towards attendance until recorded.
 
 **Trips (výpravy)**
 
-- List of the troop's trips (troop + `all`), horizontally scrollable, newest first.
-- Header: title, tag, date, price; summary „přijelo X · zaplaceno Y z přihlášených Z“ and **cash the leader should have in hand** = sum of amounts of children marked paid.
-- **Signed up** children: „přijel“ / „nepřijel“, „zaplaceno“ / „nezaplaceno“ toggle, amount (pre-filled with the event price, editable per child when someone pays a different amount, e.g. at the meeting point).
+- List of the troop's trips (§6.3: registration enabled, not the camp, not cancelled; audience troop + `all`) of this school year incl. upcoming ones, horizontally scrollable, newest first. Opens on the trip that started last.
+- Children who can join are listed: the troop's children, and for `all` trips the children of **both** troops (with their troop tag) — usually one leader records such a trip for everybody.
+- Header: title, tag, date, price (or „cena zatím není“); summary „přijelo X · zaplaceno Y z přihlášených Z · máš mít u sebe N Kč“ — the cash is the sum of amounts of children marked paid (the entered amount, else the event price).
+- **Signed up** children: „přijel“ / „nepřijel“ (clicking the active one clears it), „zaplaceno“ / „nezaplaceno“ toggle, amount (placeholder = the event price; saved when the field is left; empty = the price).
 - **Not signed up** („kdyby někdo přišel“): „přijel“, payment toggle, amount.
-- Autosave.
+- Autosave, followed live.
 
 **Overview (přehled dětí)**
 
-- For each child: meeting %, trips count (each red if below the camp requirement), and a row of dots per held meeting of the child's day — filled = present, empty = absent, hatched = meeting cancelled; tooltip with date and state.
+- For each child: meeting %, trips count (each red if below the camp requirement), and a row of dots per meeting date of the child's day this school year — filled = present, empty = absent, hatched = meeting cancelled, dashed = not recorded yet; tooltip with date and state. A child without a meeting day shows a note instead.
 
 **Reads:** `members`, `meetings`, `events` + `participants`, `settings/app`.
-**Writes:** `meetings` (presence, cancelled flag), `events/{id}/participants` (attended, paid, amount).
+**Writes:** `meetings` (presence, cancelled flag), `events/{id}/participants` (attended, paid, amountPaid).
 
 ### 4.3 Events & posters (`/vedouci/akce`)
 

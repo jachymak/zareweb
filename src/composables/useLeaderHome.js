@@ -11,12 +11,15 @@ import { getAppSettings } from '@/services/settings'
 import { useLeaderTroopStore } from '@/stores/leaderTroop'
 
 // Data of the leader home (SPEC §4.1). The troop-dependent parts (today card,
-// attendance summary) follow the troop picked in the leader header.
+// attendance summary) follow the troop picked on the page (shared with attendance).
 export function useLeaderHome() {
   const today = pragueToday()
   const schoolYear = schoolYearRange(today)
   const leaderTroop = useLeaderTroopStore()
-  const troop = computed(() => leaderTroop.troop)
+  const troop = computed({
+    get: () => leaderTroop.troop,
+    set: (value) => (leaderTroop.troop = value),
+  })
 
   const loading = ref(true)
   const loadError = ref(false)

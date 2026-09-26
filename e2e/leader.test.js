@@ -196,11 +196,15 @@ export default async function leader({ browser, check }) {
     await page.getByRole('heading', { name: 'Nejbližší akce' }).waitFor()
   }
 
-  // ---- troop switch (tags in the header) ----
+  // ---- troop switch (top right on the page, not in the header) ----
   {
-    const switchGroup = page.getByRole('banner').getByRole('group', { name: 'Oddíl' })
+    const switchGroup = page.getByRole('main').getByRole('group', { name: 'Oddíl' })
     check(
-      'switch: home troop vlc selected in the header',
+      'switch: none in the header',
+      (await page.getByRole('banner').getByRole('group', { name: 'Oddíl' }).count()) === 0,
+    )
+    check(
+      'switch: home troop vlc selected',
       (await switchGroup.getByRole('button', { name: 'vlčušky' }).getAttribute('aria-pressed')) ===
         'true',
     )
@@ -240,7 +244,7 @@ export default async function leader({ browser, check }) {
     await tools.getByRole('link', { name: 'Docházka' }).click()
     await page.waitForURL(/\/vedouci\/dochazka$/)
     check(
-      'nav: Docházka opens its page, troop switch in its header',
+      'nav: Docházka opens its page with the troop switch',
       (await page.getByRole('heading', { name: 'Docházka' }).isVisible()) &&
         (await page.getByRole('group', { name: 'Oddíl' }).isVisible()),
     )

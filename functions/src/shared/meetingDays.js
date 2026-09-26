@@ -12,6 +12,19 @@ export function weekdayOf(isoDate) {
   return WEEKDAYS[new Date(`${isoDate}T12:00:00Z`).getUTCDay()]
 }
 
+// Dates (`YYYY-MM-DD`) of the weekday between two dates (inclusive), oldest first.
+export function meetingDates(weekday, fromDate, toDate) {
+  const dates = []
+  const d = new Date(`${fromDate}T12:00:00Z`)
+  while (weekdayOf(d.toISOString().slice(0, 10)) !== weekday) d.setUTCDate(d.getUTCDate() + 1)
+  for (let iso = d.toISOString().slice(0, 10); iso <= toDate;) {
+    dates.push(iso)
+    d.setUTCDate(d.getUTCDate() + 7)
+    iso = d.toISOString().slice(0, 10)
+  }
+  return dates
+}
+
 // The troop's programme on the day, in the order of SPEC §4.1:
 // { kind: 'meeting' } | { kind: 'trip', event } | { kind: 'otherTroop' } | { kind: 'free' }.
 // A trip is an event with registration (not the camp) for the troop or everyone, starting that day.

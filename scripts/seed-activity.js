@@ -8,7 +8,7 @@
 // Run after `seed-members.js`. Usage: npm run seed:activity. Writes bypass security rules.
 
 import { pragueToday, schoolYearRange } from '../functions/src/shared/schoolYear.js'
-import { TROOP_MEETING_DAYS, weekdayOf } from '../functions/src/shared/meetingDays.js'
+import { meetingDates, TROOP_MEETING_DAYS } from '../functions/src/shared/meetingDays.js'
 
 const PROJECT = process.env.VITE_FIREBASE_PROJECT_ID ?? 'demo-zareweb'
 const HOST = process.env.FIRESTORE_EMULATOR_HOST ?? '127.0.0.1:8080'
@@ -94,8 +94,7 @@ export function buildMeetings(members) {
   const meetings = []
   for (const [troop, weekdays] of Object.entries(TROOP_MEETING_DAYS)) {
     for (const weekday of weekdays) {
-      const dates = []
-      for (let d = from; d < today; d = addDays(d, 1)) if (weekdayOf(d) === weekday) dates.push(d)
+      const dates = meetingDates(weekday, from, addDays(today, -1))
       const kids = members.filter((m) => m.troop === troop && m.meetingDay === weekday)
       dates.slice(0, -1).forEach((date, i) => {
         const cancelled = i === 1
