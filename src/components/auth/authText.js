@@ -4,7 +4,7 @@
 export const INTRO = {
   login: [
     'vítej zpátky',
-    'Oddílový zápisník',
+    'Přihlášení členů',
     'Výpravník, docházka dětí, fotky z akcí a kontakty na vedoucí — všechno na jednom místě.',
   ],
   forgot: [

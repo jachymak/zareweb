@@ -87,7 +87,7 @@ function enter() {
 
         <button
           type="button"
-          class="relative flex cursor-pointer items-center gap-3 pt-3 pr-[26px] pb-3.5 pl-6 font-hand text-[26px] leading-none font-bold text-green transition-colors hover:text-red sm:text-[30px]"
+          class="relative flex cursor-pointer items-center gap-3 pt-3 pr-[26px] pb-3.5 pl-6 font-hand text-[26px] leading-none font-bold text-gray-900 transition-colors hover:text-red sm:text-[30px]"
           @click="enter"
         >
           <!-- marker highlight under the text -->

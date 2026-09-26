@@ -10,6 +10,14 @@ Stránka pro členy
 - footer u plakátku nebude
 - rodiče nemohou vidět rozdělané plakátky
 
+Stránka pro vedoucí
+- rámečky s vhodným odsazením
+
 Klubovna
 - dodělat otroka
 - rámečky
+
+Založení účtu menší formulář
+
+Intro
+- otevrit mezernikem/enterem

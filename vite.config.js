@@ -15,4 +15,7 @@ export default defineConfig({
       '@shared': fileURLToPath(new URL('./functions/src/shared', import.meta.url)),
     },
   },
+  server: {
+    host: true, // access page on LAN
+  },
 })
