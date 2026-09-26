@@ -3,10 +3,12 @@
 // events with sign-ups and attendance, news, and recorded meetings of this
 // school year. Dates are relative to today, so the data always has upcoming,
 // open, closed and past events. Replaces `skautisPeople`, `contacts`, `events`
-// (incl. posters and participants), `news` and `meetings`.
+// (incl. posters and participants), `news` and `meetings`, and links the test
+// leader accounts to their skautIS person.
 // Run after `seed-members.js`. Usage: npm run seed:activity. Writes bypass security rules.
 
 import { pragueToday, schoolYearRange } from '../functions/src/shared/schoolYear.js'
+import { TROOP_MEETING_DAYS, weekdayOf } from '../functions/src/shared/meetingDays.js'
 
 const PROJECT = process.env.VITE_FIREBASE_PROJECT_ID ?? 'demo-zareweb'
 const HOST = process.env.FIRESTORE_EMULATOR_HOST ?? '127.0.0.1:8080'
@@ -71,6 +73,10 @@ export const EVENTS = [
   { id: 'seed-odpoledne', title: 'Zahajovací odpoledne v klubovně', audience: 'all', startDate: day(-20), endDate: day(-20), organizerIds: ['800002'], posterStatus: 'none' },
 ]
 
+// Test leader accounts of `seed-users.js` linked to their skautIS person (users.personId),
+// as the admin links them in „role vedoucích“.
+export const LEADER_ACCOUNTS = { 'vedouci@zare.test': '800001', 'spravce@zare.test': '800011' }
+
 // Newest first as parents see them; `important` is pinned on top.
 export const NEWS = [
   { id: 'seed-satky', title: 'Vlčušky mají nové šátky', body: 'Na schůzkách jsme rozdali nové šátky. Kdo ho ještě nemá, ať se ozve na nejbližší schůzce.', audience: 'vlc', author: 'Ondys', age: 2 },
@@ -80,17 +86,13 @@ export const NEWS = [
   { id: 'seed-stazena', title: 'Stažená zpráva', body: 'Tuhle zprávu rodiče neuvidí.', audience: 'all', author: 'Hobit', age: 1, withdrawn: true },
 ]
 
-const TROOP_DAYS = { vlc: ['mon', 'thu'], ss: ['tue', 'wed'] }
-const WEEKDAYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
-const weekdayOf = (iso) => WEEKDAYS[new Date(`${iso}T12:00:00Z`).getUTCDay()]
-
 // Past meeting dates of this school year per troop and weekday, oldest first.
 // The 2nd meeting of each weekday was cancelled, the latest one is not recorded
 // yet; a child misses every third recorded meeting.
 export function buildMeetings(members) {
   const { from } = schoolYearRange(today)
   const meetings = []
-  for (const [troop, weekdays] of Object.entries(TROOP_DAYS)) {
+  for (const [troop, weekdays] of Object.entries(TROOP_MEETING_DAYS)) {
     for (const weekday of weekdays) {
       const dates = []
       for (let d = from; d < today; d = addDays(d, 1)) if (weekdayOf(d) === weekday) dates.push(d)
@@ -172,6 +174,17 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     await put(`contacts/seed-${id}`, { personId: id, group, photoUrl: null, order })
   }
   console.log(`${LEADERS.length} leaders and contacts`)
+
+  for (const d of await list('users')) {
+    const personId = LEADER_ACCOUNTS[fromValue(d.fields.email)]
+    if (!personId) continue
+    const res = await fetch(`http://${HOST}/v1/${d.name}?updateMask.fieldPaths=personId`, {
+      method: 'PATCH',
+      headers: OWNER,
+      body: JSON.stringify({ fields: { personId: toValue(personId) } }),
+    })
+    if (!res.ok) throw new Error(`${d.name}: ${res.status} ${await res.text()}`)
+  }
 
   for (const { id, registration, participants = {}, poster, ...event } of EVENTS) {
     await put(`events/${id}`, {

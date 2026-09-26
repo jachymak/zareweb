@@ -39,14 +39,27 @@ const router = createRouter({
       props: true,
       meta: { auth: true, roles: ['parent', ...LEADERS] },
     },
-    // Placeholders until their pages exist.
     {
       path: '/vedouci',
       name: 'leader-home',
-      component: () => import('@/views/AreaComingSoonView.vue'),
-      props: { area: 'pro vedoucí', title: 'Stránka pro vedoucí' },
+      component: () => import('@/views/LeaderHomeView.vue'),
       meta: { auth: true, roles: LEADERS },
     },
+    // Placeholders until their pages exist.
+    ...[
+      ['/vedouci/dochazka', 'leader-attendance', 'Docházka'],
+      ['/vedouci/akce', 'leader-events', 'Akce a plakátky'],
+      ['/vedouci/aktuality', 'leader-news', 'Aktuality'],
+      ['/vedouci/klubovna', 'leader-clubhouse', 'Klubovna'],
+      ['/vedouci/cekaci-listina', 'leader-waitlist', 'Čekací listina'],
+      ['/vedouci/nahled', 'leader-preview', 'Náhled pro rodiče'],
+    ].map(([path, name, title]) => ({
+      path,
+      name,
+      component: () => import('@/views/LeaderComingSoonView.vue'),
+      props: { title },
+      meta: { auth: true, roles: LEADERS },
+    })),
     {
       path: '/vedouci/administrace',
       name: 'admin',

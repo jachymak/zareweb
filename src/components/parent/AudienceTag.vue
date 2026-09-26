@@ -5,6 +5,7 @@ import { AUDIENCES } from '@/constants/troops'
 // Small tag „vlč“ / „s&s“ / „vši“ of a troop or an event/news audience.
 const props = defineProps({
   audience: { type: String, required: true }, // vlc | ss | all
+  muted: { type: Boolean, default: false }, // outline only (an unselected switch option)
 })
 
 const COLORS = {
@@ -18,7 +19,9 @@ const info = computed(() => AUDIENCES[props.audience] ?? { name: '', tag: props.
 <template>
   <span
     class="inline-block justify-self-start rounded-full px-[9px] pt-[5px] pb-[6px] font-hand text-[19px] leading-none font-bold whitespace-nowrap"
-    :class="COLORS[audience]"
+    :class="
+      muted ? 'bg-transparent text-muted-2 ring-[1.5px] ring-line ring-inset' : COLORS[audience]
+    "
     :title="info.name"
   >
     {{ info.tag }}

@@ -79,14 +79,14 @@ export default async function login({ browser, check }) {
 
     await signIn(page, 'vedouci@zare.test')
     await page.waitForURL('**/vedouci', { timeout: 10000 })
-    await page.getByRole('heading', { name: 'Stránka pro vedoucí' }).waitFor()
+    await page.getByRole('heading', { name: 'Nejbližší akce' }).waitFor()
     check(
       'leader: lands on /vedouci with e-mail in the header',
       await page.getByText('vedouci@zare.test').isVisible(),
     )
 
     await page.reload({ waitUntil: 'load' })
-    await page.getByRole('heading', { name: 'Stránka pro vedoucí' }).waitFor()
+    await page.getByRole('heading', { name: 'Nejbližší akce' }).waitFor()
     check('leader: session survives a reload', pathOf(page) === '/vedouci')
 
     await page.goto(page.url().replace('/vedouci', '/clenove'), { waitUntil: 'load' })

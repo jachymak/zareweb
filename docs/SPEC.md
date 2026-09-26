@@ -187,19 +187,21 @@ Read-only page generated from the event's poster data. Parents see it only when 
 
 ## 4. Leader area
 
-Common header: „Skautský oddíl Záře · pro vedoucí“, nav (Domů, Docházka, Akce, Aktuality, Klubovna), „náhled pro rodiče“, user's e-mail, logout. Each subpage has „← zpět na vedoucovskou stránku“.
+Common header (as in the design, no menu): „Skautský oddíl Záře“ (→ leader home) with the badge „pro vedoucí“, the **troop switch** — the troop tags „vlč“ / „s&s“ as toggles (not on Administration) — then „náhled pro rodiče“, user's e-mail (hidden on narrow screens), „odhlásit“. Pages are reached from the tools on the leader home; each subpage has „← zpět na vedoucovskou stránku“. Footer: „vedoucovská část — vidí ji jen tým“, „náhled rodičovské stránky →“.
 
 ### 4.1 Leader home (`/vedouci`)
 
 1. **Greeting** — „Ahoj, {nickname}!“, role title + troop, today's date.
 2. **Tools** — links to Docházka, Akce a plakátky, Aktuality, Klubovna, Čekací listina; **Administrace** only for admin.
-3. **Today card** (based on the leader's troop and today's date):
-   - today is a meeting day of the leader's troop → „schůzka v klubovně, 17–19 h“ + „zapsat docházku →“ (opens that meeting);
-   - today is the first day of a trip for the troop (or `all`) → „první den výpravy — {name}“ + „zapsat účast a platby →“;
+The troop-dependent parts (today card, attendance summary) follow the troop switch in the header: it starts with the leader's home troop (`skautisPeople.troop` of the linked person), or vlčušky for a leader without one (not linked yet, or „ostatní“); the leader's choice is remembered in the browser. The greeting uses the linked person's nickname and role title, otherwise the account's first name and „vedoucí“ / „správce“.
+
+3. **Today card** (based on the chosen troop and today's date):
+   - today is a meeting day of the troop → „schůzka v klubovně, 17–19 h“ + „zapsat docházku →“ (opens that meeting: `/vedouci/dochazka?oddil={troop}&schuzka={date}`);
+   - today is the first day of a trip (§6.3) for the troop (or `all`) → „první den výpravy — {name}“ + „zapsat účast a platby →“ (`/vedouci/dochazka?oddil={troop}&vyprava={eventId}`);
    - the other troop meets today → „dneska má schůzku druhý oddíl…“;
    - otherwise → „dneska není schůzka ani výprava — klidný den“, link „zapsat jiný termín →“.
-4. **Nearest events** — upcoming events with registration: date, tag, title, organizer, **signed up / eligible** count with a progress bar, poster link („plakátek“ or „vyplnit plakátek“ → editor), link „jmenný seznam a platby →“ (attendance → trips tab). Link „přidat akci nebo plakátek →“.
-5. **Troop attendance summary** — for the leader's troop: each child with meeting % and trips count; children not meeting the camp requirement highlighted red.
+4. **Nearest events** — upcoming events of both troops with registration started (as in §3.1, incl. those past the deadline): date, tag, title, organizer, **signed up / eligible** count (active children who can join, §6.4) with a progress bar, poster link („plakátek“ → poster page, or „vyplnit plakátek“ → editor `/vedouci/akce?akce={eventId}`), link „jmenný seznam a platby →“ (attendance → trips tab). Link „přidat akci nebo plakátek →“.
+5. **Troop attendance summary** — for the chosen troop: each child with meeting % and trips count; children not meeting the camp requirement highlighted red.
 
 **Reads:** own `users/{uid}`, `members`, `meetings`, `events` + `participants`, `settings/app`.
 

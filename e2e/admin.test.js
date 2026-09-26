@@ -69,7 +69,7 @@ export default async function admin({ browser, check }) {
     const { ctx, page } = await openAs(browser, 'vedouci@zare.test')
     check(
       'access: leader home has no Administrace link',
-      (await page.getByRole('link', { name: 'Administrace →' }).count()) === 0,
+      (await page.getByRole('link', { name: 'Administrace', exact: true }).count()) === 0,
     )
     await page.goto(page.url() + '/administrace', { waitUntil: 'load' })
     await page.waitForURL(/\/vedouci$/)
@@ -78,7 +78,7 @@ export default async function admin({ browser, check }) {
   }
 
   const { ctx, page, errors } = await openAs(browser, 'spravce@zare.test')
-  await page.getByRole('link', { name: 'Administrace →' }).click()
+  await page.getByRole('link', { name: 'Administrace', exact: true }).click()
   await page.getByRole('heading', { level: 1, name: 'Administrace' }).waitFor()
   await card(page, 'cekajici@zare.test').waitFor()
   check('access: admin opens Administrace from the leader home', page.url().endsWith(ADMIN_URL))
