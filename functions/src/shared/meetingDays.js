@@ -3,6 +3,7 @@
 
 import { isTrip } from './attendance.js'
 
+// Hardcoded until the meeting settings in Administration exist (SPEC §4.8 Meetings).
 export const TROOP_MEETING_DAYS = { vlc: ['mon', 'thu'], ss: ['tue', 'wed'] }
 
 const WEEKDAYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']

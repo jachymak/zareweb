@@ -12,6 +12,8 @@ Website of the scout group **Záře** (Dejvice, Prague), part of Junák – čes
 | `vlc` | 220. oddíl **Vlčušky**          | 7–11  | Monday, Thursday           |
 | `ss`  | 222. oddíl **Skauti a skautky** | 12–15 | Tuesday, Wednesday         |
 
+Meeting days and times are set in Administration (§4.8 Meetings) — the table shows the current values, which the code still hardcodes until that tab exists.
+
 Each child has a **fixed meeting day** — one of the two days of their troop, assigned manually in Administration — and attends one meeting per week.
 Events and news are targeted at an **audience**: `vlc`, `ss` or `all` (UI tags: „vlč“, „s&s“, „vši“).
 
@@ -282,13 +284,13 @@ Plus a registration chip (not for the camp): „přihlašování nespuštěné�
 
 ### 4.5 Clubhouse (`/vedouci/klubovna`)
 
-**First version: UI only with mock data**, no hardware integration. The data layer goes through a service in `src/services/` so it can later be connected to real devices.
+**First version: UI only with mock data**, no hardware integration. The data layer goes through `src/services/clubhouse.js` (in-memory mock: readings, mode, devices, schedule, log) so it can later be connected to real devices. Until then the page below the title is **greyed out** (inert) with the note „Tohle ještě nefunguje, ale bude“.
 
 - Readings: temperature, humidity (highlighted when > 60 %).
-- Mode: **automat** (devices follow a schedule derived from meetings and the event calendar; controls read-only) or **manuál** for 2 / 4 / 8 / 12 / 24 h (controls enabled; remaining time shown; „vrátit na automat“). After manual mode expires, the schedule takes over.
+- Mode: **automat** (devices follow a schedule derived from the meeting days, times and dates without meetings set in Administration (§4.8 Meetings) and from the event calendar; controls read-only) or **manuál** for 2 / 4 / 8 / 12 / 24 h (controls enabled; remaining time shown; „vrátit na automat“). After manual mode expires, the schedule takes over.
 - Devices: air-conditioning/heating (on/off, target 8–26 °C, state „topí“ / „drží teplotu“ / „vypnutá“), fans, dehumidifier, boiler (on/off, state „běží“ / „stojí“).
-- „Podle rozvrhu“ — upcoming scheduled actions (schedule edited in Administration — later).
-- „Log“ — history of automatic and manual changes. Contact to the technician (Quido).
+- „Podle rozvrhu“ — upcoming scheduled actions (computed from the meetings and events; the clubhouse rules are edited in Administration — later).
+- „Log“ — only the **newest 5 entries** of automatic and manual changes; the full log is in Administration (§4.8 Clubhouse). Manual changes are logged in **batches**: changes made within a minute of the previous one join one entry describing the difference against the state before the batch („Ručně: manuál na 4 h, klimatizace 23 °C, ventilátory zapnuté.“); a change undone within the batch drops out, a batch with no difference leaves no entry. A change more than a minute later starts a new entry. Manual mode expiring is its own entry. Contact to the technician (Quido).
 
 ### 4.6 Waiting list management (`/vedouci/cekaci-listina`)
 
@@ -339,7 +341,8 @@ Tabs:
 6. **Packing list templates** — CRUD of templates („s sebou“). No design.
 7. **E-mail texts** — text of the waiting-list renewal e-mail (and other automated e-mails **[?]**). No design.
 8. **Settings** — camp requirement, waiting-list age limits. No design **[?]**.
-9. **Clubhouse schedule** — later (clubhouse is mock-only in v1).
+9. **Meetings (schůzky)** **(not implemented yet)** — per troop: the two meeting weekdays and the time from–to (now 17:00–19:00); dates without meetings in the school year (holidays, school breaks; per troop or both) with an optional reason. Replaces the hardcoded `TROOP_MEETING_DAYS` and „17–19 h“; used by Attendance (meeting dates — dates without meetings are left out), the leader home today card, the parent area and the clubhouse automat. Changing a troop's weekdays must be followed by re-assigning children's `meetingDay` (tab Children highlights children whose day is no longer valid). No design.
+10. **Clubhouse (klubovna)** — later (clubhouse is mock-only in v1): the automat rules (how long before a meeting to heat, target and setback temperatures, drying between meetings, …) applied to the meetings and events, and the **full log** of automatic and manual changes (filterable by date).
 
 **Reads/Writes:** `users`, `members`, `contacts`, `packingTemplates`, `settings/*`; skautIS sync via Cloud Function.
 
@@ -511,9 +514,13 @@ Document id = first 24 hex chars of SHA-256 of `firstname|lastname|birthDate` (l
 
 `lastSyncAt`.
 
+### `settings/meetings` (readable by logged-in users) — planned, §4.8 Meetings
+
+`vlc` / `ss`: `{ days: weekday[2], start: 'HH:mm', end: 'HH:mm' }`; `noMeetingDates: [{ date: 'YYYY-MM-DD', troop: 'vlc' | 'ss' | 'all', reason?: string }]`.
+
 ### Clubhouse
 
-Mock only in v1 — no collections yet.
+Mock only in v1 — no collections yet. Later: clubhouse rules (settings) and the log (a collection, one document per entry / batch).
 
 ### 5.1 Access rules (summary)
 
