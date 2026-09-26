@@ -274,7 +274,9 @@ Plus a registration chip (not for the camp): „přihlašování nespuštěné�
 ### 4.4 News (`/vedouci/aktuality`)
 
 - Form „Napsat rodičům“: title, text, audience (všem rodičům / jen vlčuškám / jen skautům a skautkám), optional link (label + URL), checkbox „označit jako důležité“. Button „zveřejnit“ → published immediately, author = current leader, date = now.
-- List of published news (date, tag, author, title; important ones highlighted) with „upravit“ (loads into the form) and „stáhnout“ (withdraw — sets `withdrawn`, parents no longer see it).
+  Link: label + URL; a URL without a scheme gets `https://`, only http(s) URLs are accepted. Author = the leader's nickname from skautIS (else the account name).
+- List of published news (date, tag, author, title; important ones highlighted), newest first, updated live, with „upravit“ (loads into the form; saving keeps author and date) and „stáhnout“ (asks first; withdraw — sets `withdrawn`, parents no longer see it).
+- Withdrawn news stay below the list, greyed out („Stažené · rodiče je nevidí“), with „upravit“ and „vrátit“ (publish again). They are not deleted; clean-up of old news comes later.
 
 **Reads:** `news`. **Writes:** `news` (create, update).
 
@@ -445,6 +447,8 @@ Poster content in a separate doc so parents can read it **only when `posterStatu
 ### `news/{newsId}`
 
 `title`, `body`, `audience`, `linkLabel?`, `linkUrl?`, `important` (bool), `authorUid`, `authorName`, `publishedAt`, `withdrawn` (bool).
+
+`authorUid` (= the writer), `authorName` and `publishedAt` (= server time) are set on create and never change.
 
 ### `contacts/{contactId}`
 

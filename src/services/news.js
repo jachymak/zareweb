@@ -3,6 +3,7 @@ import {
   collection,
   doc,
   getDocs,
+  onSnapshot,
   orderBy,
   query,
   serverTimestamp,
@@ -19,17 +20,29 @@ export async function listNews({ includeWithdrawn = false } = {}) {
   return fromQuery(await getDocs(query(news, ...filters, orderBy('publishedAt', 'desc'))))
 }
 
-export async function publishNews(
-  { title, body, audience, linkLabel, linkUrl, important },
-  authorName,
-) {
+// All news incl. withdrawn, newest first, followed live (leaders' news page).
+// A just-published item has an estimated `publishedAt` until the server confirms it.
+export function subscribeNews(callback, onError) {
+  return onSnapshot(
+    query(news, orderBy('publishedAt', 'desc')),
+    (snap) =>
+      callback(snap.docs.map((d) => ({ id: d.id, ...d.data({ serverTimestamps: 'estimate' }) }))),
+    onError,
+  )
+}
+
+const contentFields = ({ title, body, audience, linkLabel, linkUrl, important }) => ({
+  title,
+  body,
+  audience,
+  linkLabel: linkLabel || null,
+  linkUrl: linkUrl || null,
+  important,
+})
+
+export async function publishNews(content, authorName) {
   const ref = await addDoc(news, {
-    title,
-    body,
-    audience,
-    linkLabel: linkLabel || null,
-    linkUrl: linkUrl || null,
-    important,
+    ...contentFields(content),
     authorUid: auth.currentUser.uid,
     authorName,
     publishedAt: serverTimestamp(),
@@ -38,10 +51,11 @@ export async function publishNews(
   return ref.id
 }
 
-export function updateNews(newsId, fields) {
-  return updateDoc(doc(news, newsId), fields)
+// Edits the content; author and publication date stay.
+export function updateNews(newsId, content) {
+  return updateDoc(doc(news, newsId), contentFields(content))
 }
 
-export function withdrawNews(newsId) {
-  return updateDoc(doc(news, newsId), { withdrawn: true })
+export function setNewsWithdrawn(newsId, withdrawn) {
+  return updateDoc(doc(news, newsId), { withdrawn })
 }

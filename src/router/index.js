@@ -57,9 +57,14 @@ const router = createRouter({
       component: () => import('@/views/EventsView.vue'),
       meta: { auth: true, roles: LEADERS },
     },
+    {
+      path: '/vedouci/aktuality',
+      name: 'leader-news',
+      component: () => import('@/views/NewsView.vue'),
+      meta: { auth: true, roles: LEADERS },
+    },
     // Placeholders until their pages exist.
     ...[
-      ['/vedouci/aktuality', 'leader-news', 'Aktuality'],
       ['/vedouci/klubovna', 'leader-clubhouse', 'Klubovna'],
       ['/vedouci/cekaci-listina', 'leader-waitlist', 'Čekací listina'],
       ['/vedouci/nahled', 'leader-preview', 'Náhled pro rodiče'],

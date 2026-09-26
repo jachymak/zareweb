@@ -9,13 +9,14 @@
 
 ## Commands
 
+- `npm start` – everything for a normal local run in one terminal (`scripts/start.sh`): emulators in the background (log `.emulators.log`, reused if already running), test data on the first run (`npm start -- --seed` re-seeds), then the dev server; Ctrl+C stops all and saves emulator data. **Keep it in sync**: when a normal run needs a new step (seed, service, …), add it there; tests only go into its header comment.
 - `npm run dev` – dev server
 - `npm run build` – production build
 - `npm run preview` – preview the production build
 - `npm run format` – format `src/` with Prettier (config in `.prettierrc.json`)
 - `npm run emulators` – Firebase Auth + Firestore + Functions emulators (UI at http://127.0.0.1:4000); data persisted in `emulator-data/`. Changing a function's options (e.g. region) needs an emulator restart.
 - `npm run seed` – write `settings/public` and `settings/app` into the running Firestore emulator
-- `npm run test:e2e [-- public waitlist renewal login admin parent poster leader attendance events]` – end-to-end tests in `e2e/` (playwright-core + system Chrome, desktop and 360/390 px, checks Firestore over the emulator REST API). Needs `npm run emulators` and `npm run dev` running; resets `settings/*`, clears `waitlist`, and the `login`/`admin`/`parent`/`poster`/`leader`/`attendance`/`events` suites replace all Auth accounts, `users`, (admin, parent, poster, leader, attendance, events) `members` and (parent, poster, leader, attendance, events) the `seed:activity` collections with the seeded test data. Add a suite per new page; expected values derive from today's date via `functions/src/shared/`.
+- `npm run test:e2e [-- public waitlist renewal login admin parent poster leader attendance events news]` – end-to-end tests in `e2e/` (playwright-core + system Chrome, desktop and 360/390 px, checks Firestore over the emulator REST API). Needs `npm run emulators` and `npm run dev` running; resets `settings/*`, clears `waitlist`, and the `login`/`admin`/`parent`/`poster`/`leader`/`attendance`/`events`/`news` suites replace all Auth accounts, `users`, (admin, parent, poster, leader, attendance, events, news) `members` and (parent, poster, leader, attendance, events, news) the `seed:activity` collections with the seeded test data. Add a suite per new page; expected values derive from today's date via `functions/src/shared/`.
 - `npm run seed:users` – create test accounts in the emulators, one per role (`spravce@`, `vedouci@`, `rodic@`, `cekajici@`, `zamitnuty@zare.test`), password `heslo1234`
 - `npm run seed:members` – children with parents' contacts in `members` (stand-in for the skautIS sync) and some meeting days; pairs `rodic@` with Sojka (vlč) and Bobr (s&s). Run after `seed:users`
 - `npm run seed:activity` – replaces `skautisPeople`, `contacts`, `events` (+ posters, participants), `news`, `meetings` and `packingTemplates` with sample data dated relative to today (open / closed / cancelled / past events, attendance), and links `vedouci@` to Ondys (vlč) and `spravce@` to Hobit (s&s) via `users.personId`. Stand-in for the leader pages until they exist. Run after `seed:members`

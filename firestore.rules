@@ -139,7 +139,15 @@ service cloud.firestore {
 
     match /news/{newsId} {
       allow read: if isLeader() || (isApproved() && resource.data.withdrawn == false);
-      allow create, update: if isLeader();
+      // Author and publication date are set once, by the author; withdrawn news
+      // stay (deleted later in bulk, SPEC §4.4).
+      allow create: if isLeader()
+        && request.resource.data.authorUid == request.auth.uid
+        && request.resource.data.publishedAt == request.time
+        && request.resource.data.withdrawn == false;
+      allow update: if isLeader()
+        && !request.resource.data.diff(resource.data).affectedKeys()
+          .hasAny(['authorUid', 'authorName', 'publishedAt']);
       allow delete: if false;
     }
 
