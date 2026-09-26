@@ -1,0 +1,70 @@
+@import 'tailwindcss';
+
+/* Design tokens — see design-reference/README.md (Design tokeny). */
+@theme {
+  --font-sans: 'Outfit', system-ui, sans-serif;
+  --font-hand: 'Caveat', cursive;
+
+  --color-green: #2f6b4f;
+  --color-green-hover: #255a41;
+  --color-green-light: #eaf1e6;
+
+  --color-ink: #22301f;
+  --color-text: #3e4a3c;
+  --color-muted: #5d6a5b;
+  --color-muted-2: #666e63;
+  --color-faint: #a09680;
+  --color-brown: #7a6b4a;
+
+  --color-cream: #fbf6ea;
+  --color-paper: #fffdf6;
+  --color-sand: #efe9da;
+
+  --color-line: #cfc4aa;
+  --color-line-soft: #dcd3be;
+  --color-line-strong: #b9ab8a;
+  --color-trail: #a08a5c;
+
+  --color-red: #c0492a;
+  --color-red-light: #fbe3da;
+
+  --color-gold: #e5a83c;
+  --color-gold-light: #f3dfa8;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    /* Keeps anchored sections clear of the sticky header. */
+    scroll-padding-top: 5rem;
+  }
+
+  body {
+    @apply bg-cream font-sans text-text antialiased;
+  }
+
+  a {
+    @apply text-green underline-offset-[3px] hover:text-red;
+  }
+
+  ::selection {
+    @apply bg-gold-light text-ink;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-green);
+    outline-offset: 2px;
+  }
+}
+
+@utility kicker {
+  @apply font-hand text-[25px] leading-tight text-red sm:text-[27px];
+}
+
+@utility section-title {
+  @apply text-[24px] leading-[1.12] font-medium tracking-[-0.03em] text-ink sm:text-[32px];
+}
+
+@utility prose-body {
+  @apply text-[17px] leading-[1.7] text-pretty sm:text-[18px] sm:leading-[1.75];
+}

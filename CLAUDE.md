@@ -14,6 +14,7 @@
 - `npm run preview` – preview the production build
 - `npm run format` – format `src/` with Prettier (config in `.prettierrc.json`)
 - `npm run emulators` – Firebase Auth + Firestore emulators (UI at http://127.0.0.1:4000); data persisted in `emulator-data/`
+- `npm run seed` – write `settings/public` and `settings/app` into the running Firestore emulator
 
 ## Sources of truth
 

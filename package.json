@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "format": "prettier --write --experimental-cli src/",
-    "emulators": "firebase emulators:start --import=./emulator-data --export-on-exit"
+    "emulators": "firebase emulators:start --import=./emulator-data --export-on-exit",
+    "seed": "node --env-file-if-exists=.env scripts/seed-emulator.js"
   },
   "dependencies": {
     "firebase": "^12.19.0",
@@ -17,9 +18,11 @@
     "vue-router": "^5.3.1"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
     "@vitejs/plugin-vue": "^6.0.8",
     "firebase-tools": "^15.31.0",
     "prettier": "3.9.6",
+    "tailwindcss": "^4.3.3",
     "vite": "^8.2.2",
     "vite-plugin-vue-devtools": "^8.2.1"
   },
