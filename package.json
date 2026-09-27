@@ -18,7 +18,8 @@
     "seed:members": "node --env-file-if-exists=.env scripts/seed-members.js",
     "seed:activity": "node --env-file-if-exists=.env scripts/seed-activity.js",
     "seed:waitlist": "node --env-file-if-exists=.env scripts/seed-waitlist.js",
-    "seed:photos": "node --env-file-if-exists=.env scripts/seed-photos.js"
+    "seed:photos": "node --env-file-if-exists=.env scripts/seed-photos.js",
+    "skautis:probe": "node --env-file-if-exists=.env scripts/skautis-probe.js"
   },
   "dependencies": {
     "firebase": "^12.19.0",

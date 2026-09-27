@@ -55,3 +55,6 @@ ui-debug.log*
 # E2E screenshots
 e2e/screenshots/
 .emulators.log
+
+# skautIS probe output (personal data)
+.skautis-probe.json

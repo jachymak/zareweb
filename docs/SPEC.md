@@ -368,9 +368,12 @@ Effect (entries are **archived, not deleted**, to keep the original sign-up date
 
 Settings blocks (per-troop meeting days, ranges without meetings, the waiting-list reset, each e-mail text, waiting-list ages, camp requirement per troop, packing templates) start collapsed to a narrow full-width bar — title and a short summary (e.g. „pondělí a čtvrtek · 17:00–19:00“, the e-mail subject or „neposílá se“) — that opens into the block; a block with validation errors opens by itself.
 
-Tabs (only implemented ones are shown, in the order děti · účty a párování · kontakty · schůzky · čekací listina · e-maily · šablony s sebou · nastavení; the open one is kept in the URL, `?zalozka=deti|ucty|kontakty|schuzky|cekaci-listina|emaily|sablony|nastaveni`, default účty):
+Tabs (only implemented ones are shown, in the order skautIS · děti · účty a párování · kontakty · schůzky · čekací listina · e-maily · šablony s sebou · nastavení; the open one is kept in the URL, `?zalozka=skautis|deti|ucty|kontakty|schuzky|cekaci-listina|emaily|sablony|nastaveni`, default účty):
 
-1. **skautIS** — „Synchronizovat ze skautISu“: the admin logs in to skautIS; a Cloud Function loads via the skautIS API: **children** of both troops (first name, last name, nickname, troop, date of birth), **their parents' contacts** (name, e-mail, phone) and **leaders** (name, nickname, phone, e-mail). People from the středisko are not imported. Shows a diff (new / changed / left) to confirm before applying. Shows date of last sync. Run once a year and after changes. The skautIS login is used only for this sync — logging in to the web itself is always Google or e-mail + password.
+1. **skautIS** — sync of children and leaders from skautIS. Run once a year and after changes. The skautIS login is used only for this sync — logging in to the web itself is always Google or e-mail + password.
+   - **Who is imported** (shown on the tab as a note): each troop is one oddíl in skautIS (vlčušky 116.22.220, skauti a skautky 116.22.222), a person's troop is their oddíl. Members are split by **membership category**: vlče, světluška, skaut, skautka → **children** (`members`: first name, last name, nickname, troop, date of birth, **parents' contacts** — name, e-mail, phone); rover, ranger → **leaders** (`skautisPeople`: name, nickname, phone, e-mail; whatever their age, no child record). Other categories (dospělý, benjamínek, ostatní — former or inactive people) are left out as if they weren't there, only counted in the preview. Functions in skautIS are not used: the meeting day, a leader's home troop and role title are set by hand in Administration (děti, kontakty) and the sync never overwrites them. People of the středisko are not imported.
+   - **Flow:** the tab shows the date of the last sync and „Synchronizovat ze skautISu“ (a link to the skautIS login with the app id). skautIS posts the login token to the app's registered URL `https://zare.skauting.cz/skautis/prihlaseni.php` (`public/skautis/prihlaseni.php` — the web is static on the skauting.cz hosting, so this PHP relay stores nothing and redirects to `/vedouci/administrace#skautis=<token>&role=…&unit=…`; the URL fragment never reaches a server). Administration takes the token from the hash, drops it from the URL, opens this tab and calls `previewSkautisSync`: for each oddíl the login switches (`LoginUpdate`) to a role of the admin that can see it (a role on the oddíl, vedoucí/admin first, else on a unit above it, e.g. the středisko), loads the members, their details, children's parents and leaders' contacts, then logs the token out. The tab shows „Co se změní“: the oddíly used, then children and leaders, each with **noví**, **změnění** (with the changed fields, „přezdívka: Vydra → Vydrák“; a returning person „znovu v oddíle“), **odešlí** and the number unchanged, and the left-out categories. „použít změny“ writes it (`applySkautisSync`) and shows „Hotovo. Děti: 1 nový, 3 změnění, 1 odešlý. Vedoucí: …“; „zrušit“ goes back. Errors are explained: no role that can see an oddíl, oddíl not found, login expired, a skautIS error, loaded data too old (1 hour) or already used.
+   - **Writes:** new children get `meetingDay: null`, `parentUids: []`; changed ones get only the skautIS fields (+ `private/contacts` when the parents changed) and `active: true`; gone ones `active: false` (history, pairings and the meeting day stay). New leaders get `troop` = their oddíl as a first guess and `roleTitle: null`; changed ones only name, nickname, phone, e-mail and `active: true`; gone ones `active: false`. `settings/skautis.lastSyncAt` / `lastSyncBy`.
 2. **Children (děti)** — active children of the troop chosen in the troop switch (top right, shared with the leader pages; §4 intro) (nickname, name), with the number of children per meeting day and a link to the other troop when it has children without a day; the admin **clicks the meeting day** for each child (one of the troop's two days), saved at once and followed live; clicking the chosen day again clears it. Children without a valid meeting day (none, or a day the troop no longer meets on) are highlighted in red with a count on top and a filter „jen bez dne“ (they don't appear in any meeting's attendance).
 3. **Accounts & pairing (účty a párování)** — accounts: e-mail, status („potvrzený“ / „čeká na potvrzení“ / „bez přístupu“), the note from registration, **suggested children** (active children whose parent e-mail in skautIS matches the account e-mail, or whom the note names — first + last name or nickname, ignoring case and diacritics), assigned children as chips (nickname + troop, × to unassign), „+ přiřadit dítě“ (pick from imported `members`). **A parent can have several children, and a child can belong to several parent accounts** (e.g. mother and father separately); any of them can sign the child up. Unassigned children are not visible to parents. Pending accounts: „schválit“ and „zamítnout“ (role `none`); `none` accounts: „znovu aktivovat“ (back to pending) or „smazat“ (Auth account + profile). Accounts are filtered by status (čekající / rodiče / vedoucí / bez přístupu, with counts; opens on čekající) and update live. One more filter, **„děti bez účtu“** (with count), lists active children no parent account is paired with, with their parents' contacts from skautIS (name, e-mail as mailto, phone as tel) — whom to ask to create an account. Each parent e-mail has **„pozvat“**, confirmed in a second step („Poslat pozvánku na {e-mail} ({name})?“ — „Ano, poslat“ / „zrušit“) (`inviteParent`: the informative `parentInvitation` e-mail naming that parent's active children and asking them to create an account, with a plain link to `/prihlaseni` — not personalised, they may register with another address, e.g. Google; the account then starts as pending and is approved as usual); a sent invitation shows „pozváno {date}“ with „poslat znovu“; a parent e-mail that already has an account shows „má už účet“ instead. For a pending account, picked children (suggestion or „+ přiřadit dítě“) are only chosen — chips with ×, nothing saved — until „schválit jako rodiče“ pairs them all and approves the account as a parent in one write, so the approval e-mail lists them all; for a parent account, pairing is saved at once; unpairing a parent's last child returns the account to pending; „odebrat přístup“ / „zamítnout“ sets `none` and unpairs all children. Leader accounts can be switched between „vedoucí“ and „správce“ here too. The admin can't change their own account.
 4. **Leader roles (role vedoucích)** — each leader (from `skautisPeople`): nickname, name, e-mail; role „vedoucí“ / „správce“ / „bez přístupu“; **home troop** and **role title** (used on the leader home page and in contacts); linked web account (matched by e-mail, or pending accounts can be linked manually).
@@ -436,7 +439,7 @@ Document id = skautIS person id, so re-imports keep all references (attendance, 
 | `meetingDay`      | `weekday` \| null | set manually in Administration  |
 | `parentUids`      | string[]   | paired parent accounts (set by admin)  |
 | `active`          | boolean    | false when no longer in skautIS        |
-| `syncedAt`        | Timestamp  |                                        |
+| `syncedAt`        | Timestamp  | last sync that wrote the record        |
 
 #### `members/{memberId}/private/contacts` (leaders only)
 
@@ -456,12 +459,12 @@ Document id = skautIS person id. **The single identity of a leader**: the accoun
 | `nickname`  | string     | skautIS                                  |
 | `phone`     | string?    | skautIS                                  |
 | `email`     | string?    | skautIS                                  |
-| `troop`     | `troop`?   | admin — home troop (leader home page)    |
-| `roleTitle` | string?    | skautIS function — e.g. „rádce Bobrů“ (the contact can override it) |
+| `troop`     | `troop`?   | admin — home troop (leader home page); the sync sets the oddíl for a new leader |
+| `roleTitle` | string?    | admin — e.g. „rádce Bobrů“ (skautIS functions are not imported; the contact can override it) |
 | `active`    | boolean    | false when no longer in skautIS          |
 | `syncedAt`  | Timestamp  |                                          |
 
-Sync overwrites only the skautIS fields.
+Sync overwrites only the skautIS fields (name, nickname, phone, e-mail, `active`, `syncedAt`).
 
 ### `meetings/{troop_date}` (e.g. `vlc_2026-03-19`)
 
@@ -603,7 +606,11 @@ Document id = first 24 hex chars of SHA-256 of `firstname|lastname|birthDate` (l
 
 ### `settings/skautis` (admin only)
 
-`lastSyncAt`.
+`lastSyncAt`, `lastSyncBy` (uid), set by `applySkautisSync`.
+
+### `skautisSync/pending` (functions only)
+
+The skautIS data loaded by `previewSkautisSync` (`loaded: { units, children, leaders, skipped }`, `createdBy`, `createdAt`), applied and deleted by `applySkautisSync` (refused after 1 hour). No client access.
 
 ### `settings/meetings` (publicly readable) — §4.8 Meetings
 
@@ -623,6 +630,7 @@ Mock only in v1 — no collections yet. Later: clubhouse rules (settings) and th
 | `settings/emails`           | —                          | —                | —                                                        | read              | rw    |
 | `settings/skautis`          | —                          | —                | —                                                        | read              | rw    |
 | `invitations`               | —                          | —                | —                                                        | —                 | read (writes: `inviteParent`) |
+| `skautisSync`               | —                          | —                | —                                                        | —                 | — (functions only) |
 | `skautisPeople`             | —                          | —                | read **[?]**                                             | read              | rw    |
 | `members/*/private/*`       | —                          | —                | —                                                        | read              | rw    |
 | `waitlist`                  | — (via `submitWaitlist`)   | —                | —                                                        | rw                | rw    |
@@ -691,7 +699,8 @@ Firebase Blaze plan with Cloud Functions (region `europe-west3`, code in `functi
 | `deleteAccount`             | callable (admin)                | delete an account with role `none`: Auth account, profile, pairings |
 | `inviteParent`              | callable (admin)                | informative invitation e-mail to a parent e-mail from skautIS (link to the login page), remembered in `invitations` |
 | `onEventUpdated`            | Firestore update `events`       | e-mail parents that sign-up is open / the poster is out (§6.5) |
-| `syncSkautis`               | callable (admin)                | load members/leaders from skautIS API, return diff, apply |
+| `previewSkautisSync`        | callable (admin)                | with the skautIS login token: load both troops from the skautIS API (SOAP, `functions/src/skautis/`), keep them in `skautisSync/pending`, return what would change (§4.8 skautIS). In the emulator the token `fixture` reads test data instead |
+| `applySkautisSync`          | callable (admin)                | write the previewed sync to `members` (+ `private/contacts`) and `skautisPeople`, set `settings/skautis.lastSyncAt` |
 | `processPhoto`              | Storage object finalized (`originals/` only) | EXIF rotation, preview + thumbnail (sharp), size, dominant colour, `takenAt`; writes the photo doc, raises `photoCount`, first cover; failures → `status: error`. 1 GiB, 120 s, ≤ 10 instances |
 | `deletePhotos`              | callable (leader)               | delete photo docs + files, lower the count, move the cover |
 | `deleteAlbum`               | callable (leader)               | delete the album, its photos and all its files           |
@@ -710,7 +719,7 @@ E-mails are sent from `zare@skaut.cz` via **SMTP of the skaut.cz Google Workspac
 
 ## Open questions
 
-1. **skautIS API** — the app needs to be registered with skautIS (application ID); verify the API exposes the needed fields (nickname, parents' contacts).
+1. **skautIS API** — solved (§4.8 skautIS): the test app works end to end (`zare-test.skauting.cz` relays to localhost); the production app for `https://zare.skauting.cz/` with the login URL `/skautis/prihlaseni.php` was requested on 2026-09-27. Before production: fill in the production app id (`VITE_SKAUTIS_*`, `SKAUTIS_*`), upload the relay with the web, and check the admin has a role that sees both oddíly.
 2. **Photos** — solved: albums in Firebase Storage (§3.3, §4.9). Before production: create the default bucket in `europe-west3` (same region as the functions; the Blaze plan is needed) and set a budget alert in Google Cloud Billing (e.g. 100 CZK). Later: HEIC conversion, downloading a whole album (ZIP), reordering photos of an uploaded album by hand (drag & drop; an own order would override the date / file name order).
 3. **Administration extras** — children & meeting days, meetings, packing templates, e-mail texts and settings have no design; built in the visual language of `Zare - sprava`, to be reviewed.
 4. **Registration texts** — proposed labels in §3.1 and §4.3 need review.

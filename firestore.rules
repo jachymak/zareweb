@@ -90,6 +90,11 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // skautIS data loaded by previewSkautisSync, waiting to be applied (functions only).
+    match /skautisSync/{docId} {
+      allow read, write: if false;
+    }
+
     match /skautisPeople/{personId} {
       allow read: if isApproved();
       allow write: if isAdmin();

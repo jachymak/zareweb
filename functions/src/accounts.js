@@ -2,21 +2,13 @@ import { getAuth } from 'firebase-admin/auth'
 import { FieldValue } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/https'
 import { logger } from 'firebase-functions'
-import { db } from './admin.js'
+import { db, requireAdmin } from './admin.js'
 import { APP_URL, sendEmails } from './mail.js'
 import { BASE_OPTIONS } from './options.js'
 import { emailTemplate, renderEmail } from './shared/emails.js'
 import { EMAIL_RE } from './shared/waitlistRules.js'
 
 // Account management by the admin — SPEC §4.8 „účty a párování“.
-
-async function requireAdmin(request) {
-  const caller = request.auth?.uid
-  if (!caller) throw new HttpsError('unauthenticated', 'Sign in first.')
-  const callerDoc = await db.doc(`users/${caller}`).get()
-  if (callerDoc.get('role') !== 'admin') throw new HttpsError('permission-denied', 'Admins only.')
-  return caller
-}
 
 const joinNames = (names) =>
   names.length > 1 ? `${names.slice(0, -1).join(', ')} a ${names.at(-1)}` : names[0]

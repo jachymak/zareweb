@@ -119,7 +119,9 @@ const router = createRouter({
     if (to.path === from.path && (to.query.photo || from.query.photo)) return false
     if (savedPosition) return savedPosition
     // Pages that load their content later scroll to the hash themselves.
-    if (to.hash && document.querySelector(to.hash)) return { el: to.hash, behavior: 'smooth' }
+    // Only plain ids — the skautIS login passes its token in the hash.
+    if (/^#[\w-]+$/.test(to.hash) && document.querySelector(to.hash))
+      return { el: to.hash, behavior: 'smooth' }
     return { top: 0 }
   },
 })
