@@ -57,6 +57,23 @@ export const EMAILS = {
       ),
     },
   },
+  parentInvitation: {
+    placeholders: {
+      dite: 'jména dětí toho rodiče',
+      odkaz: 'odkaz na přihlášení na webu',
+    },
+    required: ['odkaz'],
+    switchable: false,
+    default: {
+      subject: 'Pozvánka na web oddílu Záře',
+      body: paragraphs(
+        'Dobrý den!',
+        'Zveme Vás na web skautského oddílu Záře, kam chodí {dite}. Najdete tam docházku, akce a přihlašování na ně, plakátky i fotky.',
+        'Založte si prosím účet tady: {odkaz} (tlačítko „nemám účet, chci ho založit“, nebo přes Google). Do poznámky napište, čí jste rodič — podle toho účet propojíme s Vašimi dětmi a přijde Vám e-mail.',
+        'S přáním hezkého dne\nvedoucí ze skautského oddílu Záře',
+      ),
+    },
+  },
   registrationOpened: {
     placeholders: {
       dite: 'jména dětí, které můžou jet',

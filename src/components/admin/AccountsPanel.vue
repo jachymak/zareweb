@@ -1,7 +1,14 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
-import { deleteAccount, revokeAccess, setUserRole, subscribeUsers } from '@/services/users'
+import {
+  deleteAccount,
+  inviteParent,
+  revokeAccess,
+  setUserRole,
+  subscribeInvitations,
+  subscribeUsers,
+} from '@/services/users'
 import {
   approveParent,
   getParentContactsOf,
@@ -21,6 +28,7 @@ const auth = useAuthStore()
 const accounts = ref(null)
 const members = ref(null)
 const parentContacts = ref({})
+const invitations = ref([])
 const loadError = ref('')
 
 let unsubscribe = []
@@ -32,6 +40,10 @@ onMounted(() => {
   unsubscribe = [
     subscribeUsers((list) => (accounts.value = list), fail),
     subscribeMembers((list) => (members.value = list), fail),
+    subscribeInvitations(
+      (list) => (invitations.value = list),
+      (e) => console.error('Loading invitations failed', e),
+    ),
   ]
 })
 onUnmounted(() => unsubscribe.forEach((u) => u()))
@@ -59,6 +71,12 @@ const childrenOf = (uid) => (members.value ?? []).filter((m) => m.parentUids?.in
 // Active children without any paired parent account.
 const unpaired = computed(() =>
   (members.value ?? []).filter((m) => m.active && !m.parentUids?.length),
+)
+
+// For „děti bez účtu“: when each parent e-mail was invited, and which have an account.
+const invitedAt = computed(() => Object.fromEntries(invitations.value.map((i) => [i.id, i.sentAt])))
+const accountEmails = computed(
+  () => new Set((accounts.value ?? []).map((a) => a.email?.toLowerCase())),
 )
 
 const counts = computed(() => ({
@@ -137,6 +155,22 @@ const revoke = (account) =>
     ),
   )
 const remove = (account) => run(account, () => deleteAccount(account.id))
+
+const invitingEmail = ref(null)
+const inviteErrors = ref({})
+async function invite(email) {
+  const key = email.toLowerCase()
+  invitingEmail.value = key
+  inviteErrors.value = { ...inviteErrors.value, [key]: '' }
+  try {
+    await inviteParent(email)
+  } catch (e) {
+    console.error('Invitation failed', e)
+    inviteErrors.value = { ...inviteErrors.value, [key]: 'Pozvánku se nepodařilo poslat.' }
+  } finally {
+    invitingEmail.value = null
+  }
+}
 </script>
 
 <template>
@@ -157,6 +191,11 @@ const remove = (account) => run(account, () => deleteAccount(account.id))
         v-if="filter === 'unpaired'"
         :children="unpaired"
         :parent-contacts="parentContacts"
+        :invited-at="invitedAt"
+        :account-emails="accountEmails"
+        :inviting-email="invitingEmail"
+        :invite-errors="inviteErrors"
+        @invite="invite"
       />
       <div v-else class="flex flex-col gap-2.5">
         <AccountCard

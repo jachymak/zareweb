@@ -120,6 +120,7 @@ export default async function adminExtras({ browser, check: report }) {
   check = report
   await clearAuthAccounts()
   await clearCollection('users')
+  await clearCollection('invitations')
   runScript('seed-users.js')
   runScript('seed-members.js')
   runScript('seed-activity.js')
@@ -196,6 +197,52 @@ export default async function adminExtras({ browser, check: report }) {
     check(
       'accounts: parents’ contacts from skautIS with mailto links',
       (await unpaired.first().locator('a[href^="mailto:"]').count()) > 0,
+    )
+
+    // parent invitations
+    const zabka = unpaired.filter({ hasText: 'Žabka' })
+    check(
+      'invite: a parent with an account gets no invitation button',
+      (await zabka.getByText('má už účet').isVisible()) &&
+        (await zabka.getByTestId('invite').count()) === 0,
+    )
+    const liska = unpaired.filter({ hasText: 'Liška' })
+    await liska.getByRole('button', { name: 'Pozvat dub.tomas@example.cz' }).click()
+    const confirm = liska.getByRole('alertdialog', {
+      name: 'Poslat pozvánku na dub.tomas@example.cz',
+    })
+    await confirm.getByRole('button', { name: 'zrušit' }).click()
+    await new Promise((r) => setTimeout(r, 1000))
+    check(
+      'invite: „zrušit“ in the confirmation sends nothing',
+      !(await getDoc('invitations/dub.tomas@example.cz')).data && (await confirm.count()) === 0,
+    )
+    await liska.getByRole('button', { name: 'Pozvat dub.tomas@example.cz' }).click()
+    await confirm.getByRole('button', { name: 'Ano, poslat' }).click()
+    await liska.getByText(`pozváno ${new Date().toLocaleDateString('cs-CZ')}`).waitFor()
+    check(
+      'invite: sent, remembered in invitations and shown with „poslat znovu“',
+      (await getDoc('invitations/dub.tomas@example.cz')).data?.email === 'dub.tomas@example.cz' &&
+        (await liska.getByRole('button', { name: 'Pozvat dub.tomas@example.cz' }).innerText()) ===
+          'poslat znovu',
+    )
+    logCheck(
+      'invite: e-mail with the child and the registration link',
+      'parentInvitation e-mail to dub.tomas@example.cz: Pozvánka na web oddílu Záře',
+    )
+    check(
+      'invite: rules — invitations can’t be written from the web',
+      (await patchDocAs(
+        (await signInRest('spravce@zare.test', PASSWORD)).idToken,
+        'invitations/x@example.cz',
+        {
+          email: { stringValue: 'x@example.cz' },
+        },
+      )) === 403,
+    )
+    logCheck(
+      'invite: names the children, plain link to the login page',
+      'kam chodí Liška a Bobr. Najdete tam docházku, akce a přihlašování na ně, plakátky i fotky.\\n\\nZaložte si prosím účet tady: http://localhost:5173/prihlaseni (',
     )
   }
 

@@ -19,6 +19,7 @@ const EVENT_SAMPLES = {
 }
 const ACCOUNT_SAMPLES = {
   deti: 'Přiřadili jsme k němu: Sojka (vlčušky) a Bobr (skauti a skautky).',
+  dite: 'Sojka a Bobr',
   odkaz: 'odkaz na web',
 }
 
@@ -76,13 +77,22 @@ onMounted(async () => {
           O novém účtu, který čeká na schválení, přijde e-mail správcům — jakmile má poznámku, kdo
           to je. Ten text se neupravuje.
         </p>
-        <EmailTemplateForm
-          email-key="accountApproved"
-          :stored="stored.accountApproved"
-          title="Schválený účet"
-          description="Přijde, když účet poprvé schválíš — přiřazením dítěte (rodič) nebo jako vedoucího. Rodičům vypíše přiřazené děti ({deti}); vedoucím se ten odstavec vynechá."
-          :samples="ACCOUNT_SAMPLES"
-        />
+        <div class="flex flex-col gap-3.5">
+          <EmailTemplateForm
+            email-key="accountApproved"
+            :stored="stored.accountApproved"
+            title="Schválený účet"
+            description="Přijde, když účet poprvé schválíš — jako rodiče (s vybranými dětmi) nebo jako vedoucího. Rodičům vypíše přiřazené děti ({deti}); vedoucím se ten odstavec vynechá."
+            :samples="ACCOUNT_SAMPLES"
+          />
+          <EmailTemplateForm
+            email-key="parentInvitation"
+            :stored="stored.parentInvitation"
+            title="Pozvánka pro rodiče"
+            description="Přijde rodiči, kterého pozveš z „děti bez účtu“ v záložce účty a párování. {dite} jsou jeho děti podle skautISu; odkaz vede na přihlášení na webu, kde si účet založí."
+            :samples="ACCOUNT_SAMPLES"
+          />
+        </div>
       </section>
     </div>
   </div>

@@ -3,17 +3,28 @@ import { FieldValue } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/https'
 import { logger } from 'firebase-functions'
 import { db } from './admin.js'
+import { APP_URL, sendEmails } from './mail.js'
 import { BASE_OPTIONS } from './options.js'
+import { emailTemplate, renderEmail } from './shared/emails.js'
+import { EMAIL_RE } from './shared/waitlistRules.js'
 
 // Account management by the admin — SPEC §4.8 „účty a párování“.
 
-// Deletes an account without access (role `none`): the Auth account, the
-// profile and any pairings. The client can't delete other Auth accounts.
-export const deleteAccount = onCall(BASE_OPTIONS, async (request) => {
+async function requireAdmin(request) {
   const caller = request.auth?.uid
   if (!caller) throw new HttpsError('unauthenticated', 'Sign in first.')
   const callerDoc = await db.doc(`users/${caller}`).get()
   if (callerDoc.get('role') !== 'admin') throw new HttpsError('permission-denied', 'Admins only.')
+  return caller
+}
+
+const joinNames = (names) =>
+  names.length > 1 ? `${names.slice(0, -1).join(', ')} a ${names.at(-1)}` : names[0]
+
+// Deletes an account without access (role `none`): the Auth account, the
+// profile and any pairings. The client can't delete other Auth accounts.
+export const deleteAccount = onCall(BASE_OPTIONS, async (request) => {
+  const caller = await requireAdmin(request)
 
   const uid = request.data?.uid
   if (typeof uid !== 'string' || !uid || uid === caller) {
@@ -38,4 +49,46 @@ export const deleteAccount = onCall(BASE_OPTIONS, async (request) => {
   }
   logger.info('Account deleted', { uid, by: caller })
   return { deleted: true }
+})
+
+// Invites a parent from the skautIS contacts to create an account (from „děti
+// bez účtu“): an informative e-mail naming their children, with a link to the
+// login page (not personalised — they may register with another address, e.g.
+// Google). Remembered in invitations/{e-mail} so the admin sees who was invited when.
+export const inviteParent = onCall(BASE_OPTIONS, async (request) => {
+  const caller = await requireAdmin(request)
+  const email = typeof request.data?.email === 'string' ? request.data.email.trim() : ''
+  if (!EMAIL_RE.test(email)) throw new HttpsError('invalid-argument', 'Invalid e-mail.')
+  const key = email.toLowerCase()
+
+  const members = (await db.collection('members').where('active', '==', true).get()).docs
+  const contacts = members.length
+    ? await db.getAll(...members.map((m) => m.ref.collection('private').doc('contacts')))
+    : []
+  const names = members
+    .filter((m, i) =>
+      (contacts[i].get('parents') ?? []).some((p) => p.email?.trim().toLowerCase() === key),
+    )
+    .map((m) => m.get('nickname') || m.get('firstName'))
+  if (!names.length) {
+    throw new HttpsError('failed-precondition', 'No active child has this parent e-mail.')
+  }
+
+  const template = emailTemplate(
+    'parentInvitation',
+    (await db.doc('settings/emails').get()).get('parentInvitation'),
+  )
+  await sendEmails('parentInvitation', [
+    {
+      to: email,
+      ...renderEmail(template, { dite: joinNames(names), odkaz: `${APP_URL}/prihlaseni` }),
+    },
+  ])
+  await db.doc(`invitations/${key}`).set({
+    email,
+    sentAt: FieldValue.serverTimestamp(),
+    sentBy: caller,
+  })
+  logger.info('Parent invited', { by: caller })
+  return { sent: true }
 })

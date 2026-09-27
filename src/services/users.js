@@ -73,3 +73,15 @@ export async function deleteAccount(uid) {
 export function linkUserToPerson(uid, personId) {
   return updateDoc(doc(users, uid), { personId })
 }
+
+// Parent invitations — SPEC §4.8 „děti bez účtu“ (admins only).
+const inviteParentCallable = httpsCallable(functions, 'inviteParent')
+
+export async function inviteParent(email) {
+  await inviteParentCallable({ email })
+}
+
+// Sent invitations, live: [{ id: lower-case e-mail, email, sentAt }].
+export function subscribeInvitations(callback, onError) {
+  return onSnapshot(collection(db, 'invitations'), (snap) => callback(fromQuery(snap)), onError)
+}

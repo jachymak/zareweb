@@ -84,6 +84,12 @@ service cloud.firestore {
       }
     }
 
+    // Parent invitations sent from Administration (inviteParent only).
+    match /invitations/{email} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
     match /skautisPeople/{personId} {
       allow read: if isApproved();
       allow write: if isAdmin();
