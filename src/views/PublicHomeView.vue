@@ -15,7 +15,6 @@ import TroopList from '@/components/public/TroopList.vue'
 import JoinCard from '@/components/public/JoinCard.vue'
 import FaqAccordion from '@/components/public/FaqAccordion.vue'
 import IntroScreen from '@/components/public/IntroScreen.vue'
-import sketchScouts from '@/assets/sketches/skica-skautici.svg'
 import sketchHouses from '@/assets/sketches/skica-domy.svg'
 import sketchClubhouse from '@/assets/sketches/skica-klubovna.svg'
 import sketchForest from '@/assets/sketches/skica-les.svg'
@@ -24,6 +23,8 @@ import sketchTram from '@/assets/sketches/skica-tram.svg'
 import sketchCamp from '@/assets/sketches/skica-tabor.svg'
 import sketchGoal from '@/assets/sketches/skica-cil.svg'
 import clubhouseMap from '@/assets/public/mapa-klubovna.jpg'
+import rocks1000 from '@/assets/public/skaly-1000.webp'
+import rocks1600 from '@/assets/public/skaly-1600.webp'
 
 // Public home — SPEC §2.1. Reads settings/public, writes nothing.
 const settingsStore = usePublicSettingsStore()
@@ -45,15 +46,32 @@ const showIntro = isFirstPage() && !useRoute().hash
       <TrailPath class="hidden md:block" />
 
       <div class="relative z-[1] mx-auto max-w-[1120px] px-4 pb-6 sm:px-6">
-        <StorySection id="uvod" :sketch="sketchScouts" class="pt-8 md:pt-14 md:pb-4">
+        <section id="uvod" data-section class="pt-8 text-center md:pt-12 md:pb-8">
           <h2
-            class="m-0 max-w-[20ch] font-hand text-[36px] leading-[1.1] font-semibold text-balance text-ink sm:text-[48px] lg:text-[60px]"
+            class="m-0 mx-auto max-w-[24ch] font-hand text-[36px] leading-[1.1] font-semibold text-balance text-ink sm:text-[48px] lg:text-[60px]"
           >
             Přes louky, lesy, skály šedé, společná nás cesta vede
           </h2>
-        </StorySection>
+          <!-- The trail sets off from the foot of the rocks (data-trail-x/y). -->
+          <div
+            data-trail-start
+            data-trail-x="0.4"
+            data-trail-y="0.93"
+            class="mx-auto mt-4 max-w-[960px]"
+          >
+            <img
+              :src="rocks1000"
+              :srcset="`${rocks1000} 1000w, ${rocks1600} 1600w`"
+              sizes="(min-width: 1024px) 960px, 100vw"
+              alt="Kresba pískovcových skal nad krajinou"
+              width="2500"
+              height="500"
+              class="block [mask-composite:intersect] [mask-image:linear-gradient(to_right,transparent,#000_7%,#000_93%,transparent),linear-gradient(transparent,#000_12%,#000_85%,transparent)] aspect-[5/2] h-auto w-full object-cover object-[30%_50%] md:aspect-[5/1]"
+            />
+          </div>
+        </section>
 
-        <TrailConnector from="left" to="left" class="md:hidden" />
+        <TrailConnector from="center" to="left" class="md:hidden" />
 
         <StorySection
           id="start"

@@ -73,10 +73,10 @@ export default async function publicPage({ browser, check }) {
     check('desktop: trail path drawn', !!d && d.split('C').length > 10)
     check('desktop: no horizontal overflow', (await horizontalOverflow(page)) <= 0)
     check(
-      'desktop: all 8 sketches loaded',
+      'desktop: all 7 sketches and the hero drawing loaded',
       await page.evaluate(
         () =>
-          [...document.querySelectorAll('[data-stop] img')].filter(
+          [...document.querySelectorAll('[data-stop] img, [data-trail-start] img')].filter(
             (i) => i.complete && i.naturalWidth > 0,
           ).length === 8,
       ),

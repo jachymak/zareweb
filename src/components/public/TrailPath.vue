@@ -5,6 +5,8 @@ import { onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue'
 // It is routed through every `[data-stop]` (the sketches) inside the parent
 // element, walking in the gutter between a sketch and its text. When other
 // `[data-section]` blocks sit between two stops, it detours around their left edge.
+// It sets off from a `[data-trail-start]` element, if any, at the point given by
+// its `data-trail-x` / `data-trail-y` (fractions of its box).
 
 const svg = useTemplateRef('svg')
 const d = ref('')
@@ -40,6 +42,15 @@ function waypoints(wrap) {
   })
 
   const pts = []
+  const start = wrap.querySelector('[data-trail-start]')
+  if (start) {
+    const b = box(start, origin)
+    const x = b.l + (b.r - b.l) * Number(start.dataset.trailX ?? 0.5)
+    const y = b.t + (b.b - b.t) * Number(start.dataset.trailY ?? 1)
+    pts.push({ x, y })
+    // Into the first stop's lane before its section starts, clear of the text.
+    if (stops[0]) pts.push({ x: stops[0].lane, y: Math.max(y + 60, stops[0].section.t + 40) })
+  }
   stops.forEach((stop, i) => {
     const prev = stops[i - 1]
     if (prev) {

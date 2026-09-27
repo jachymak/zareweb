@@ -3,11 +3,11 @@ import { computed } from 'vue'
 
 // Short piece of the dashed trail between two stacked blocks (mobile layout).
 const props = defineProps({
-  from: { type: String, default: 'left' }, // side it enters from the block above
+  from: { type: String, default: 'left' }, // side it enters from the block above ('center' too)
   to: { type: String, default: 'right' }, // side it leaves towards the block below
 })
 
-const X = { left: 56, right: 298 }
+const X = { left: 56, center: 177, right: 298 }
 
 const d = computed(() => {
   const a = X[props.from]
