@@ -368,13 +368,13 @@ Effect (entries are **archived, not deleted**, to keep the original sign-up date
 
 Settings blocks (per-troop meeting days, ranges without meetings, the waiting-list reset, each e-mail text, waiting-list ages, camp requirement per troop, packing templates) start collapsed to a narrow full-width bar — title and a short summary (e.g. „pondělí a čtvrtek · 17:00–19:00“, the e-mail subject or „neposílá se“) — that opens into the block; a block with validation errors opens by itself.
 
-Tabs (only implemented ones are shown, in the order děti · účty a párování · schůzky · čekací listina · e-maily k akcím · šablony s sebou · nastavení; the open one is kept in the URL, `?zalozka=deti|ucty|schuzky|cekaci-listina|emaily-akce|sablony|nastaveni`, default účty):
+Tabs (only implemented ones are shown, in the order děti · účty a párování · kontakty · schůzky · čekací listina · e-maily k akcím · šablony s sebou · nastavení; the open one is kept in the URL, `?zalozka=deti|ucty|kontakty|schuzky|cekaci-listina|emaily-akce|sablony|nastaveni`, default účty):
 
 1. **skautIS** — „Synchronizovat ze skautISu“: the admin logs in to skautIS; a Cloud Function loads via the skautIS API: **children** of both troops (first name, last name, nickname, troop, date of birth), **their parents' contacts** (name, e-mail, phone) and **leaders** (name, nickname, phone, e-mail). People from the středisko are not imported. Shows a diff (new / changed / left) to confirm before applying. Shows date of last sync. Run once a year and after changes. The skautIS login is used only for this sync — logging in to the web itself is always Google or e-mail + password.
 2. **Children (děti)** — active children of the troop chosen in the troop switch (top right, shared with the leader pages; §4 intro) (nickname, name), with the number of children per meeting day and a link to the other troop when it has children without a day; the admin **clicks the meeting day** for each child (one of the troop's two days), saved at once and followed live; clicking the chosen day again clears it. Children without a valid meeting day (none, or a day the troop no longer meets on) are highlighted in red with a count on top and a filter „jen bez dne“ (they don't appear in any meeting's attendance).
 3. **Accounts & pairing (účty a párování)** — accounts: e-mail, status („potvrzený“ / „čeká na potvrzení“ / „bez přístupu“), the note from registration, **suggested children** (active children whose parent e-mail in skautIS matches the account e-mail, or whom the note names — first + last name or nickname, ignoring case and diacritics), assigned children as chips (nickname + troop, × to unassign), „+ přiřadit dítě“ (pick from imported `members`). **A parent can have several children, and a child can belong to several parent accounts** (e.g. mother and father separately); any of them can sign the child up. Unassigned children are not visible to parents. Pending accounts: „schválit“, „poslat dotaz“ (e-mail asking an unknown account to get in touch) and „zamítnout“ (role `none`); `none` accounts: „znovu aktivovat“ (back to pending) or „smazat“ (Auth account + profile). Accounts are filtered by status (čekající / rodiče / vedoucí / bez přístupu, with counts; opens on čekající) and update live. One more filter, **„děti bez účtu“** (with count), lists active children no parent account is paired with, with their parents' contacts from skautIS (name, e-mail as mailto, phone as tel) — whom to ask to create an account. Pairing a child with a pending account approves it as a parent in the same write; unpairing a parent's last child returns the account to pending; „odebrat přístup“ / „zamítnout“ sets `none` and unpairs all children. Leader accounts can be switched between „vedoucí“ and „správce“ here too. The admin can't change their own account. „Pozvat nový rodičovský účet“ **(not implemented yet)** — e-mail (can be picked from parent contacts in skautIS) → invitation e-mail.
 4. **Leader roles (role vedoucích)** — each leader (from `skautisPeople`): nickname, name, e-mail; role „vedoucí“ / „správce“ / „bez přístupu“; **home troop** and **role title** (used on the leader home page and in contacts); linked web account (matched by e-mail, or pending accounts can be linked manually).
-5. **Contacts (kontakty)** — the list shown to parents in „Vedoucí“, stored as its own collection. Each contact is **linked to a person from skautIS**: name, phone and e-mail come from skautIS and are read-only here; the admin edits only group (vlčušky / skauti a skautky / ostatní), photo and order. Contacts in the „ostatní“ group who are not in the import (e.g. středisko people) **[?]** — manual entry, or not shown. If the phone/e-mail is missing in skautIS, the contact shows a warning „doplň telefon ve skautISu“ and the phone isn't shown to parents until the leader updates skautIS and the next sync runs. „+ přidat kontakt“ (pick a skautIS person), „uložit kontakty“.
+5. **Contacts (kontakty)** — the list shown to parents in „Vedoucí“, stored as its own collection. Intro text as in the design; a group switch (vlčušky / skauti a skautky / ostatní, with counts) shows one group at a time in its order. A contact **linked to a person from skautIS** shows nickname, name, phone and e-mail read-only; a missing phone/e-mail shows „doplň telefon / e-mail ve skautISu“ in red (parents then just don't see it until skautIS is updated and synced); a leader no longer active in skautIS is flagged („rodiče ho nevidí“). The admin edits the **role** (pre-filled with the leader's `roleTitle` from skautIS, can be overwritten — „ve skautISu: … · vrátit“; the same text or an emptied field means no override), the **group** (moving a contact puts it at the end of the other group), the **photo** and the **order** (↑ výš / ↓ níž within the group); „odebrat kontakt“. „+ přidat kontakt“ picks an active skautIS leader not yet in the shown group (one person can be in several groups). In „ostatní“ also **„+ ruční kontakt“** — someone outside the import (e.g. people of the středisko): nickname, name, phone, e-mail (a name or nickname and a phone or e-mail required, `manualContactErrors`) and role, all editable. **Photo**: „nahrát / změnit fotku“ (JPEG / PNG / WebP, HEIC rejected as in §4.9) is cut from the middle to 3:4 and resized to 480×640 JPEG in the browser, shown at once; „odebrat fotku“. Everything, photos included, is saved with one „uložit kontakty“ („neuložené změny“ until then): new photos are uploaded to Storage `contacts/`, then all contacts are written in one batch (order = position in the list), then photos no contact uses any more are deleted.
 6. **Packing list templates („šablony s sebou“)** — templates collapsed to name + items; open to edit the name and items (one per line, blank lines dropped; both required), „+ nová šablona“, „smazat šablonu“ with inline confirmation. Posters copy the items, so edits and deletes don't change existing posters.
 7. **Waiting list (čekací listina)** — the annual reset (§4.6: explanation, last reset date, „Resetovat listinu na další rok“ → wizard, banner after it); the texts of the **renewal e-mail** (sent by the reset, must contain `{odkaz}`) and the **confirmation e-mail** (sent by `submitWaitlist` to everyone who signs up; `{dite}`); **waiting-list ages** (`settings/public`: warning age < limit, both whole years 1–25).
 8. **E-mails about events (e-maily k akcím)** — texts of the automated e-mails to parents (§6.5, `onEventUpdated`), each can be switched off („posílat tenhle e-mail“): **registration started** (`{dite}`, `{akce}`, `{termin}`, `{uzaverka}`, `{odkaz}` = the parent page) and **poster published** (`{dite}`, `{akce}`, `{termin}`, `{prihlasovani}` = a sentence with the deadline and link while registration is open, else the paragraph is left out, `{odkaz}` = the poster). Both must contain `{odkaz}`.
@@ -383,7 +383,7 @@ Tabs (only implemented ones are shown, in the order děti · účty a párován�
 10. **Meetings (schůzky)** — per troop: exactly two meeting weekdays (Mon–Fri) and the time from–to (default 17:00–19:00); **ranges without meetings** (holidays, school breaks; from–to, one day = from only; vlčušky / skauti a skautky / všichni) with an optional reason. Ranges that are over disappear from the list (ones added in this visit stay until saved) but stay in the data until the school year ends, because attendance still leaves their dates out; ranges of earlier school years are deleted when the tab opens. Single cancelled meetings are not entered here; leaders mark them in Attendance („schůzka nebyla“). Everything is saved with one „uložit“ („neuložené změny“ until then) into `settings/meetings`. Used by the public home (troop days and times), Attendance (weekdays, time, meeting dates — dates without meetings are left out), the leader home today card and the clubhouse automat (later). Changing a troop's weekdays must be followed by re-assigning children's `meetingDay`: the tab warns how many children have a day the troop no longer has and links to Children. Old attendance records stay on their weekday and still count for those children.
 11. **Clubhouse (klubovna)** — later (clubhouse is mock-only in v1): the automat rules (how long before a meeting to heat, target and setback temperatures, drying between meetings, …) applied to the meetings and events, and the **full log** of automatic and manual changes (filterable by date).
 
-**Reads/Writes:** `users`, `members`, `contacts`, `packingTemplates`, `settings/*`; skautIS sync via Cloud Function.
+**Reads/Writes:** `users`, `members`, `contacts` (+ Storage `contacts/`), `skautisPeople` (read), `packingTemplates`, `settings/*`; skautIS sync via Cloud Function.
 
 ### 4.9 Photos (`/vedouci/fotky`, `/vedouci/fotky/:albumId`)
 
@@ -451,7 +451,7 @@ Document id = skautIS person id. **The single identity of a leader**: the accoun
 | `phone`     | string?    | skautIS                                  |
 | `email`     | string?    | skautIS                                  |
 | `troop`     | `troop`?   | admin — home troop (leader home page)    |
-| `roleTitle` | string?    | admin — e.g. „rádce Bobrů“               |
+| `roleTitle` | string?    | skautIS function — e.g. „rádce Bobrů“ (the contact can override it) |
 | `active`    | boolean    | false when no longer in skautIS          |
 | `syncedAt`  | Timestamp  |                                          |
 
@@ -512,10 +512,15 @@ Poster content in a separate doc so parents can read it **only when `posterStatu
 
 | Field             | Type                          | Source                     |
 | ----------------- | ----------------------------- | -------------------------- |
-| `personId`        | string                        | `skautisPeople` id — name, nickname, phone, e-mail, role title come from there |
+| `personId`        | string?                       | `skautisPeople` id — nickname, name, phone, e-mail come from there; null = manual contact (group `other` only) |
 | `group`           | `"vlc" \| "ss" \| "other"`    | admin                      |
-| `photoUrl`        | string?                       | admin                      |
-| `order`           | number                        | admin                      |
+| `roleTitle`       | string?                       | admin — overrides the person's `roleTitle`; null = from skautIS |
+| `nickname`, `name`, `phone`, `email` | string?    | admin — manual contacts only |
+| `photoUrl`        | string?                       | token download URL of the photo |
+| `photoPath`       | string?                       | Storage `contacts/{contactId}/{fileId}.jpg` |
+| `order`           | number                        | admin — position in the whole list |
+
+What parents see is `contactCard` (`functions/src/shared/contacts.js`); contacts of inactive leaders are left out.
 
 ### `packingTemplates/{templateId}`
 
@@ -545,9 +550,10 @@ Poster content in a separate doc so parents can read it **only when `posterStatu
 originals/{albumId}/{photoId}.{jpg|png|webp}   uploaded by leaders, untouched (EXIF incl. GPS kept)
 previews/{albumId}/{photoId}.jpg               long edge 2048 px, JPEG q82, metadata stripped
 thumbs/{albumId}/{photoId}.jpg                 long edge 640 px, JPEG q75, metadata stripped
+contacts/{contactId}/{fileId}.jpg              leader contact photos, 480×640 JPEG made in the browser
 ```
 
-Rules in `storage.rules`: leaders may create originals in an existing album (JPEG/PNG/WebP, ≤ 30 MB, metadata `albumId` and `uploadedBy` matching); nothing else is writable by clients. Reading: leaders everything, parents files of published albums. Expected size ~13 GB per year (~2,300 photos).
+Rules in `storage.rules`: leaders may create originals in an existing album (JPEG/PNG/WebP, ≤ 30 MB, metadata `albumId` and `uploadedBy` matching); admins create (JPEG ≤ 2 MB) and delete contact photos; nothing else is writable by clients. Reading: leaders everything, parents files of published albums. Expected size ~13 GB per year (~2,300 photos).
 
 ### `waitlist/{entryId}`
 
@@ -625,6 +631,7 @@ Mock only in v1 — no collections yet. Later: clubhouse rules (settings) and th
 | `albums/*/photos`           | —                          | —                | read (album published)                                   | read              | read  |
 | Storage `originals/`        | —                          | —                | read (album published)                                   | read, create      | same  |
 | Storage `previews/`, `thumbs/` | —                       | —                | read (album published)                                   | read              | read  |
+| Storage `contacts/`         | —                          | —                | read                                                     | read              | read, create, delete |
 
 - Parents must not change their own `role`; pairing (`members.parentUids`) is written only by admins.
 - `skautisPeople` is readable by parents because contacts and organizers show leaders' names and phones. **[?]** Acceptable, given it contains only leaders of the two troops?
@@ -702,6 +709,5 @@ E-mails are sent from `zare@skaut.cz` via **SMTP of the skaut.cz Google Workspac
 2. **Photos** — solved: albums in Firebase Storage (§3.3, §4.9). Before production: create the default bucket in `europe-west3` (same region as the functions; the Blaze plan is needed) and set a budget alert in Google Cloud Billing (e.g. 100 CZK). Later: HEIC conversion, downloading a whole album (ZIP), reordering photos of an uploaded album by hand (drag & drop; an own order would override the date / file name order).
 3. **Administration extras** — children & meeting days, meetings, packing templates, e-mail texts and settings have no design; built in the visual language of `Zare - sprava`, to be reviewed.
 4. **Registration texts** — proposed labels in §3.1 and §4.3 need review.
-5. **Photo storage** — leaders' photos for contacts: Firebase Storage is set up now (photo albums), so probably there.
-6. **Contacts outside skautIS import** — how to show středisko people in the „ostatní“ group?
-7. **Parent contacts from skautIS** — may leaders (not only admins) see them, e.g. in attendance?
+5. **Parent contacts from skautIS** — may leaders (not only admins) see them, e.g. in attendance?
+6. **Contacts less tied to skautIS (TODO)** — now a contact is linked to a skautIS leader (name, phone, e-mail read-only; only the role title can be overwritten) and manual contacts are allowed only in „ostatní“ (§4.8 Contacts). Possibly loosen this later, e.g. overriding phone / e-mail / name per contact, or manual contacts in every group.

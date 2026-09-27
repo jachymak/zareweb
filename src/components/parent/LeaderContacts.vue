@@ -1,24 +1,24 @@
 <script setup>
 import { computed, ref } from 'vue'
+import { CONTACT_GROUP_NAMES } from '@/constants/troops'
 import PillSwitch from './PillSwitch.vue'
 import SectionHeading from './SectionHeading.vue'
 
-// „Vedoucí“ — contact cards by group. Details come from skautIS; a missing
-// phone or e-mail is simply not shown.
+// „Vedoucí“ — contact cards by group (contactCard in @shared/contacts). A
+// missing phone or e-mail is simply not shown.
 const props = defineProps({
-  contacts: { type: Array, required: true }, // [{ id, group, photoUrl, person }]
+  contacts: { type: Array, required: true }, // [{ id, group, photoUrl, nickname, name, roleTitle, phone, email }]
   initialGroup: { type: String, default: 'vlc' },
 })
 
-const GROUPS = [
-  { value: 'vlc', label: 'vlčušky' },
-  { value: 'ss', label: 'skauti a skautky' },
-  { value: 'other', label: 'ostatní' },
-]
+const GROUPS = Object.entries(CONTACT_GROUP_NAMES).map(([value, label]) => ({ value, label }))
 const TILTS = [-1.6, 1.4, -1, 1.8, -1.3, 1.1]
 
 const group = ref(props.initialGroup)
 const visible = computed(() => props.contacts.filter((c) => c.group === group.value))
+
+// „Theodor Mikolajek · vedoucí oddílu“ (the name only when the heading is the nickname)
+const subtitle = (c) => [c.nickname && c.name, c.roleTitle].filter(Boolean).join(' · ')
 
 const telHref = (phone) => `tel:${phone.replace(/\s+/g, '')}`
 </script>
@@ -48,17 +48,14 @@ const telHref = (phone) => `tel:${phone.replace(/\s+/g, '')}`
         </div>
         <div class="min-w-0">
           <h3 class="m-0 font-hand text-[23px] leading-[1.15] font-bold text-ink">
-            {{ contact.person.nickname || contact.person.name }}
+            {{ contact.nickname || contact.name }}
           </h3>
-          <p class="m-0 mb-[5px] text-[14.5px] text-muted">
-            {{ contact.person.name
-            }}<template v-if="contact.person.roleTitle"> · {{ contact.person.roleTitle }}</template>
+          <p class="m-0 mb-[5px] text-[14.5px] text-muted">{{ subtitle(contact) }}</p>
+          <p v-if="contact.phone" class="m-0 text-[15px]">
+            <a :href="telHref(contact.phone)" class="text-ink">{{ contact.phone }}</a>
           </p>
-          <p v-if="contact.person.phone" class="m-0 text-[15px]">
-            <a :href="telHref(contact.person.phone)" class="text-ink">{{ contact.person.phone }}</a>
-          </p>
-          <p v-if="contact.person.email" class="m-0 text-[15px] break-words">
-            <a :href="`mailto:${contact.person.email}`">{{ contact.person.email }}</a>
+          <p v-if="contact.email" class="m-0 text-[15px] break-words">
+            <a :href="`mailto:${contact.email}`">{{ contact.email }}</a>
           </p>
         </div>
       </li>

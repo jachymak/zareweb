@@ -1,5 +1,5 @@
 // End-to-end tests against the dev server and Firebase emulators.
-// Usage: npm run test:e2e [-- public waitlist renewal login admin parent poster preview leader attendance events news clubhouse waitlistadmin adminextras photos]   (default: all)
+// Usage: npm run test:e2e [-- public waitlist renewal login admin parent poster preview leader attendance events news clubhouse waitlistadmin adminextras photos contacts]   (default: all)
 // Needs `npm run emulators` and `npm run dev` running. Modifies emulator data:
 // resets settings/*, clears the `waitlist` collection, and (login) replaces all
 // accounts and `users` with the test accounts of `seed-users.js`, (admin, parent,
@@ -8,7 +8,8 @@
 // accounts too; waitlistadmin replaces the accounts and the whole `waitlist` with
 // `seed-waitlist.js` and runs the annual reset; adminextras replaces accounts,
 // members and activity like the parent suites and edits settings/* and templates;
-// photos replaces them too and all albums with their Storage files (`seed-photos.js`).
+// photos replaces them too and all albums with their Storage files (`seed-photos.js`);
+// contacts replaces them like adminextras, edits contacts and their Storage photos.
 
 import { assertRunning, createReport, launchBrowser, runScript, SCREENSHOTS } from './lib.js'
 
@@ -29,6 +30,7 @@ const SUITES = {
   waitlistadmin: () => import('./waitlistAdmin.test.js'),
   adminextras: () => import('./adminExtras.test.js'),
   photos: () => import('./photos.test.js'),
+  contacts: () => import('./contacts.test.js'),
 }
 
 const requested = process.argv.slice(2)

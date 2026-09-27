@@ -101,6 +101,19 @@ export const LEADERS = [
   },
 ]
 
+// A contact outside skautIS (group „ostatní“), entered by hand in Administration.
+export const MANUAL_CONTACT = {
+  personId: null,
+  group: 'other',
+  nickname: 'Kormorán',
+  name: 'Petr Vondráček',
+  roleTitle: 'vedoucí střediska Šipka',
+  phone: '+420 602 555 014',
+  email: null,
+  photoUrl: null,
+  photoPath: null,
+}
+
 // Full poster content, as the leaders' poster editor saves it (SPEC §5).
 export const STREDOHORI_POSTER = {
   intro: 'Vyrazíme na dva dny do Českého středohoří, vylezeme na Milešovku a přespíme na chatě.',
@@ -414,9 +427,17 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       active: true,
       syncedAt: now,
     })
-    await put(`contacts/seed-${id}`, { personId: id, group, photoUrl: null, order })
+    await put(`contacts/seed-${id}`, {
+      personId: id,
+      group,
+      roleTitle: null,
+      photoUrl: null,
+      photoPath: null,
+      order,
+    })
   }
-  console.log(`${LEADERS.length} leaders and contacts`)
+  await put('contacts/seed-manual', { ...MANUAL_CONTACT, order: LEADERS.length })
+  console.log(`${LEADERS.length} leaders and ${LEADERS.length + 1} contacts`)
 
   for (const d of await list('users')) {
     const personId = LEADER_ACCOUNTS[fromValue(d.fields.email)]

@@ -37,3 +37,10 @@ export const AUDIENCES = {
   ss: { name: 'skauti a skautky', tag: 's&s' },
   all: { name: 'všichni', tag: 'vši' },
 }
+
+// Groups of leader contacts on the parents' page (SPEC §3.1 Vedoucí).
+export const CONTACT_GROUP_NAMES = {
+  vlc: 'vlčušky',
+  ss: 'skauti a skautky',
+  other: 'ostatní',
+}

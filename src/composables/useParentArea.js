@@ -2,6 +2,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { pragueToday, schoolYearRange } from '@shared/schoolYear'
 import { campRequirements, meetingStats, tripCount } from '@shared/attendance'
 import { canJoin, isOpenForSignUp, isRelevant } from '@shared/events'
+import { contactCard } from '@shared/contacts'
 import { getParticipant, listEvents, setSignedUp } from '@/services/events'
 import { listMeetings } from '@/services/meetings'
 import { listNews } from '@/services/news'
@@ -118,11 +119,9 @@ export function useParentArea(loadChildren) {
 
   const signUpEvents = computed(() => relevantEvents.value.filter((e) => isOpenForSignUp(e, today)))
 
-  // Contacts with their leader's details, in the admin's order.
+  // Contact cards with their leader's details, in the admin's order.
   const leaderContacts = computed(() =>
-    contacts.value
-      .map((c) => ({ ...c, person: leaders.value[c.personId] }))
-      .filter((c) => c.person?.active),
+    contacts.value.map((c) => contactCard(c, leaders.value[c.personId])).filter(Boolean),
   )
 
   // ---- sign-up ----

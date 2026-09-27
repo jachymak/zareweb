@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import AccountsPanel from '@/components/admin/AccountsPanel.vue'
 import AdminTabs from '@/components/admin/AdminTabs.vue'
 import ChildrenPanel from '@/components/admin/ChildrenPanel.vue'
+import ContactsPanel from '@/components/admin/ContactsPanel.vue'
 import EventEmailsPanel from '@/components/admin/EventEmailsPanel.vue'
 import MeetingsPanel from '@/components/admin/MeetingsPanel.vue'
 import PackingTemplatesPanel from '@/components/admin/PackingTemplatesPanel.vue'
@@ -16,6 +17,7 @@ import LeaderHeader from '@/components/leader/LeaderHeader.vue'
 const TABS = [
   { id: 'deti', label: 'děti', panel: ChildrenPanel },
   { id: 'ucty', label: 'účty a párování', panel: AccountsPanel },
+  { id: 'kontakty', label: 'kontakty', panel: ContactsPanel },
   { id: 'schuzky', label: 'schůzky', panel: MeetingsPanel },
   { id: 'cekaci-listina', label: 'čekací listina', panel: WaitlistPanel },
   { id: 'emaily-akce', label: 'e-maily k akcím', panel: EventEmailsPanel },

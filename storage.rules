@@ -3,6 +3,7 @@ rules_version = '2';
 // Storage access — see docs/SPEC.md §5.1. Photos of albums (§4.9):
 //   originals/{albumId}/{photoId}.{ext}  uploaded by leaders, untouched
 //   previews/…, thumbs/…                 written by processPhoto only
+// Leader contact photos (§4.8): contacts/{contactId}/{fileId}.jpg, by admins.
 // Previews and thumbnails are shown through token URLs from the photo
 // documents; the rules below guard direct access (e.g. the original download).
 service firebase.storage {
@@ -14,6 +15,10 @@ service firebase.storage {
 
     function isLeader() {
       return request.auth != null && role() in ['leader', 'admin'];
+    }
+
+    function isAdmin() {
+      return request.auth != null && role() == 'admin';
     }
 
     function isApproved() {
@@ -39,6 +44,16 @@ service firebase.storage {
         && request.resource.contentType.matches('image/(jpeg|png|webp)')
         && request.resource.metadata.albumId == albumId
         && request.resource.metadata.uploadedBy == request.auth.uid;
+    }
+
+    // Resized in the browser to a 480×640 JPEG (MAX_CONTACT_PHOTO_BYTES).
+    match /contacts/{contactId}/{fileName} {
+      allow read: if isApproved();
+      allow create: if isAdmin()
+        && fileName.matches('[A-Za-z0-9]{20}[.]jpg')
+        && request.resource.size <= 2 * 1024 * 1024
+        && request.resource.contentType == 'image/jpeg';
+      allow delete: if isAdmin();
     }
 
     match /{folder}/{albumId}/{fileName} {
