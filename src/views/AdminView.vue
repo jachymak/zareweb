@@ -5,7 +5,7 @@ import AccountsPanel from '@/components/admin/AccountsPanel.vue'
 import AdminTabs from '@/components/admin/AdminTabs.vue'
 import ChildrenPanel from '@/components/admin/ChildrenPanel.vue'
 import ContactsPanel from '@/components/admin/ContactsPanel.vue'
-import EventEmailsPanel from '@/components/admin/EventEmailsPanel.vue'
+import EmailsPanel from '@/components/admin/EmailsPanel.vue'
 import MeetingsPanel from '@/components/admin/MeetingsPanel.vue'
 import PackingTemplatesPanel from '@/components/admin/PackingTemplatesPanel.vue'
 import SettingsPanel from '@/components/admin/SettingsPanel.vue'
@@ -20,7 +20,7 @@ const TABS = [
   { id: 'kontakty', label: 'kontakty', panel: ContactsPanel },
   { id: 'schuzky', label: 'schůzky', panel: MeetingsPanel },
   { id: 'cekaci-listina', label: 'čekací listina', panel: WaitlistPanel },
-  { id: 'emaily-akce', label: 'e-maily k akcím', panel: EventEmailsPanel },
+  { id: 'emaily', label: 'e-maily', panel: EmailsPanel },
   { id: 'sablony', label: 'šablony s sebou', panel: PackingTemplatesPanel },
   { id: 'nastaveni', label: 'nastavení', panel: SettingsPanel },
 ]

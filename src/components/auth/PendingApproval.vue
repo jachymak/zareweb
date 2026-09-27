@@ -88,6 +88,14 @@ async function submit() {
       novalidate
       @submit.prevent="submit"
     >
+      <p
+        v-if="!savedNote"
+        class="m-0 text-[15.5px] leading-normal text-ink"
+        data-testid="note-needed"
+      >
+        <strong class="font-medium">Ještě jeden krok:</strong> dokud nenapíšeš, koho u nás máš,
+        správce se o tvém účtu nedozví a nemůže ho schválit.
+      </p>
       <NoteField v-model="note" :error="errors.note" />
       <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
         <button type="submit" class="btn-primary" :disabled="saving">

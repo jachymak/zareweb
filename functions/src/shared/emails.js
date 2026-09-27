@@ -1,4 +1,4 @@
-// Automated e-mails — SPEC §4.8 (Čekací listina, E-maily k akcím), §7.
+// Automated e-mails — SPEC §4.8 (Čekací listina, E-maily), §7.
 // Texts are stored in `settings/emails.{key}` as { subject, body, enabled? };
 // the defaults below apply while none is saved. Paragraphs are separated by a
 // blank line; `{name}` placeholders are filled per recipient, and a paragraph
@@ -36,6 +36,23 @@ export const EMAILS = {
         'Před nějakou dobou jste na naši čekací listinu zapsali Vaše dítě {dite}.',
         'Letos jsme do oddílu právě nabrali nováčky a Vaše dítě jsme bohužel nepřijali. Chceme se Vás zeptat, zda Váš zájem stále trvá?\nPokud ano, potvrďte nám to prosím zde: {odkaz}',
         'Do oddílu nabíráme děti ve věku 7–11 let. Pokud je Vaše dítě starší, doporučujeme se podívat po jiném oddílu (např. na webu skaut.cz).',
+        'S přáním hezkého dne\nvedoucí ze skautského oddílu Záře',
+      ),
+    },
+  },
+  accountApproved: {
+    placeholders: {
+      deti: 'věta s přiřazenými dětmi — jen u rodičů',
+      odkaz: 'odkaz na web oddílu',
+    },
+    required: ['odkaz'],
+    switchable: false,
+    default: {
+      subject: 'Váš účet na webu oddílu Záře je schválený',
+      body: paragraphs(
+        'Dobrý den!',
+        'Schválili jsme Váš účet na webu skautského oddílu Záře. Přihlásit se můžete tady: {odkaz}',
+        '{deti}',
         'S přáním hezkého dne\nvedoucí ze skautského oddílu Záře',
       ),
     },

@@ -544,7 +544,7 @@ export default async function adminExtras({ browser, check: report }) {
 
   // ---- e-mails about events ----
   {
-    await tab(page, 'e-maily k akcím').click()
+    await tab(page, 'e-maily').click()
     const opened = page.getByTestId('email-registrationOpened')
     const poster = page.getByTestId('email-posterPublished')
     await expand(opened)
@@ -606,6 +606,47 @@ export default async function adminExtras({ browser, check: report }) {
       'posterPublished e-mail to rodic@zare.test: Plakátek: Zkušební výprava',
     )
     await deleteDocRest('events/test-emails')
+  }
+
+  // ---- e-mails about accounts ----
+  {
+    const approved = page.getByTestId('email-accountApproved')
+    await expand(approved)
+    check(
+      'account e-mails: the approval e-mail can’t be switched off',
+      (await approved.getByLabel('posílat tenhle e-mail').count()) === 0,
+    )
+    await approved.getByLabel('Předmět').fill('Schváleno: web Záře')
+    await approved.getByRole('button', { name: 'uložit' }).click()
+    await approved.getByText('uloženo ✓').waitFor()
+    check(
+      'account e-mails: saved subject',
+      (await getDoc('settings/emails')).data.accountApproved?.subject === 'Schváleno: web Záře',
+    )
+
+    // onUserWritten: the seeded pending account was announced to the admins;
+    // approving it (here as a leader) e-mails the user once.
+    const pending = (await listDocs('users')).find(
+      (d) => fieldValue(d.fields.email) === 'cekajici@zare.test',
+    )
+    const path = `users/${pending.name.split('/').at(-1)}`
+    check(
+      'account e-mails: pending account with a note announced to the admins',
+      !!(await until(async () => (await getDoc(path)).data.adminNotifiedAt, 15000)),
+    )
+    await patchDoc(path, { role: { stringValue: 'leader' } })
+    check(
+      'account e-mails: approval e-mail marked as sent',
+      !!(await until(async () => (await getDoc(path)).data.approvalNotifiedAt, 15000)),
+    )
+    logCheck(
+      'account e-mails: approval e-mail to the user with the saved subject',
+      'accountApproved e-mail to cekajici@zare.test: Schváleno: web Záře',
+    )
+    logCheck(
+      'account e-mails: admins told about the pending account',
+      'newAccount e-mail to spravce@zare.test: Nový účet čeká na schválení: cekajici@zare.test',
+    )
   }
 
   // ---- settings: camp requirements per troop ----
@@ -685,7 +726,7 @@ export default async function adminExtras({ browser, check: report }) {
       ['deti', 'children-ss'], // spravce@'s home troop
       ['schuzky', 'troop-vlc'],
       ['cekaci-listina', 'reset'],
-      ['emaily-akce', 'email-registrationOpened'],
+      ['emaily', 'email-registrationOpened'],
       ['sablony', 'template'],
       ['nastaveni', 'camp-vlc'],
     ]) {

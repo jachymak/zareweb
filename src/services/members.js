@@ -53,12 +53,17 @@ export function setMeetingDay(memberId, meetingDay) {
   return updateDoc(doc(members, memberId), { meetingDay })
 }
 
-// Pairing is stored only in members.parentUids (SPEC §5). Pairing a child with
-// a pending account approves it as a parent in the same write.
-export function pairParent(memberId, uid, { approve = false } = {}) {
+// Pairing is stored only in members.parentUids (SPEC §5).
+export function pairParent(memberId, uid) {
+  return updateDoc(doc(members, memberId), { parentUids: arrayUnion(uid) })
+}
+
+// Approves a pending account as a parent with all the chosen children in one
+// write, so the approval e-mail (onUserWritten) lists them all.
+export function approveParent(uid, memberIds) {
   const batch = writeBatch(db)
-  batch.update(doc(members, memberId), { parentUids: arrayUnion(uid) })
-  if (approve) batch.update(doc(users, uid), { role: 'parent' })
+  for (const id of memberIds) batch.update(doc(members, id), { parentUids: arrayUnion(uid) })
+  batch.update(doc(users, uid), { role: 'parent' })
   return batch.commit()
 }
 

@@ -108,21 +108,41 @@ export default async function admin({ browser, check }) {
     await page.screenshot({ path: `${SCREENSHOTS}admin-desktop.png`, fullPage: true })
   }
 
-  // ---- pairing approves live ----
+  // ---- choosing children, then approving (live) ----
   {
     const other = await openPage(browser, '/prihlaseni')
     await signIn(other.page, 'cekajici@zare.test')
     await other.page.getByRole('heading', { name: 'Čekáme na schválení' }).waitFor()
-    await card(page, 'cekajici@zare.test')
-      .getByRole('button', { name: 'Přiřadit Anna Nováková' })
-      .click()
+    const pending = card(page, 'cekajici@zare.test')
+    await pending.getByRole('button', { name: 'Přiřadit Anna Nováková' }).click()
+    await pending.getByRole('button', { name: '+ přiřadit dítě' }).click()
+    await pending.getByRole('searchbox', { name: 'Hledat dítě' }).fill('liš')
+    await pending.getByRole('button', { name: /Liška/ }).click()
+    const uid = (await userDoc('cekajici@zare.test')).name.split('/').at(-1)
+    await new Promise((r) => setTimeout(r, 1000))
+    check(
+      'choose: two children chosen, nothing saved yet',
+      (await pending.getByTestId('children').innerText()).includes('Žabka') &&
+        (await pending.getByTestId('children').innerText()).includes('Liška') &&
+        !(await pending.getByTestId('suggestions').count()) &&
+        (await roleOf('cekajici@zare.test')) === 'pending' &&
+        !(await parentUidsOf('900101')).includes(uid),
+    )
+    await pending.getByRole('button', { name: 'schválit jako rodiče' }).click()
     await other.page.waitForURL(/\/clenove$/, { timeout: 10000 })
     check('pair: the waiting user is moved to /clenove live', true)
-    const uid = (await userDoc('cekajici@zare.test')).name.split('/').at(-1)
     check(
-      'pair: Firestore — child paired and role parent',
+      'pair: Firestore — both children paired and role parent',
       (await parentUidsOf('900101')).includes(uid) &&
+        (await parentUidsOf('900103')).includes(uid) &&
         (await roleOf('cekajici@zare.test')) === 'parent',
+    )
+    check(
+      'pair: approval e-mail marked as sent (onUserWritten)',
+      !!(await until(
+        async () => (await userDoc('cekajici@zare.test')).fields.approvalNotifiedAt,
+        15000,
+      )),
     )
     await other.ctx.close()
   }
@@ -159,6 +179,7 @@ export default async function admin({ browser, check }) {
     )
     await search.fill('vyd')
     await fresh.getByRole('button', { name: /Vydra/ }).click()
+    await fresh.getByRole('button', { name: 'schválit jako rodiče' }).click()
     await filter(page, 'Rodiče').click()
     const parentCard = card(page, newEmail)
     await parentCard.waitFor()

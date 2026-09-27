@@ -292,7 +292,8 @@ export default async function login({ browser, check }) {
     await cardTitle(page, 'Čekáme na schválení').waitFor({ timeout: 15000 })
     check(
       'google: first login → waiting screen asking for the note',
-      await page.getByLabel('Koho u nás máš?').isVisible(),
+      (await page.getByLabel('Koho u nás máš?').isVisible()) &&
+        (await page.getByTestId('note-needed').isVisible()),
     )
     let f = (await userDoc('petr.google@example.cz'))?.fields ?? {}
     check(
@@ -300,6 +301,11 @@ export default async function login({ browser, check }) {
       fieldValue(f.role) === 'pending' &&
         fieldValue(f.displayName) === 'Petr Googlový' &&
         fieldValue(f.note) === null,
+    )
+    await new Promise((r) => setTimeout(r, 1500))
+    check(
+      'google: admins not told about an account without a note',
+      !(await userDoc('petr.google@example.cz')).fields.adminNotifiedAt,
     )
 
     await page.getByRole('button', { name: 'Uložit →' }).click()
@@ -312,6 +318,16 @@ export default async function login({ browser, check }) {
     await page.getByTestId('saved-note').waitFor({ timeout: 10000 })
     f = (await userDoc('petr.google@example.cz')).fields
     check('google: note saved', fieldValue(f.note) === 'Kuba Googlový, skauti')
+    check(
+      'google: the „one more step“ hint is gone',
+      !(await page.getByTestId('note-needed').count()),
+    )
+    let notified = false
+    for (let i = 0; i < 50 && !notified; i++) {
+      await new Promise((r) => setTimeout(r, 200))
+      notified = !!(await userDoc('petr.google@example.cz')).fields.adminNotifiedAt
+    }
+    check('google: admins told once the note is filled in', notified)
     check('google: no console errors', errors.length === 0, errors.join(' | '))
     await ctx.close()
   }

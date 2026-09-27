@@ -1,11 +1,13 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import ChildChip from './ChildChip.vue'
 import ChildPicker from './ChildPicker.vue'
 import { ROLE_LABELS, childName, formatDate, troopTag } from './accounts'
 
 // One account in „účty a párování“ — SPEC §4.8. Emits the admin's actions;
-// the parent component writes them.
+// the parent component writes them. Children picked for a pending account are
+// only chosen here; „schválit jako rodiče“ pairs them all and approves the
+// account in one write, so the approval e-mail lists them all.
 const props = defineProps({
   account: { type: Object, required: true },
   children: { type: Array, default: () => [] }, // paired members
@@ -15,13 +17,33 @@ const props = defineProps({
   busy: { type: Boolean, default: false },
   error: { type: String, default: '' },
 })
-defineEmits(['pair', 'unpair', 'set-role', 'revoke', 'reactivate', 'delete'])
+const emit = defineEmits([
+  'pair',
+  'approve',
+  'unpair',
+  'set-role',
+  'revoke',
+  'reactivate',
+  'delete',
+])
 
 const role = computed(() => props.account.role ?? 'pending')
 const isLeader = computed(() => ['leader', 'admin'].includes(role.value))
 const canPair = computed(() => ['pending', 'parent'].includes(role.value))
 
 const picking = ref(false)
+
+// Children chosen for a pending account, not saved until approval.
+const chosen = ref([])
+watch(role, (r) => r !== 'pending' && (chosen.value = []))
+const isChosen = (m) => chosen.value.some((c) => c.id === m.id)
+const openCandidates = computed(() => props.candidates.filter((m) => !isChosen(m)))
+const openSuggestions = computed(() => props.suggestions.filter((s) => !isChosen(s.member)))
+
+function pick(member) {
+  if (role.value !== 'pending') return emit('pair', member)
+  if (!isChosen(member)) chosen.value = [...chosen.value, member]
+}
 const confirmingDelete = ref(false)
 
 const BADGE = {
@@ -69,13 +91,24 @@ const BADGE = {
     </p>
 
     <!-- children -->
-    <div v-if="canPair || children.length" class="mt-3 flex flex-wrap items-center gap-2">
+    <div
+      v-if="canPair || children.length"
+      data-testid="children"
+      class="mt-3 flex flex-wrap items-center gap-2"
+    >
       <ChildChip
         v-for="m in children"
         :key="m.id"
         :member="m"
         :disabled="busy"
         @remove="$emit('unpair', m)"
+      />
+      <ChildChip
+        v-for="m in chosen"
+        :key="m.id"
+        :member="m"
+        :disabled="busy"
+        @remove="chosen = chosen.filter((c) => c.id !== m.id)"
       />
       <button
         v-if="canPair && !picking"
@@ -88,18 +121,18 @@ const BADGE = {
     </div>
     <ChildPicker
       v-if="picking"
-      :members="candidates"
+      :members="openCandidates"
       :disabled="busy"
-      @pick="(m) => ($emit('pair', m), (picking = false))"
+      @pick="(m) => (pick(m), (picking = false))"
       @close="picking = false"
     />
 
     <!-- suggestions -->
-    <div v-if="canPair && suggestions.length" class="mt-3" data-testid="suggestions">
+    <div v-if="canPair && openSuggestions.length" class="mt-3" data-testid="suggestions">
       <p class="m-0 mb-1.5 text-[12.5px] tracking-widest text-[#8a7b5e] uppercase">Návrhy</p>
       <ul class="m-0 flex list-none flex-col gap-1.5 p-0">
         <li
-          v-for="{ member, reasons } in suggestions"
+          v-for="{ member, reasons } in openSuggestions"
           :key="member.id"
           class="flex flex-wrap items-center gap-x-3 gap-y-1 text-[15px]"
         >
@@ -113,7 +146,7 @@ const BADGE = {
             class="btn-link"
             :aria-label="`Přiřadit ${childName(member)}`"
             :disabled="busy"
-            @click="$emit('pair', member)"
+            @click="pick(member)"
           >
             přiřadit
           </button>
@@ -121,7 +154,10 @@ const BADGE = {
       </ul>
     </div>
     <p v-if="role === 'pending'" class="m-0 mt-2 text-[14px] text-muted">
-      Přiřazením dítěte účet schválíš jako rodiče.
+      <template v-if="chosen.length">
+        Vybrané děti se uloží až se schválením — e-mail o schválení pak přijde se všemi.
+      </template>
+      <template v-else>Vyber děti, které k účtu patří, a pak ho schval jako rodiče.</template>
     </p>
 
     <!-- actions -->
@@ -130,6 +166,15 @@ const BADGE = {
       class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-[#ece4d0] pt-2"
     >
       <template v-if="role === 'pending'">
+        <button
+          v-if="chosen.length"
+          type="button"
+          class="cursor-pointer rounded-full border-0 bg-green px-4 py-1.5 text-[15px] font-medium text-cream disabled:cursor-wait disabled:opacity-70"
+          :disabled="busy"
+          @click="$emit('approve', chosen)"
+        >
+          schválit jako rodiče
+        </button>
         <button
           type="button"
           class="btn-link"

@@ -2,7 +2,13 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { deleteAccount, revokeAccess, setUserRole, subscribeUsers } from '@/services/users'
-import { getParentContactsOf, pairParent, subscribeMembers, unpairParent } from '@/services/members'
+import {
+  approveParent,
+  getParentContactsOf,
+  pairParent,
+  subscribeMembers,
+  unpairParent,
+} from '@/services/members'
 import AccountCard from './AccountCard.vue'
 import AccountFilter from './AccountFilter.vue'
 import UnpairedChildren from './UnpairedChildren.vue'
@@ -105,8 +111,14 @@ async function run(account, action) {
   }
 }
 
-const pair = (account, member) =>
-  run(account, () => pairParent(member.id, account.id, { approve: account.role === 'pending' }))
+const pair = (account, member) => run(account, () => pairParent(member.id, account.id))
+const approve = (account, chosen) =>
+  run(account, () =>
+    approveParent(
+      account.id,
+      chosen.map((m) => m.id),
+    ),
+  )
 
 const unpair = (account, member) =>
   run(account, () =>
@@ -131,9 +143,9 @@ const remove = (account) => run(account, () => deleteAccount(account.id))
   <section aria-labelledby="accounts-title">
     <h2 id="accounts-title" class="sr-only">Účty a párování</h2>
     <p class="m-0 mb-4 max-w-[70ch] text-[15.5px] leading-normal text-muted">
-      Účet si může založit kdokoli; bez schválení nic nevidí. Rodiče schválíš přiřazením dítěte —
-      nepřiřazené děti rodič ve své sekci nevidí. Návrhy vycházejí z e-mailů rodičů ve skautISu a z
-      poznámky, kterou uživatel napsal.
+      Účet si může založit kdokoli; bez schválení nic nevidí. Rodiče schválíš tak, že mu vybereš
+      děti a dáš „schválit jako rodiče“ — nepřiřazené děti rodič ve své sekci nevidí. Návrhy
+      vycházejí z e-mailů rodičů ve skautISu a z poznámky, kterou uživatel napsal.
     </p>
 
     <p v-if="loadError" role="alert" class="text-red">{{ loadError }}</p>
@@ -154,6 +166,7 @@ const remove = (account) => run(account, () => deleteAccount(account.id))
           :busy="busyUid === account.id"
           :error="errors[account.id]"
           @pair="(m) => pair(account, m)"
+          @approve="(chosen) => approve(account, chosen)"
           @unpair="(m) => unpair(account, m)"
           @set-role="(r) => setRole(account, r)"
           @revoke="revoke(account)"
