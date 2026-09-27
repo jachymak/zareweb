@@ -94,8 +94,8 @@ export default async function leader({ browser, check }) {
     check('greeting: role title and troop', role.startsWith('rádce Bobrů · vlčušky'), role)
     const tools = page.getByRole('navigation', { name: 'Nástroje' })
     check(
-      'tools: five tools, no Administrace for a leader',
-      (await tools.getByRole('link').count()) === 5 &&
+      'tools: six tools, no Administrace for a leader',
+      (await tools.getByRole('link').count()) === 6 &&
         (await tools.getByRole('link', { name: 'Administrace' }).count()) === 0,
     )
   }

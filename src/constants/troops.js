@@ -37,6 +37,3 @@ export const AUDIENCES = {
   ss: { name: 'skauti a skautky', tag: 's&s' },
   all: { name: 'všichni', tag: 'vši' },
 }
-
-// The group's photo albums. TODO: the group's own Zonerama gallery (SPEC open question 2).
-export const PHOTOS_URL = 'https://zonerama.com'

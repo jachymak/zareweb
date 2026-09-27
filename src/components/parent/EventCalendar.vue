@@ -16,6 +16,8 @@ const props = defineProps({
   today: { type: String, required: true },
   organizersOf: { type: Function, required: true },
   participantOf: { type: Function, required: true },
+  albumOf: { type: Function, default: () => null }, // the event's published album
+  query: { type: Object, default: () => ({}) }, // kept on links (leaders' preview)
 })
 
 const MODES = [
@@ -118,6 +120,13 @@ function attendance(event) {
             >
               zrušeno
             </span>
+            <RouterLink
+              v-if="albumOf(event)"
+              :to="{ name: 'album', params: { albumId: albumOf(event).id }, query }"
+              class="py-0.5 text-[14.5px]"
+            >
+              fotky →
+            </RouterLink>
           </span>
           <span class="flex flex-wrap gap-[7px] sm:justify-self-end">
             <span

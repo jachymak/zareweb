@@ -92,3 +92,50 @@
 @utility note-warm {
   @apply rounded-[10px] bg-[#F7EBCB] px-3 py-2 text-[14.5px] leading-[1.55] text-[#8A5A2B];
 }
+
+/* Photo lightbox (PhotoSwipe, usePhotoLightbox.js). Prefixed with .pswp to
+   win over photoswipe.css, which loads later with the lightbox. */
+.pswp {
+  --pswp-bg: #10150f;
+  font-family: var(--font-sans);
+}
+.pswp .pswp__button--download {
+  display: flex;
+  width: auto;
+  align-items: center;
+  gap: 4px;
+  padding: 0 10px 0 4px;
+  color: #fff;
+}
+.pswp .pswp__button--download .pswp__icn {
+  position: static;
+  flex: none;
+  color: #fff;
+  stroke: #fff;
+}
+.pswp .pswp__download-label {
+  display: none;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+@media (min-width: 640px) {
+  .pswp .pswp__download-label {
+    display: inline;
+  }
+}
+.pswp__button--busy {
+  cursor: wait;
+  opacity: 0.5;
+}
+.pswp__caption {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 0 16px 18px;
+  color: rgb(255 255 255 / 0.8);
+  font-size: 14px;
+  text-align: center;
+  pointer-events: none;
+}

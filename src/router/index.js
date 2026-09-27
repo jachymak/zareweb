@@ -40,6 +40,19 @@ const router = createRouter({
       meta: { auth: true, roles: ['parent', ...LEADERS] },
     },
     {
+      path: '/clenove/fotky',
+      name: 'albums',
+      component: () => import('@/views/AlbumsView.vue'),
+      meta: { auth: true, roles: ['parent', ...LEADERS] },
+    },
+    {
+      path: '/clenove/fotky/:albumId',
+      name: 'album',
+      component: () => import('@/views/AlbumView.vue'),
+      props: true,
+      meta: { auth: true, roles: ['parent', ...LEADERS] },
+    },
+    {
       path: '/vedouci',
       name: 'leader-home',
       component: () => import('@/views/LeaderHomeView.vue'),
@@ -76,6 +89,19 @@ const router = createRouter({
       meta: { auth: true, roles: LEADERS },
     },
     {
+      path: '/vedouci/fotky',
+      name: 'leader-albums',
+      component: () => import('@/views/LeaderAlbumsView.vue'),
+      meta: { auth: true, roles: LEADERS },
+    },
+    {
+      path: '/vedouci/fotky/:albumId',
+      name: 'leader-album',
+      component: () => import('@/views/LeaderAlbumView.vue'),
+      props: true,
+      meta: { auth: true, roles: LEADERS },
+    },
+    {
       path: '/vedouci/nahled',
       name: 'leader-preview',
       component: () => import('@/views/LeaderPreviewView.vue'),
@@ -89,6 +115,8 @@ const router = createRouter({
     },
   ],
   scrollBehavior(to, from, savedPosition) {
+    // Opening / closing a photo in an album keeps the page where it is.
+    if (to.path === from.path && (to.query.photo || from.query.photo)) return false
     if (savedPosition) return savedPosition
     // Pages that load their content later scroll to the hash themselves.
     if (to.hash && document.querySelector(to.hash)) return { el: to.hash, behavior: 'smooth' }

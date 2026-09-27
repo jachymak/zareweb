@@ -5,6 +5,7 @@ import { canJoin, isOpenForSignUp, isRelevant } from '@shared/events'
 import { getParticipant, listEvents, setSignedUp } from '@/services/events'
 import { listMeetings } from '@/services/meetings'
 import { listNews } from '@/services/news'
+import { listAlbums } from '@/services/photos'
 import { listContacts } from '@/services/contacts'
 import { listLeaders } from '@/services/skautisPeople'
 import { getAppSettings } from '@/services/settings'
@@ -22,6 +23,7 @@ export function useParentArea(loadChildren) {
   const settings = ref(campRequirements(null)) // camp requirement per troop
   const events = ref([])
   const news = ref([])
+  const albums = ref([]) // published, newest first
   const meetings = ref([])
   const contacts = ref([])
   const leaders = ref({}) // skautisPeople by id
@@ -37,11 +39,12 @@ export function useParentArea(loadChildren) {
   onMounted(async () => {
     try {
       children.value = (await loadChildren()).filter((c) => c.active)
-      const [appSettings, eventList, newsList, contactList, people, ...meetingLists] =
+      const [appSettings, eventList, newsList, albumList, contactList, people, ...meetingLists] =
         await Promise.all([
           getAppSettings(),
           listEvents({ fromDate: schoolYear.from }),
           listNews(),
+          listAlbums({ publishedOnly: true }),
           listContacts(),
           listLeaders({ activeOnly: false }),
           ...troops.value.map((troop) =>
@@ -51,6 +54,7 @@ export function useParentArea(loadChildren) {
       settings.value = campRequirements(appSettings)
       events.value = eventList
       news.value = newsList
+      albums.value = albumList
       contacts.value = contactList
       leaders.value = Object.fromEntries(people.map((p) => [p.id, p]))
       meetings.value = meetingLists.flat()
@@ -106,6 +110,12 @@ export function useParentArea(loadChildren) {
     return first ? [first, ...list.filter((n) => n !== first)] : []
   })
 
+  const relevantAlbums = computed(() =>
+    albums.value.filter((a) => isRelevant(a.audience, troops.value)),
+  )
+  // Album of an event, for the „fotky“ link of past events.
+  const albumOf = (event) => albums.value.find((a) => a.eventId === event.id) ?? null
+
   const signUpEvents = computed(() => relevantEvents.value.filter((e) => isOpenForSignUp(e, today)))
 
   // Contacts with their leader's details, in the admin's order.
@@ -156,6 +166,8 @@ export function useParentArea(loadChildren) {
     settings,
     events,
     relevantNews,
+    relevantAlbums,
+    albumOf,
     signUpEvents,
     nearestEvent,
     childStats,

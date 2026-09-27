@@ -161,9 +161,34 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Photo albums (SPEC §4.9). Parents see published albums; the photo count
+    // and the photos are kept by Cloud Functions, deleting goes through them too.
     match /albums/{albumId} {
-      allow read: if isApproved();
-      allow write: if isAdmin();
+      function validAlbum(data) {
+        return data.title is string && data.title.size() > 0 && data.title.size() <= 120
+          && data.audience in ['vlc', 'ss', 'all']
+          && data.startDate is string && data.endDate is string && data.startDate <= data.endDate
+          && data.published is bool
+          && (!('groupByDay' in data) || data.groupByDay is bool)
+          && (data.eventId == null || data.eventId is string);
+      }
+
+      allow read: if isLeader() || (isApproved() && resource.data.published == true);
+      allow create: if isLeader() && validAlbum(request.resource.data)
+        && request.resource.data.photoCount == 0
+        && request.resource.data.coverPhotoId == null
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdAt == request.time;
+      allow update: if isLeader() && validAlbum(request.resource.data)
+        && !request.resource.data.diff(resource.data).affectedKeys()
+          .hasAny(['photoCount', 'createdBy', 'createdAt']);
+      allow delete: if false;
+
+      match /photos/{photoId} {
+        allow read: if isLeader()
+          || (isApproved() && get(/databases/$(database)/documents/albums/$(albumId)).data.published == true);
+        allow write: if false;
+      }
     }
 
     // ---- waiting list ----

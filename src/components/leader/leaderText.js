@@ -5,6 +5,7 @@ export const TOOLS = [
   { to: '/vedouci/dochazka', label: 'Docházka' },
   { to: '/vedouci/akce', label: 'Akce a plakátky' },
   { to: '/vedouci/aktuality', label: 'Aktuality' },
+  { to: '/vedouci/fotky', label: 'Fotky' },
   { to: '/vedouci/klubovna', label: 'Klubovna' },
   { to: '/vedouci/cekaci-listina', label: 'Čekací listina' },
 ]

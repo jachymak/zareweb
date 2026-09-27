@@ -4,7 +4,7 @@
 # dev server. Ctrl+C stops everything; emulator data is saved to emulator-data/.
 #
 # Usage: npm start              (or: bash scripts/start.sh)
-#        npm start -- --seed    re-seed test data (replaces accounts, members, activity, waiting list)
+#        npm start -- --seed    re-seed test data (replaces accounts, members, activity, waiting list, photos)
 #
 # Keep this in sync with what a normal local run needs (new seeds, services, …).
 #
@@ -32,7 +32,7 @@ if [[ ! -d node_modules || ! -d functions/node_modules ]]; then
 fi
 
 up() { curl -s -o /dev/null "$1"; }
-emulators_up() { up http://127.0.0.1:8080 && up http://127.0.0.1:9099 && up http://127.0.0.1:5001; }
+emulators_up() { up http://127.0.0.1:8080 && up http://127.0.0.1:9099 && up http://127.0.0.1:5001 && up http://127.0.0.1:9199; }
 
 EMU_PID=""
 stop() {
@@ -82,6 +82,7 @@ if $SEED; then
   npm run --silent seed:members
   npm run --silent seed:activity
   npm run --silent seed:waitlist
+  npm run --silent seed:photos
 fi
 
 cat <<'EOF'

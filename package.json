@@ -17,10 +17,12 @@
     "seed:users": "node --env-file-if-exists=.env scripts/seed-users.js",
     "seed:members": "node --env-file-if-exists=.env scripts/seed-members.js",
     "seed:activity": "node --env-file-if-exists=.env scripts/seed-activity.js",
-    "seed:waitlist": "node --env-file-if-exists=.env scripts/seed-waitlist.js"
+    "seed:waitlist": "node --env-file-if-exists=.env scripts/seed-waitlist.js",
+    "seed:photos": "node --env-file-if-exists=.env scripts/seed-photos.js"
   },
   "dependencies": {
     "firebase": "^12.19.0",
+    "photoswipe": "^5.4.4",
     "pinia": "^4.0.3",
     "vue": "^3.5.42",
     "vue-router": "^5.3.1"

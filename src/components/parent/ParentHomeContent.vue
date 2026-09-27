@@ -28,6 +28,8 @@ const {
   settings,
   events,
   relevantNews,
+  relevantAlbums,
+  albumOf,
   signUpEvents,
   nearestEvent,
   childStats,
@@ -118,11 +120,13 @@ const section = 'mx-auto max-w-[960px] px-4 sm:px-6'
           :today="today"
           :organizers-of="organizersOf"
           :participant-of="participantOf"
+          :album-of="albumOf"
+          :query="posterQuery"
         />
       </div>
 
       <div :class="section" class="pt-10">
-        <PhotoAlbums />
+        <PhotoAlbums :albums="relevantAlbums.slice(0, 4)" :today="today" :query="posterQuery" />
       </div>
 
       <div :class="section" class="pt-[42px]">

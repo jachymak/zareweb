@@ -1,0 +1,48 @@
+rules_version = '2';
+
+// Storage access — see docs/SPEC.md §5.1. Photos of albums (§4.9):
+//   originals/{albumId}/{photoId}.{ext}  uploaded by leaders, untouched
+//   previews/…, thumbs/…                 written by processPhoto only
+// Previews and thumbnails are shown through token URLs from the photo
+// documents; the rules below guard direct access (e.g. the original download).
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function role() {
+      return firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isLeader() {
+      return request.auth != null && role() in ['leader', 'admin'];
+    }
+
+    function isApproved() {
+      return request.auth != null && role() in ['parent', 'leader', 'admin'];
+    }
+
+    function album(albumId) {
+      return /databases/(default)/documents/albums/$(albumId);
+    }
+
+    function mayView(albumId) {
+      return isLeader()
+        || (isApproved() && firestore.get(album(albumId)).data.published == true);
+    }
+
+    match /originals/{albumId}/{fileName} {
+      allow read: if mayView(albumId);
+      // New files only (the photo id is fresh), into an existing album.
+      allow create: if isLeader()
+        && firestore.exists(album(albumId))
+        && fileName.matches('[A-Za-z0-9]{20}[.](jpg|png|webp)')
+        && request.resource.size <= 30 * 1024 * 1024
+        && request.resource.contentType.matches('image/(jpeg|png|webp)')
+        && request.resource.metadata.albumId == albumId
+        && request.resource.metadata.uploadedBy == request.auth.uid;
+    }
+
+    match /{folder}/{albumId}/{fileName} {
+      allow read: if folder in ['previews', 'thumbs'] && mayView(albumId);
+    }
+  }
+}

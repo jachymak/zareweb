@@ -58,6 +58,10 @@ Routes are in Czech (they are user-visible).
 | 12 | Waiting list (management)   | `/vedouci/cekaci-listina`           | leader  | `Zare - vedouci cekaci listina`   |
 | 13 | Parent preview              | `/vedouci/nahled`                   | leader  | reuses page 5                     |
 | 14 | Administration („Administrace“) | `/vedouci/administrace`         | admin   | `Zare - sprava`                   |
+| 15 | All albums                  | `/clenove/fotky`                    | parent, leader | — (cards from page 5)      |
+| 16 | Album                       | `/clenove/fotky/:albumId`           | parent, leader | — (Google Photos–like)     |
+| 17 | Photos (management)         | `/vedouci/fotky`                    | leader  | — (cards from page 5)             |
+| 18 | Album (management)          | `/vedouci/fotky/:albumId`           | leader  | — (as page 16 + tools)            |
 
 Not in scope: `Zare - cesta responzivne` — design study of the hand-drawn trail on mobile; visual reference for page 1 only.
 Password reset uses Firebase's default hosted page.
@@ -165,8 +169,9 @@ Common header: „Skautský oddíl Záře — pro členy“, the user's e-mail, 
    - Toggle „i akce druhého oddílu“ / „jen naše akce“ — by default only events for the children's troops + `all`. Hidden when the children are in both troops.
    - Shows first 2 months, button „zobrazit celý rok“ expands.
    - Row: date, tag, title, organizer; cancelled events struck through with „zrušeno“.
+   - An event with a published album shows „fotky →“ (→ the album, §3.3).
    - „proběhlo“ lists past events of the current school year, newest first; each child who could join shows ✓/✗ attendance, only for trips (events with registration, not the camp).
-6. **Photos (Fotky)** — 4 latest albums (cover, title, detail like „únor · 31 fotek“), each linking to the group's Zonerama; link „všechna alba →“. **[?] Data source still open** — Zonerama most likely has no API; solution to be decided. Until then the section shows four empty album frames linking to the gallery.
+6. **Photos (Fotky)** — the 4 latest published albums of the children's troops (+ `all`), as tilted polaroids: cover, troop tag, title, detail like „únor · 31 fotek“ (month with the year when not this year); each opens the album (§3.3); „všechna alba →“ opens all albums. No albums → „Zatím tu nejsou žádná alba…“.
 7. **Leaders (Vedoucí)** — contact cards (photo, nickname, name · role, phone, e-mail) filtered by tabs „vlčušky“ / „skauti a skautky“ / „ostatní“.
 
 **Reads:** own `users/{uid}`, `members` (own children), `meetings` (attendance), `events` + own children's `participants`, `news`, `albums`, `contacts`, `settings/app`.
@@ -187,6 +192,22 @@ Read-only page generated from the event's poster data. Parents see it only when 
 
 **Reads:** `events/{id}`, `events/{id}/poster/content`, `skautisPeople` (organizers).
 
+### 3.3 Photo albums (`/clenove/fotky`, `/clenove/fotky/:albumId`)
+
+Photos of events are stored in Firebase Storage (§5 Storage): originals in full quality, a preview (long edge 2048 px) for viewing and a thumbnail (640 px) for the grid, both made by the `processPhoto` Cloud Function. Only published albums are shown; leaders open these pages from the parent preview like the poster (`?nahled=`, same header and preview bar), otherwise with the leader header and „spravovat album →“.
+
+**All albums** — „Fotky“, published albums by school year („školní rok 2026/27“, newest first) as the polaroid cards of §3.1. With children in one troop only the albums of that troop and `all` are shown; „i alba druhého oddílu“ / „jen naše alba“ switches (text below: „Vidíte alba vlčušek a z akcí pro všechny.“), as in the Výpravník. „← zpět na stránku pro členy“.
+
+**Album** — kicker with the dates („14.–16. 3. 2026“), title, troop tag, photo count, „← všechna alba“.
+
+- **Grid** like Google Photos: justified rows (every row fills the width, photos keep their aspect ratio, rows close to 132 / 190 / 230 px high by screen width; a row ends where its height is closest to that; the last row isn't stretched). Sizes come from the stored width/height, so nothing shifts while loading; each tile shows the photo's dominant colour until its lazy-loaded thumbnail fades in.
+- **Order** (`sortPhotos`): by the time taken (EXIF `DateTimeOriginal`); photos without a date last; ties and undated photos by file name with numbers compared as numbers („IMG_9“ before „IMG_10“), so naming files 01, 02, … sets their order. Photos can't be reordered by hand (yet — see Open questions).
+- Albums of several days are **grouped by day** („sobota 14. března · 23 fotek“), photos without a date last („bez data pořízení“), unless the leader turned it off (`groupByDay`); one-day albums and albums without dates are one grid.
+- **Lightbox** (PhotoSwipe): the preview zooms in from the clicked thumbnail; arrows / keys / swiping move between photos, pinch or wheel zooms, swipe down or Esc closes. Counter „3 / 88“, caption with the date and time taken, button **„Stáhnout originál“** downloads the untouched original under its file name (one photo at a time). The open photo is in the URL (`?photo={photoId}`): the link opens it directly, the back button closes it.
+- Parents see only processed (`ready`) photos. An unpublished or deleted album: „Tohle album jsme nenašli“.
+
+**Reads:** `albums` (published), `albums/{id}/photos`, `members` (own children, for the troop filter); originals via Storage (download).
+
 ---
 
 ## 4. Leader area
@@ -198,7 +219,7 @@ Common header (as in the design, no menu): „Skautský oddíl Záře“ (→ le
 ### 4.1 Leader home (`/vedouci`)
 
 1. **Greeting** — „Ahoj, {nickname}!“, role title + troop, today's date.
-2. **Tools** — links to Docházka, Akce a plakátky, Aktuality, Klubovna, Čekací listina; **Administrace** only for admin.
+2. **Tools** — links to Docházka, Akce a plakátky, Aktuality, Fotky, Klubovna, Čekací listina; **Administrace** only for admin.
 The troop-dependent parts (today card, attendance summary) follow the troop switch. The greeting uses the linked person's nickname and role title, otherwise the account's first name and „vedoucí“ / „správce“.
 
 3. **Today card** (based on the chosen troop and today's date):
@@ -364,6 +385,21 @@ Tabs (only implemented ones are shown, in the order děti · účty a párován�
 
 **Reads/Writes:** `users`, `members`, `contacts`, `packingTemplates`, `settings/*`; skautIS sync via Cloud Function.
 
+### 4.9 Photos (`/vedouci/fotky`, `/vedouci/fotky/:albumId`)
+
+Every leader manages all albums (like events).
+
+**All albums** — „Fotky“, all albums by school year incl. hidden ones, as the cards of §3.1 with a status chip „zveřejněné“ / „skryté před rodiči“, followed live. „+ nové album“ (`?nove`) opens the form: **„Z které akce“** (optional — started, not cancelled events of this and the last school year, newest first; picking one fills in the title, troop and dates, still editable, and parents then find „fotky →“ at the event), **name**, **for whom** (vlčušky / skauti a skautky / všichni), **dates** (the calendar of §4.3), for several days also **„fotky rozdělit po dnech“** (on by default; off = one grid, same order). A new album starts **hidden**; after „založit album“ its page opens.
+
+**Album** — header as in §3.3 plus the status; buttons **„+ nahrát fotky“**, **„zveřejnit album“ / „skrýt před rodiči“**, **„upravit“** (the form above). A hidden album with photos shows „Rodiče album zatím nevidí. Až bude kompletní, zveřejni ho.“
+
+- **Upload** — pick files (multi-select, the whole album at once) or drop them anywhere on the page (overlay „pusť fotky sem“); an empty album shows a large drop area. Before uploading each file is checked (`photoFileProblem` in `functions/src/shared/photos.js`): JPEG / PNG / WebP up to 30 MB; **HEIC/HEIF is rejected** by type and by extension („Fotky ve formátu HEIC (iPhone) nejsou podporované. Exportujte je prosím jako JPEG.“; the picker accepts only JPEG/PNG/WebP, so iPhones convert on their own). Rejected files are listed with the reason. Below, collapsed „Jak se fotky v albu řadí?“ explains the order (§3.3): by the time taken, so photos of several people mix correctly; undated ones (edited, from WhatsApp / Messenger) last by file name — name them 01.jpg, 02.jpg… for an own order; a camera with a wrong clock needs the date fixed in the files before uploading; reordering an uploaded album isn't possible yet. Originals go straight to Storage (`uploadBytesResumable`), at most 3 at once, each retried up to 3× on failure; one progress bar for the batch („Nahrávám 12 / 88 · 40 % · nezavírej stránku“, „zastavit“), failed files listed with „zkusit znovu“. Leaving the page while uploading asks first. The client sets custom metadata `albumId`, `uploadedBy`, `originalFilename` and `contentDisposition: attachment` (the original downloads under its name).
+- **Processing** — uploaded photos not yet processed: „Zpracovávám 5 fotek — objeví se tu samy.“ (the page follows the photos live). Failed photos (`status: error`) are listed with „smazat“ and advice to re-upload / save as JPEG.
+- **Grid and lightbox** as §3.3. **Selection**: a circle on each tile (on hover, always in selection mode — „vybrat fotky“ / „hotovo“), shift-click selects a range, „vybrat celý den“ per day. A floating bar: „vybráno N“, **„nastavit jako titulní“** (one photo), **„smazat“** → „smazat N fotek i s originály? ano, smazat / ne“, × clears. The cover photo is marked „titulní“; without a chosen one the first processed photo is the cover.
+- **„smazat celé album“** (bottom) → „Smazat album včetně všech fotek? Nejde to vrátit.“ → deletes it with all files; „jak album vidí rodiče →“.
+
+**Reads:** `albums`, `albums/{id}/photos`, `events`. **Writes:** `albums` (not the count), Storage `originals/`; deleting via `deletePhotos` / `deleteAlbum`.
+
 ---
 
 ## 5. Firestore data model
@@ -485,9 +521,33 @@ Poster content in a separate doc so parents can read it **only when `posterStatu
 
 `name`, `items: string[]`.
 
-### `albums/{albumId}` **[?] depends on the chosen photo solution**
+### `albums/{albumId}` — §3.3, §4.9
 
-`title`, `detail` (e.g. photo count), `url`, `coverUrl`, `date`.
+| Field             | Type                          | Notes                                    |
+| ----------------- | ----------------------------- | ---------------------------------------- |
+| `title`           | string                        | ≤ 120 chars                              |
+| `audience`        | `"vlc" \| "ss" \| "all"`      |                                          |
+| `eventId`         | string?                       | the event the photos are from            |
+| `startDate`, `endDate` | string `YYYY-MM-DD`      | one day: both the same                   |
+| `published`       | boolean                       | parents see published albums only        |
+| `groupByDay`      | boolean                       | group photos by day (missing = true)     |
+| `photoCount`      | number                        | processed photos; kept by Cloud Functions |
+| `coverPhotoId`, `coverUrl`, `coverColor` | string? | cover (thumbnail URL + dominant colour, for cards); first processed photo unless a leader picks one |
+| `createdBy`, `createdAt` |                        | set once                                 |
+
+#### `albums/{albumId}/photos/{photoId}` — written by `processPhoto` only
+
+`status` (`"ready" | "error"`), `originalPath`, `previewPath`, `thumbPath`, `previewUrl`, `thumbUrl` (token download URLs — shown without signing in to Storage, protected by these documents' rules), `width`, `height` (after EXIF rotation), `dominantColor` (`#rrggbb`), `takenAt` (EXIF `DateTimeOriginal` as Prague time unless the photo has an offset; null when missing or implausible), `sortAt` (= `takenAt` ?? `uploadedAt`, the query order; the display order is `sortPhotos`, §3.3), `uploadedAt`, `uploadedBy`, `originalFilename`, `sizeBytes`, `error` (message when failed). The id is generated by the client before the upload.
+
+### Storage (Firebase Storage, bucket in `europe-west3`)
+
+```
+originals/{albumId}/{photoId}.{jpg|png|webp}   uploaded by leaders, untouched (EXIF incl. GPS kept)
+previews/{albumId}/{photoId}.jpg               long edge 2048 px, JPEG q82, metadata stripped
+thumbs/{albumId}/{photoId}.jpg                 long edge 640 px, JPEG q75, metadata stripped
+```
+
+Rules in `storage.rules`: leaders may create originals in an existing album (JPEG/PNG/WebP, ≤ 30 MB, metadata `albumId` and `uploadedBy` matching); nothing else is writable by clients. Reading: leaders everything, parents files of published albums. Expected size ~13 GB per year (~2,300 photos).
 
 ### `waitlist/{entryId}`
 
@@ -560,7 +620,11 @@ Mock only in v1 — no collections yet. Later: clubhouse rules (settings) and th
 | `events`                    | —                          | —                | read (not deleted)                                       | rw                | rw    |
 | `events/*/poster/content`   | —                          | —                | read if published                                        | rw                | rw    |
 | `…/participants`            | —                          | —                | read own; write sign-up fields for own children before deadline | rw         | rw    |
-| `news`, `contacts`, `albums`, `packingTemplates` | — | —            | read                                                     | read (news: rw)   | rw    |
+| `news`, `contacts`, `packingTemplates` | — | —                      | read                                                     | read (news: rw)   | rw    |
+| `albums`                    | —                          | —                | read published                                           | rw (not `photoCount`; no delete) | same |
+| `albums/*/photos`           | —                          | —                | read (album published)                                   | read              | read  |
+| Storage `originals/`        | —                          | —                | read (album published)                                   | read, create      | same  |
+| Storage `previews/`, `thumbs/` | —                       | —                | read (album published)                                   | read              | read  |
 
 - Parents must not change their own `role`; pairing (`members.parentUids`) is written only by admins.
 - `skautisPeople` is readable by parents because contacts and organizers show leaders' names and phones. **[?]** Acceptable, given it contains only leaders of the two troops?
@@ -616,7 +680,9 @@ Firebase Blaze plan with Cloud Functions (region `europe-west3`, code in `functi
 | `inviteParent`              | callable (admin)                | invitation e-mail                                        |
 | `onEventUpdated`            | Firestore update `events`       | e-mail parents that sign-up is open / the poster is out (§6.5) |
 | `syncSkautis`               | callable (admin)                | load members/leaders from skautIS API, return diff, apply |
-| photos **[?]**              | —                               | depends on the chosen photo solution                     |
+| `processPhoto`              | Storage object finalized (`originals/` only) | EXIF rotation, preview + thumbnail (sharp), size, dominant colour, `takenAt`; writes the photo doc, raises `photoCount`, first cover; failures → `status: error`. 1 GiB, 120 s, ≤ 10 instances |
+| `deletePhotos`              | callable (leader)               | delete photo docs + files, lower the count, move the cover |
+| `deleteAlbum`               | callable (leader)               | delete the album, its photos and all its files           |
 
 E-mails are sent from `zare@skaut.cz` via **SMTP of the skaut.cz Google Workspace** (e.g. Nodemailer in Cloud Functions; credentials in Functions secrets, never in the repo). Gmail limit (~2000 recipients/day) is sufficient.
 
@@ -633,9 +699,9 @@ E-mails are sent from `zare@skaut.cz` via **SMTP of the skaut.cz Google Workspac
 ## Open questions
 
 1. **skautIS API** — the app needs to be registered with skautIS (application ID); verify the API exposes the needed fields (nickname, parents' contacts).
-2. **Photos** — Zonerama most likely has no API; solution still open.
+2. **Photos** — solved: albums in Firebase Storage (§3.3, §4.9). Before production: create the default bucket in `europe-west3` (same region as the functions; the Blaze plan is needed) and set a budget alert in Google Cloud Billing (e.g. 100 CZK). Later: HEIC conversion, downloading a whole album (ZIP), reordering photos of an uploaded album by hand (drag & drop; an own order would override the date / file name order).
 3. **Administration extras** — children & meeting days, meetings, packing templates, e-mail texts and settings have no design; built in the visual language of `Zare - sprava`, to be reviewed.
 4. **Registration texts** — proposed labels in §3.1 and §4.3 need review.
-5. **Photo storage** — where to store leaders' photos for contacts (Firebase Storage?).
+5. **Photo storage** — leaders' photos for contacts: Firebase Storage is set up now (photo albums), so probably there.
 6. **Contacts outside skautIS import** — how to show středisko people in the „ostatní“ group?
 7. **Parent contacts from skautIS** — may leaders (not only admins) see them, e.g. in attendance?

@@ -48,7 +48,7 @@ export default async function login({ browser, check }) {
     await cardTitle(page, 'Přihlášení').waitFor()
     check(
       'login: intro and card shown',
-      (await page.getByRole('heading', { level: 1, name: 'Oddílový zápisník' }).isVisible()) &&
+      (await page.getByRole('heading', { level: 1, name: 'Přihlášení členů' }).isVisible()) &&
         (await page.getByRole('button', { name: 'Přihlásit se Googlem' }).isVisible()),
     )
     await page.screenshot({ path: `${SCREENSHOTS}login-desktop.png`, fullPage: true })
