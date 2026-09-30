@@ -9,6 +9,9 @@ const props = defineProps({
   kicker: { type: String, default: '' },
   title: { type: String, default: '' },
   sketch: { type: String, required: true },
+  // Raster drawing (design-reference/drawings) instead of a line sketch: a
+  // `srcset`, shown larger.
+  srcset: { type: String, default: undefined },
   sketchSide: { type: String, default: 'right' }, // 'left' | 'right' (desktop)
 })
 
@@ -35,16 +38,32 @@ const textSide = props.sketchSide === 'left' ? 'right' : 'left'
 
     <div
       data-stop
-      class="relative flex min-w-0 md:min-h-80 md:flex-[1_1_260px] md:py-2.5"
-      :class="textSide === 'right' ? 'justify-end' : 'justify-start'"
+      class="relative flex min-w-0 md:py-2.5"
+      :class="[
+        textSide === 'right' ? 'justify-end' : 'justify-start',
+        srcset ? 'md:min-h-[440px] md:flex-[1_1_360px]' : 'md:min-h-80 md:flex-[1_1_260px]',
+      ]"
     >
       <img
         :src="sketch"
+        :srcset="srcset"
+        :sizes="srcset ? '(min-width: 768px) 400px, 280px' : undefined"
         alt=""
         width="260"
         height="300"
-        class="block h-auto w-[200px] sm:w-[240px] md:absolute md:inset-0 md:size-full md:object-contain"
+        class="block h-auto md:absolute md:inset-0 md:size-full md:object-contain"
+        :class="srcset ? 'drawing w-[260px] sm:w-[300px]' : 'w-[200px] sm:w-[240px]'"
       />
     </div>
   </section>
 </template>
+
+<style scoped>
+/* Fade the drawing's edges into the paper, like the hero rocks. */
+.drawing {
+  mask-image:
+    linear-gradient(to right, transparent, #000 6%, #000 94%, transparent),
+    linear-gradient(transparent, #000 6%, #000 94%, transparent);
+  mask-composite: intersect;
+}
+</style>

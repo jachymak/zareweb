@@ -15,22 +15,30 @@ import TroopList from '@/components/public/TroopList.vue'
 import JoinCard from '@/components/public/JoinCard.vue'
 import FaqAccordion from '@/components/public/FaqAccordion.vue'
 import IntroScreen from '@/components/public/IntroScreen.vue'
-import sketchHouses from '@/assets/sketches/skica-domy.svg'
 import sketchClubhouse from '@/assets/sketches/skica-klubovna.svg'
-import sketchForest from '@/assets/sketches/skica-les.svg'
-import sketchSignpost from '@/assets/sketches/skica-rozcestnik.svg'
-import sketchTram from '@/assets/sketches/skica-tram.svg'
-import sketchCamp from '@/assets/sketches/skica-tabor.svg'
 import sketchGoal from '@/assets/sketches/skica-cil.svg'
 import clubhouseMap from '@/assets/public/mapa-klubovna.jpg'
 import rocks1000 from '@/assets/public/skaly-1000.webp'
 import rocks1600 from '@/assets/public/skaly-1600.webp'
+import dejvice400 from '@/assets/public/dejvice-400.webp'
+import dejvice800 from '@/assets/public/dejvice-800.webp'
+import guide400 from '@/assets/public/pruvodce-400.webp'
+import guide800 from '@/assets/public/pruvodce-800.webp'
+import clubhouse400 from '@/assets/public/klubovna-400.webp'
+import clubhouse800 from '@/assets/public/klubovna-800.webp'
+import camp400 from '@/assets/public/tabor-400.webp'
+import camp800 from '@/assets/public/tabor-800.webp'
+import signpost400 from '@/assets/public/rozcestnik-400.webp'
+import signpost800 from '@/assets/public/rozcestnik-800.webp'
 
 // Public home — SPEC §2.1. Reads settings/public, writes nothing.
 const settingsStore = usePublicSettingsStore()
 const { recruitment } = storeToRefs(settingsStore)
 
 onMounted(() => settingsStore.load())
+
+// Props for a StorySection with a raster drawing (400 px and 800 px wide).
+const drawing = (small, large) => ({ sketch: small, srcset: `${small} 400w, ${large} 800w` })
 
 // The intro greets every fresh load of the home page, but not in-app returns
 // or links to a section.
@@ -77,7 +85,7 @@ const showIntro = isFirstPage() && !useRoute().hash
           id="start"
           kicker="kdo jsme"
           title="Ahoj! My jsme Záře!"
-          :sketch="sketchHouses"
+          v-bind="drawing(dejvice400, dejvice800)"
         >
           <p class="prose-body mb-3.5 max-w-[52ch]">
             Dva skautské oddíly z Dejvic — jeden pro
@@ -112,7 +120,7 @@ const showIntro = isFirstPage() && !useRoute().hash
           id="cinnost"
           kicker="co děláme"
           title="Parta, příroda, samostatnost"
-          :sketch="sketchForest"
+          v-bind="drawing(guide400, guide800)"
         >
           <p class="prose-body mb-3.5 max-w-[52ch]">
             Na schůzkách hrajeme, vyrábíme, učíme se praktické věci a plánujeme, kam vyrazíme
@@ -144,7 +152,7 @@ const showIntro = isFirstPage() && !useRoute().hash
           id="rok"
           kicker="jak to u nás chodí"
           title="Od schůzky k táboru"
-          :sketch="sketchSignpost"
+          v-bind="drawing(signpost400, signpost800)"
           sketch-side="left"
         >
           <div class="ml-auto flex max-w-[44ch] flex-col gap-4">
@@ -171,7 +179,7 @@ const showIntro = isFirstPage() && !useRoute().hash
           id="klubovna"
           kicker="naše klubovna"
           title="Kafkova 23, Dejvice"
-          :sketch="sketchTram"
+          v-bind="drawing(clubhouse400, clubhouse800)"
         >
           <p class="prose-body mb-5 max-w-[40ch]">
             Kousek od Kulaťáku. Ve vnitrobloku za klubovnou je hřiště, kam často na schůzkách
@@ -229,7 +237,7 @@ const showIntro = isFirstPage() && !useRoute().hash
           id="tabor"
           kicker="vrchol roku"
           title="Tábor v jižních Čechách"
-          :sketch="sketchCamp"
+          v-bind="drawing(camp400, camp800)"
           sketch-side="left"
         >
           <p class="prose-body mb-3.5 ml-auto max-w-[48ch]">
