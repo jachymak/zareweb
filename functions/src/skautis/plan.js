@@ -37,11 +37,16 @@ function diff(incoming, current, fields) {
   return { added, changed, removed, unchanged }
 }
 
+// Without parents' contacts from skautIS (loaded.parentsUnavailable) the
+// stored ones are neither compared nor overwritten.
+const comparedMemberFields = (loaded) =>
+  loaded.parentsUnavailable ? MEMBER_FIELDS.filter((f) => f !== 'parents') : MEMBER_FIELDS
+
 // loaded: loadFromSkautis() result; members: current members with `parents`
 // from their private contacts; people: current skautisPeople.
 export function planSync(loaded, members, people) {
   return {
-    members: diff(loaded.children, members, MEMBER_FIELDS),
+    members: diff(loaded.children, members, comparedMemberFields(loaded)),
     people: diff(loaded.leaders, people, PERSON_FIELDS),
   }
 }

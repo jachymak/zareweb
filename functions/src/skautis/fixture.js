@@ -4,8 +4,14 @@
 // `seed:activity` it has — children: new Ještěrka, Sojka's parent's phone,
 // Vydra → Vydrák, returning Ježek, Liška gone; leaders: new Mravenec, Nina's
 // phone, Quido gone; plus a benjamínek and a dospělý, who are left out.
+// FIXTURE_TOKEN_BASIC: the same, but PersonParentAll is refused (an app with
+// only the basic package of skautIS functions).
+
+import { SkautisError } from './client.js'
 
 export const FIXTURE_TOKEN = 'fixture'
+export const FIXTURE_TOKEN_BASIC = 'fixture-basic'
+export const FIXTURE_TOKENS = [FIXTURE_TOKEN, FIXTURE_TOKEN_BASIC]
 
 const child = (id, FirstName, LastName, NickName, Birthday, category, parents) => ({
   person: { ID: id, FirstName, LastName, NickName, Birthday: `${Birthday}T00:00:00` },
@@ -107,7 +113,7 @@ const CATEGORY_NAMES = {
 }
 
 // Same interface as skautisClient(); units: { troop: registration number }.
-export function fixtureClient(units) {
+export function fixtureClient(units, token = FIXTURE_TOKEN) {
   const unitId = (troop) => `fixture-${troop}`
   const troopOf = (id) => Object.keys(units).find((t) => unitId(t) === id)
   const everyone = Object.values(MEMBERS).flat()
@@ -141,7 +147,12 @@ export function fixtureClient(units) {
         MembershipCategory: CATEGORY_NAMES[m.category],
       })),
     PersonDetail: ({ ID }) => byId(ID).person,
-    PersonParentAll: ({ ID_Person }) => byId(ID_Person).parents ?? [],
+    PersonParentAll: ({ ID_Person }) => {
+      if (token === FIXTURE_TOKEN_BASIC) {
+        throw new SkautisError('PersonParentAll', 'Aplikace nemá povolenou tuto funkci.')
+      }
+      return byId(ID_Person).parents ?? []
+    },
     PersonContactAll: ({ ID_Person }) => byId(ID_Person).contacts ?? [],
   }
   return async (service, method, input = {}) => {

@@ -136,6 +136,13 @@ const unitText = (units) =>
         removed-note="nebudou mezi organizátory ani v kontaktech pro rodiče"
         data-testid="skautis-people"
       />
+      <p
+        v-if="preview.parentsUnavailable"
+        class="m-0 text-[14.5px] text-muted-2"
+        data-testid="skautis-no-parents"
+      >
+        Kontakty na rodiče skautIS nepovolil, zůstávají ty dřív uložené.
+      </p>
       <p v-if="skippedText(preview.skipped)" class="m-0 text-[14.5px] text-muted-2">
         Nenačteno podle kategorie: {{ skippedText(preview.skipped) }}
       </p>

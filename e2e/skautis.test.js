@@ -4,9 +4,10 @@
 // (skautIS fields written, web data kept), a second sync with nothing to
 // change, access rules, mobile widths. skautIS itself is replaced by the
 // emulator fixture (`functions/src/skautis/fixture.js`, token FIXTURE_TOKEN)
-// compared with `seed-members.js` and `seed-activity.js`.
+// compared with `seed-members.js` and `seed-activity.js`; FIXTURE_TOKEN_BASIC
+// refuses parents' contacts (the basic package of skautIS functions).
 
-import { FIXTURE_TOKEN } from '../functions/src/skautis/fixture.js'
+import { FIXTURE_TOKEN, FIXTURE_TOKEN_BASIC } from '../functions/src/skautis/fixture.js'
 import {
   FIRESTORE,
   SCREENSHOTS,
@@ -298,5 +299,43 @@ export default async function skautisSuite({ browser, check }) {
     check(`${width} px: no console errors`, m.errors.length === 0, m.errors.join(' | '))
     await m.ctx.close()
   }
+
+  // ---- basic package: no parents' contacts, the stored ones are kept ----
+  await clearCollection('members')
+  await deleteDoc('members/900105/private/contacts') // left by the first apply
+  runScript('seed-members.js')
+  runScript('seed-activity.js')
+  const basicUrl = RETURN_URL.replace(FIXTURE_TOKEN, FIXTURE_TOKEN_BASIC)
+  const b = await openAs(browser, 'spravce@zare.test', basicUrl)
+  await b.page.getByRole('heading', { name: 'Co se změní' }).waitFor({ timeout: 20000 })
+  const basicChanged = await rowsText(b.page, 'skautis-members', 'changed')
+  check(
+    'basic package: the preview says parents are not loaded',
+    (await b.page.getByTestId('skautis-no-parents').count()) === 1,
+  )
+  check(
+    'basic package: parents are not compared',
+    /změnění \(2\)/.test(basicChanged) && !basicChanged.includes('kontakty rodičů'),
+    basicChanged,
+  )
+  await b.page.getByRole('button', { name: 'použít změny' }).click()
+  const basicStatus = b.page.getByRole('status').filter({ hasText: 'Hotovo' })
+  await basicStatus.waitFor({ timeout: 20000 })
+  check(
+    'basic package: applied',
+    (await basicStatus.innerText()).includes('Děti: 1 nový, 2 změnění, 1 odešlý.'),
+    await basicStatus.innerText(),
+  )
+  check(
+    'basic package: stored parents kept',
+    (await getDoc('members/900102/private/contacts'))?.parents?.[0]?.phone === '+420 602 333 444',
+  )
+  check(
+    'basic package: new child has no contacts yet',
+    (await getDoc('members/900105'))?.nickname === 'Ještěrka' &&
+      (await getDoc('members/900105/private/contacts')) === null,
+  )
+  check('basic package: no console errors', b.errors.length === 0, b.errors.join(' | '))
+  await b.ctx.close()
   await deleteDoc('skautisSync/pending')
 }

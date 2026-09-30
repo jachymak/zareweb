@@ -5,7 +5,7 @@ import { db, requireAdmin } from './admin.js'
 import { BASE_OPTIONS } from './options.js'
 import { SKAUTIS_TEST } from './shared/skautis.js'
 import { SkautisError, skautisClient } from './skautis/client.js'
-import { FIXTURE_TOKEN, fixtureClient } from './skautis/fixture.js'
+import { FIXTURE_TOKENS, fixtureClient } from './skautis/fixture.js'
 import { loadFromSkautis } from './skautis/load.js'
 import { MEMBER_FIELDS, PERSON_FIELDS, planSummary, planSync } from './skautis/plan.js'
 
@@ -28,7 +28,8 @@ const PENDING = 'skautisSync/pending'
 const PENDING_MAX_AGE_MS = 60 * 60 * 1000
 const BATCH_SIZE = 400 // Firestore allows 500 writes per batch
 
-const isFixture = (token) => process.env.FUNCTIONS_EMULATOR === 'true' && token === FIXTURE_TOKEN
+const isFixture = (token) =>
+  process.env.FUNCTIONS_EMULATOR === 'true' && FIXTURE_TOKENS.includes(token)
 
 async function loadCurrent() {
   const [membersSnap, peopleSnap] = await Promise.all([
@@ -66,7 +67,7 @@ function loadError(e) {
 }
 
 // data: { token } — the skautIS login token. Returns { units, skipped,
-// members, people } (planSummary).
+// parentsUnavailable, members, people } (planSummary).
 export const previewSkautisSync = onCall(
   { ...BASE_OPTIONS, timeoutSeconds: 300 },
   async (request) => {
@@ -77,7 +78,7 @@ export const previewSkautisSync = onCall(
     }
 
     const call = isFixture(token)
-      ? fixtureClient(SKAUTIS.units)
+      ? fixtureClient(SKAUTIS.units, token)
       : skautisClient({ url: SKAUTIS.url, appId: SKAUTIS.appId, token })
     let loaded
     try {
@@ -97,8 +98,14 @@ export const previewSkautisSync = onCall(
       by: caller,
       children: loaded.children.length,
       leaders: loaded.leaders.length,
+      parentsUnavailable: loaded.parentsUnavailable,
     })
-    return { units: loaded.units, skipped: loaded.skipped, ...planSummary(plan) }
+    return {
+      units: loaded.units,
+      skipped: loaded.skipped,
+      parentsUnavailable: loaded.parentsUnavailable,
+      ...planSummary(plan),
+    }
   },
 )
 
@@ -121,6 +128,8 @@ export const applySkautisSync = onCall(BASE_OPTIONS, async (request) => {
   const now = FieldValue.serverTimestamp()
   const pick = (record, fields) => Object.fromEntries(fields.map((f) => [f, record[f] ?? null]))
   const memberFields = MEMBER_FIELDS.filter((f) => f !== 'parents')
+  // Parents' contacts are written only when skautIS gave them.
+  const withParents = !pending.get('loaded').parentsUnavailable
   const ops = []
 
   for (const m of plan.members.added) {
@@ -135,7 +144,9 @@ export const applySkautisSync = onCall(BASE_OPTIONS, async (request) => {
         syncedAt: now,
       }),
     )
-    ops.push((b) => b.set(ref.collection('private').doc('contacts'), { parents: m.parents }))
+    if (withParents) {
+      ops.push((b) => b.set(ref.collection('private').doc('contacts'), { parents: m.parents }))
+    }
   }
   for (const m of plan.members.changed) {
     const ref = db.doc(`members/${m.id}`)

@@ -64,10 +64,25 @@ async function membersWithRole(call, token, roles, unit) {
   return null
 }
 
-async function loadChild(call, m, troop) {
+// Parents' contacts, or null when skautIS doesn't give them: PersonParentAll
+// is outside the basic package of functions an app gets. Any refusal counts
+// (a denied function may be worded differently from a denied role); an
+// expired login still fails the whole load.
+async function loadParents(call, personId, state) {
+  if (state.parentsUnavailable) return null
+  try {
+    return await call('OrganizationUnit', 'PersonParentAll', { ID_Person: personId })
+  } catch (e) {
+    if (!(e instanceof SkautisError) || e.loggedOut) throw e
+    state.parentsUnavailable = true
+    return null
+  }
+}
+
+async function loadChild(call, m, troop, state) {
   const [person, parents] = await Promise.all([
     call('OrganizationUnit', 'PersonDetail', { ID: m.ID_Person }),
-    call('OrganizationUnit', 'PersonParentAll', { ID_Person: m.ID_Person }),
+    loadParents(call, m.ID_Person, state),
   ])
   return {
     id: m.ID_Person,
@@ -76,11 +91,12 @@ async function loadChild(call, m, troop) {
     nickname: clean(person.NickName) ?? '',
     troop,
     birthDate: (person.Birthday ?? m.Birthday ?? '').slice(0, 10) || null,
-    parents: parents.map((p) => ({
-      name: fullName(p.FirstName, p.LastName) || clean(p.Parent) || '',
-      email: clean(p.Email),
-      phone: clean(p.Phone),
-    })),
+    parents:
+      parents?.map((p) => ({
+        name: fullName(p.FirstName, p.LastName) || clean(p.Parent) || '',
+        email: clean(p.Email),
+        phone: clean(p.Phone),
+      })) ?? null,
   }
 }
 
@@ -104,13 +120,16 @@ async function loadLeader(call, m, troop) {
 
 // units: { vlc: '116.22.220', ss: '116.22.222' } (registration numbers).
 // Returns { units: { troop: { regNumber, name } }, children, leaders,
-// skipped: { [category name]: count } }. Throws SkautisError, or an Error
-// with `code` 'unit-not-found' / 'no-role' and `regNumber`.
+// skipped: { [category name]: count }, parentsUnavailable }; with
+// parentsUnavailable every child's `parents` is null (not loaded). Throws
+// SkautisError, or an Error with `code` 'unit-not-found' / 'no-role' and
+// `regNumber`.
 export async function loadFromSkautis(call, token, units) {
   const user = await call('UserManagement', 'UserDetail', {})
   const roles = await call('UserManagement', 'UserRoleAll', { ID_User: user.ID, IsActive: true })
 
   const result = { units: {}, children: new Map(), leaders: new Map(), skipped: {} }
+  const state = { parentsUnavailable: false }
   for (const [troop, regNumber] of Object.entries(units)) {
     const unit = (
       await call('OrganizationUnit', 'UnitAll', { RegistrationNumber: regNumber })
@@ -146,15 +165,18 @@ export async function loadFromSkautis(call, token, units) {
         result.skipped[name] = (result.skipped[name] ?? 0) + 1
       }
     }
-    for (const c of await mapLimit(children, (m) => loadChild(call, m, troop)))
+    for (const c of await mapLimit(children, (m) => loadChild(call, m, troop, state)))
       result.children.set(c.id, c)
     for (const l of await mapLimit(leaders, (m) => loadLeader(call, m, troop)))
       result.leaders.set(l.id, l)
   }
+  const children = [...result.children.values()]
+  if (state.parentsUnavailable) children.forEach((c) => (c.parents = null))
   return {
     units: result.units,
-    children: [...result.children.values()],
+    children,
     leaders: [...result.leaders.values()],
     skipped: result.skipped,
+    parentsUnavailable: state.parentsUnavailable,
   }
 }
