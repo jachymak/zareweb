@@ -62,6 +62,7 @@ Routes are in Czech (they are user-visible).
 | 16 | Album                       | `/clenove/fotky/:albumId`           | parent, leader | — (Google Photos–like)     |
 | 17 | Photos (management)         | `/vedouci/fotky`                    | leader  | — (cards from page 5)             |
 | 18 | Album (management)          | `/vedouci/fotky/:albumId`           | leader  | — (as page 16 + tools)            |
+| 19 | Troop history               | `/historie`                         | public  | — (header as page 2)              |
 
 Not in scope: `Zare - cesta responzivne` — design study of the hand-drawn trail on mobile; visual reference for page 1 only.
 Password reset uses Firebase's default hosted page.
@@ -83,6 +84,8 @@ Decorative: a hand-drawn trail connecting drawings along the page, opening and c
 - „Chcete se přidat?“ block: *„Nováčky na školní rok {doneYear} už máme nabrané. Nové zápisy zařadíme do výběru na rok {nextYear}.“* — see §6.1.
 - Buttons: „Zapsat na čekací listinu“ → page 2; „…nebo najít jiný oddíl“ → `https://skautskyoddil.cz`.
 - FAQ: accordion, one item open at a time. Content static (6 Q&A in the design).
+
+A link under the Tábor section („historie oddílu a všechny naše tábory od roku 1976“) leads to page 19; the history has no stop of its own on the trail.
 
 **Footer:** group name + troops, středisko Šipka (logo + link), contact `zare@skaut.cz` with a note not to use it for sign-up interest (link to waiting list), supporter logos.
 
@@ -148,6 +151,14 @@ One entry point for parents and leaders. Four states:
 **Approval flow:** a pending account with its note triggers an e-mail to the admins (Cloud Function `onUserWritten`; right at registration, after a first Google login once the note is filled in; once per account, fixed text with the note and a link to „účty a párování“). In Administration (§4.8, „účty a párování“) the admin sees the note and suggested children (parent e-mail matches skautIS) and either approves (pairs children → role `parent`, or sets a leader role), or rejects it; to ask an unknown account who they are, the admin writes to its e-mail directly (role `none`). A `none` account can later be reactivated or deleted. When the admin approves the account for the first time (pending → parent / leader / admin), `onUserWritten` e-mails the user (`accountApproved`, with the paired children for parents); pairing more children later or approving again after unpairing sends nothing.
 
 **Reads:** own `users/{uid}`. **Writes:** Auth account; `users/{uid}` (create on registration / first Google login).
+
+---
+
+### 2.5 Troop history (`/historie`)
+
+Static content in `src/content/history.js` (from the old web): the history of the troop in periods (hand-written years as headings), then „Tábory oddílu Záře“ — every camp year from 1976, grouped by decade (cards, two columns from `sm`). A year's row appears from July of that year (the camp starts in early July); a theme is a name or one name per troop (vlčušky / skauti); years without a theme show „doplníme“. New camps are added to `CAMPS` in the content file.
+
+**Reads / writes:** nothing.
 
 ---
 

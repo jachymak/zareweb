@@ -1,4 +1,5 @@
 <script setup>
+import { computed } from 'vue'
 import TrailConnector from './TrailConnector.vue'
 
 // One stop on the illustrated trail: text on one side, a sketch on the other.
@@ -15,7 +16,7 @@ const props = defineProps({
   sketchSide: { type: String, default: 'right' }, // 'left' | 'right' (desktop)
 })
 
-const textSide = props.sketchSide === 'left' ? 'right' : 'left'
+const textSide = computed(() => (props.sketchSide === 'left' ? 'right' : 'left'))
 </script>
 
 <template>

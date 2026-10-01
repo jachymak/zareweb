@@ -14,6 +14,11 @@ const router = createRouter({
       component: () => import('@/views/WaitlistView.vue'),
     },
     {
+      path: '/historie',
+      name: 'history',
+      component: () => import('@/views/HistoryView.vue'),
+    },
+    {
       path: '/cekaci-listina/obnovit/:token',
       name: 'waitlist-renewal',
       component: () => import('@/views/WaitlistRenewalView.vue'),

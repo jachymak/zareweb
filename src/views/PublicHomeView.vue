@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted } from 'vue'
+import { defineAsyncComponent, onMounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRoute } from 'vue-router'
 import { isFirstPage } from '@/router'
@@ -15,11 +15,10 @@ import TroopList from '@/components/public/TroopList.vue'
 import JoinCard from '@/components/public/JoinCard.vue'
 import FaqAccordion from '@/components/public/FaqAccordion.vue'
 import IntroScreen from '@/components/public/IntroScreen.vue'
+import HomeHero from '@/components/public/HomeHero.vue'
 import sketchClubhouse from '@/assets/sketches/skica-klubovna.svg'
 import sketchGoal from '@/assets/sketches/skica-cil.svg'
 import clubhouseMap from '@/assets/public/mapa-klubovna.jpg'
-import rocks1000 from '@/assets/public/skaly-1000.webp'
-import rocks1600 from '@/assets/public/skaly-1600.webp'
 import dejvice400 from '@/assets/public/dejvice-400.webp'
 import dejvice800 from '@/assets/public/dejvice-800.webp'
 import guide400 from '@/assets/public/pruvodce-400.webp'
@@ -40,6 +39,78 @@ onMounted(() => settingsStore.load())
 // Props for a StorySection with a raster drawing (400 px and 800 px wide).
 const drawing = (small, large) => ({ sketch: small, srcset: `${small} 400w, ${large} 800w` })
 
+// Drawing and side of each StorySection; the DrawingPicker (dev only) can
+// override them to try out variants from design-reference/drawings.
+const STORIES = [
+  {
+    id: 'start',
+    label: 'Kdo jsme',
+    defaultFile: 'dejvice-2.png',
+    sketchSide: 'right',
+    ...drawing(dejvice400, dejvice800),
+  },
+  {
+    id: 'oddily',
+    label: 'Mladší a starší',
+    defaultFile: 'skica-klubovna.svg',
+    sketchSide: 'left',
+    sketch: sketchClubhouse,
+  },
+  {
+    id: 'cinnost',
+    label: 'Co děláme',
+    defaultFile: 'pruvodce-2.png',
+    sketchSide: 'right',
+    ...drawing(guide400, guide800),
+  },
+  {
+    id: 'rok',
+    label: 'Od schůzky k táboru',
+    defaultFile: 'rozcestnik-2.png',
+    sketchSide: 'left',
+    ...drawing(signpost400, signpost800),
+  },
+  {
+    id: 'klubovna',
+    label: 'Klubovna',
+    defaultFile: 'klubovna.png',
+    sketchSide: 'right',
+    ...drawing(clubhouse400, clubhouse800),
+  },
+  {
+    id: 'tabor',
+    label: 'Tábor',
+    defaultFile: 'tabor-2.png',
+    sketchSide: 'left',
+    ...drawing(camp400, camp800),
+  },
+  {
+    id: 'cil',
+    label: 'Závěr',
+    defaultFile: 'skica-cil.svg',
+    sketchSide: 'left',
+    sketch: sketchGoal,
+  },
+]
+const overrides = ref({})
+// { size, layout } of the HomeHero variant under trial.
+const hero = ref({})
+const DrawingPicker = import.meta.env.DEV
+  ? defineAsyncComponent(() => import('@/components/public/DrawingPicker.vue'))
+  : null
+
+function story(id) {
+  const { sketch, srcset, sketchSide } = STORIES.find((s) => s.id === id)
+  const o = overrides.value[id] ?? {}
+  const image = o.url
+    ? { sketch: o.url, srcset: o.raster ? `${o.url} 800w` : undefined }
+    : { sketch, srcset }
+  return { ...image, sketchSide: o.side ?? sketchSide }
+}
+
+// Mobile trail connectors run from one story's text side to the next one's.
+const textSide = (id) => (story(id).sketchSide === 'left' ? 'right' : 'left')
+
 // The intro greets every fresh load of the home page, but not in-app returns
 // or links to a section.
 const showIntro = isFirstPage() && !useRoute().hash
@@ -51,41 +122,18 @@ const showIntro = isFirstPage() && !useRoute().hash
     <PublicHeader />
 
     <main class="relative">
-      <TrailPath class="hidden md:block" />
+      <TrailPath :key="JSON.stringify([overrides, hero])" class="hidden md:block" />
 
       <div class="relative z-[1] mx-auto max-w-[1120px] px-4 pb-6 sm:px-6">
-        <section id="uvod" data-section class="pt-8 text-center md:pt-12 md:pb-8">
-          <h2
-            class="m-0 mx-auto max-w-[24ch] font-hand text-[36px] leading-[1.1] font-semibold text-balance text-ink sm:text-[48px] lg:text-[60px]"
-          >
-            Přes louky, lesy, skály šedé, společná nás cesta vede
-          </h2>
-          <!-- The trail sets off from the foot of the rocks (data-trail-x/y). -->
-          <div
-            data-trail-start
-            data-trail-x="0.4"
-            data-trail-y="0.93"
-            class="mx-auto mt-4 max-w-[960px]"
-          >
-            <img
-              :src="rocks1000"
-              :srcset="`${rocks1000} 1000w, ${rocks1600} 1600w`"
-              sizes="(min-width: 1024px) 960px, 100vw"
-              alt="Kresba pískovcových skal nad krajinou"
-              width="2500"
-              height="500"
-              class="block [mask-composite:intersect] [mask-image:linear-gradient(to_right,transparent,#000_7%,#000_93%,transparent),linear-gradient(transparent,#000_12%,#000_85%,transparent)] aspect-[5/2] h-auto w-full object-cover object-[30%_50%] md:aspect-[5/1]"
-            />
-          </div>
-        </section>
+        <HomeHero v-bind="hero" />
 
-        <TrailConnector from="center" to="left" class="md:hidden" />
+        <TrailConnector from="center" :to="textSide('start')" class="md:hidden" />
 
         <StorySection
           id="start"
           kicker="kdo jsme"
           title="Ahoj! My jsme Záře!"
-          v-bind="drawing(dejvice400, dejvice800)"
+          v-bind="story('start')"
         >
           <p class="prose-body mb-3.5 max-w-[52ch]">
             Dva skautské oddíly z Dejvic — jeden pro
@@ -99,14 +147,13 @@ const showIntro = isFirstPage() && !useRoute().hash
           <PolaroidPhoto caption="Naše parta na výpravě" :tilt="-1.6" />
         </StorySection>
 
-        <TrailConnector from="left" to="right" class="md:hidden" />
+        <TrailConnector :from="textSide('start')" :to="textSide('oddily')" class="md:hidden" />
 
         <StorySection
           id="oddily"
           kicker="dva oddíly"
           title="Mladší a starší"
-          :sketch="sketchClubhouse"
-          sketch-side="left"
+          v-bind="story('oddily')"
         >
           <TroopList class="mb-3.5" />
           <p class="ml-auto max-w-[46ch] text-[17px] leading-[1.7] text-pretty">
@@ -114,13 +161,13 @@ const showIntro = isFirstPage() && !useRoute().hash
           </p>
         </StorySection>
 
-        <TrailConnector from="right" to="left" class="md:hidden" />
+        <TrailConnector :from="textSide('oddily')" :to="textSide('cinnost')" class="md:hidden" />
 
         <StorySection
           id="cinnost"
           kicker="co děláme"
           title="Parta, příroda, samostatnost"
-          v-bind="drawing(guide400, guide800)"
+          v-bind="story('cinnost')"
         >
           <p class="prose-body mb-3.5 max-w-[52ch]">
             Na schůzkách hrajeme, vyrábíme, učíme se praktické věci a plánujeme, kam vyrazíme
@@ -152,8 +199,7 @@ const showIntro = isFirstPage() && !useRoute().hash
           id="rok"
           kicker="jak to u nás chodí"
           title="Od schůzky k táboru"
-          v-bind="drawing(signpost400, signpost800)"
-          sketch-side="left"
+          v-bind="story('rok')"
         >
           <div class="ml-auto flex max-w-[44ch] flex-col gap-4">
             <p class="m-0 text-[17px] leading-[1.7] sm:text-[17.5px]">
@@ -173,13 +219,13 @@ const showIntro = isFirstPage() && !useRoute().hash
           </div>
         </StorySection>
 
-        <TrailConnector from="right" to="left" class="md:hidden" />
+        <TrailConnector :from="textSide('rok')" :to="textSide('klubovna')" class="md:hidden" />
 
         <StorySection
           id="klubovna"
           kicker="naše klubovna"
           title="Kafkova 23, Dejvice"
-          v-bind="drawing(clubhouse400, clubhouse800)"
+          v-bind="story('klubovna')"
         >
           <p class="prose-body mb-5 max-w-[40ch]">
             Kousek od Kulaťáku. Ve vnitrobloku za klubovnou je hřiště, kam často na schůzkách
@@ -231,14 +277,13 @@ const showIntro = isFirstPage() && !useRoute().hash
           />
         </StorySection>
 
-        <TrailConnector from="left" to="right" class="md:hidden" />
+        <TrailConnector :from="textSide('klubovna')" :to="textSide('tabor')" class="md:hidden" />
 
         <StorySection
           id="tabor"
           kicker="vrchol roku"
           title="Tábor v jižních Čechách"
-          v-bind="drawing(camp400, camp800)"
-          sketch-side="left"
+          v-bind="story('tabor')"
         >
           <p class="prose-body mb-3.5 ml-auto max-w-[48ch]">
             Začátkem července vyrážíme na dva až tři týdny do přírody, na táborovou louku. V
@@ -246,8 +291,10 @@ const showIntro = isFirstPage() && !useRoute().hash
             týpí či podsadových stanech, vaříme na kamnech a myjeme se v řece. Většinou hrajeme
             celotáborovou hru, která se táhne celým táborem.
           </p>
-          <p class="mb-6 font-hand text-[24px] leading-tight text-green sm:text-[26px]">
-            Tři týdny bez telefonu — a nikomu nechybí
+          <p class="mb-6 font-hand text-[24px] leading-tight sm:text-[26px]">
+            <RouterLink to="/historie"
+              >historie oddílu a všechny naše tábory od roku 1976</RouterLink
+            >
           </p>
           <div class="flex justify-end">
             <PolaroidPhoto caption="Táborová louka" :tilt="-2.2" />
@@ -270,7 +317,7 @@ const showIntro = isFirstPage() && !useRoute().hash
           <FaqAccordion :items="FAQ" />
         </section>
 
-        <StorySection :sketch="sketchGoal" sketch-side="left" class="pt-12 md:pt-10 md:pb-4">
+        <StorySection v-bind="story('cil')" class="pt-12 md:pt-10 md:pb-4">
           <h2
             class="m-0 ml-auto max-w-[20ch] font-hand text-[36px] leading-[1.1] font-semibold text-balance text-ink sm:text-[48px] lg:text-[60px]"
           >
@@ -281,5 +328,6 @@ const showIntro = isFirstPage() && !useRoute().hash
     </main>
 
     <PublicFooter />
+    <DrawingPicker v-if="DrawingPicker" v-model="overrides" v-model:hero="hero" :slots="STORIES" />
   </div>
 </template>
