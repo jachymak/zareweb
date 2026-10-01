@@ -6,3 +6,8 @@ RewriteCond %{REQUEST_URI} ^/el_prihlaska/ [NC]
 RewriteRule ^ - [L]
 
 # The countdown page (index.html) is served at the root; the old site stays under /old/.
+# Visits to /old/ from outside (search engines, external links) go to the root, so Google
+# drops /old/ from its index. Clicks from our own pages (the launch page button, links
+# inside the old site) carry our host in the Referer and still reach the old site.
+RewriteCond %{HTTP_HOST}@@%{HTTP_REFERER} !^([^@]+)@@https?://\1/ [NC]
+RewriteRule ^old(/.*)?$ / [R=301,L]
