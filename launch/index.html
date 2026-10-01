@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="cs">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skautský oddíl Záře — nové stránky už brzy</title>
+    <meta name="description" content="Skautský oddíl Záře z Dejvic chystá nové stránky. Do té doby najdete vše na původním webu.">
+    <link rel="icon" href="favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --green: #2f6b4f;
+        --green-hover: #255a41;
+        --ink: #22301f;
+        --text: #3e4a3c;
+        --muted: #5d6a5b;
+        --cream: #fbf6ea;
+        --paper: #fffdf6;
+        --line: #cfc4aa;
+        --red: #c0492a;
+      }
+
+      * { box-sizing: border-box; }
+
+      html, body { margin: 0; }
+
+      body {
+        min-height: 100vh;
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 16px;
+        background: var(--cream);
+        color: var(--text);
+        font-family: 'Outfit', system-ui, sans-serif;
+        text-align: center;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      main { width: 100%; max-width: 640px; }
+
+      .logo { width: 88px; height: auto; display: block; margin: 0 auto 18px; }
+
+      .kicker {
+        margin: 0;
+        font-family: 'Caveat', cursive;
+        font-size: 27px;
+        font-weight: 600;
+        line-height: 1.2;
+        color: var(--red);
+      }
+
+      h1 {
+        margin: 6px 0 0;
+        font-size: 30px;
+        font-weight: 500;
+        line-height: 1.12;
+        letter-spacing: -0.03em;
+        color: var(--ink);
+        text-wrap: balance;
+      }
+
+      .lead {
+        margin: 14px auto 0;
+        max-width: 30em;
+        font-size: 17px;
+        line-height: 1.65;
+        text-wrap: pretty;
+      }
+
+      .countdown {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+        margin: 30px auto 0;
+        max-width: 480px;
+        padding: 0;
+        list-style: none;
+      }
+
+      .countdown li {
+        padding: 14px 4px 10px;
+        border: 2px solid var(--ink);
+        border-radius: 4px;
+        background: var(--paper);
+        box-shadow: 3px 4px 0 rgba(34, 48, 31, .15);
+      }
+
+      .countdown li:nth-child(odd) { transform: rotate(-1deg); }
+      .countdown li:nth-child(even) { transform: rotate(1deg); }
+
+      .num {
+        display: block;
+        font-size: 34px;
+        font-weight: 500;
+        line-height: 1;
+        color: var(--ink);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .unit {
+        display: block;
+        margin-top: 6px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .done {
+        margin: 30px 0 0;
+        font-family: 'Caveat', cursive;
+        font-size: 32px;
+        font-weight: 700;
+        color: var(--ink);
+      }
+
+      .illustration {
+        display: block;
+        width: 100%;
+        max-width: 240px;
+        height: auto;
+        margin: 28px auto 0;
+        mix-blend-mode: multiply;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 26px;
+        padding: 15px 30px;
+        border-radius: 999px;
+        background: var(--green);
+        color: var(--cream);
+        font-size: 17px;
+        font-weight: 500;
+        text-decoration: none;
+      }
+
+      .btn:hover { background: var(--green-hover); }
+
+      .btn:focus-visible { outline: 2px solid var(--green); outline-offset: 3px; }
+
+      .note { margin: 14px 0 0; font-size: 15px; color: var(--muted); }
+
+      [hidden] { display: none !important; }
+
+      @media (min-width: 640px) {
+        h1 { font-size: 40px; }
+        .lead { font-size: 18px; }
+        .countdown { gap: 14px; }
+        .num { font-size: 46px; }
+        .unit { font-size: 14px; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <svg class="logo" viewBox="0 0 100 58" role="img" aria-label="Logo oddílu Záře">
+        <g fill="none" stroke-linecap="round">
+          <path d="M6 52 A44 44 0 0 1 94 52" stroke="#E5A83C" stroke-width="6.5" />
+          <path d="M22 52 A28 28 0 0 1 78 52" stroke="#D5762D" stroke-width="6" />
+          <path d="M37 52 A13 13 0 0 1 63 52" stroke="#C0492A" stroke-width="5.5" />
+        </g>
+      </svg>
+
+      <p class="kicker">Skautský oddíl Záře</p>
+      <h1>Blíží se něco velkého…</h1>
+      <p class="lead">Nový web oddílu spustíme už za chvíli. Do té doby najdete vše potřebné na původních stránkách.</p>
+
+      <ul class="countdown" id="countdown" aria-label="Zbývající čas do spuštění">
+        <li><span class="num" id="d">–</span><span class="unit" id="d-unit">dní</span></li>
+        <li><span class="num" id="h">–</span><span class="unit" id="h-unit">hodin</span></li>
+        <li><span class="num" id="m">–</span><span class="unit" id="m-unit">minut</span></li>
+        <li><span class="num" id="s">–</span><span class="unit" id="s-unit">sekund</span></li>
+      </ul>
+      <p class="done" id="done" hidden>Už to bude! Zkuste stránku za chvíli obnovit.</p>
+
+      <img class="illustration" src="rozcestnik-800.webp" alt="" width="800" height="923">
+
+      <a class="btn" href="/old/index.php">Přejít na původní stránky</a>
+    </main>
+
+    <script>
+      // Friday 2 October 2026, midnight in Prague (CEST, UTC+2).
+      var target = new Date('2026-10-03T00:00:00+02:00').getTime()
+
+      function plural(n, one, few, many) {
+        if (n === 1) return one
+        if (n >= 2 && n <= 4) return few
+        return many
+      }
+
+      var units = [
+        ['d', 86400, ['den', 'dny', 'dní']],
+        ['h', 3600, ['hodina', 'hodiny', 'hodin']],
+        ['m', 60, ['minuta', 'minuty', 'minut']],
+        ['s', 1, ['sekunda', 'sekundy', 'sekund']],
+      ]
+
+      function tick() {
+        var left = Math.max(0, Math.floor((target - Date.now()) / 1000))
+        if (left === 0) {
+          document.getElementById('countdown').hidden = true
+          document.getElementById('done').hidden = false
+          clearInterval(timer)
+          return
+        }
+        units.forEach(function (u) {
+          var value = Math.floor(left / u[1])
+          left -= value * u[1]
+          document.getElementById(u[0]).textContent = u[0] === 'd' ? value : String(value).padStart(2, '0')
+          document.getElementById(u[0] + '-unit').textContent = plural(value, u[2][0], u[2][1], u[2][2])
+        })
+      }
+
+      var timer = setInterval(tick, 1000)
+      tick()
+    </script>
+  </body>
+</html>

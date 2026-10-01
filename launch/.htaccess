@@ -1,0 +1,8 @@
+RewriteEngine On
+DirectoryIndex index.html
+
+# Skip rewrite for anything under /el_prihlaska/
+RewriteCond %{REQUEST_URI} ^/el_prihlaska/ [NC]
+RewriteRule ^ - [L]
+
+# The countdown page (index.html) is served at the root; the old site stays under /old/.
