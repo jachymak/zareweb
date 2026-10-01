@@ -7,10 +7,11 @@ import ZareLogo from '@/components/ZareLogo.vue'
 import ForgotPasswordForm from '@/components/auth/ForgotPasswordForm.vue'
 import LoginForm from '@/components/auth/LoginForm.vue'
 import NoAccess from '@/components/auth/NoAccess.vue'
-import NotebookSketch from '@/components/auth/NotebookSketch.vue'
 import PendingApproval from '@/components/auth/PendingApproval.vue'
 import RegisterForm from '@/components/auth/RegisterForm.vue'
 import { INTRO } from '@/components/auth/authText'
+import lock400 from '@/assets/auth/zamek-400.webp'
+import lock800 from '@/assets/auth/zamek-800.webp'
 
 // Login / registration — SPEC §2.4. One entry point for parents and leaders;
 // approved users are sent on by role, the others see their account status.
@@ -69,7 +70,15 @@ async function signOut() {
             {{ intro[1] }}
           </h1>
           <p class="prose-body m-0 mb-6 max-w-[42ch]">{{ intro[2] }}</p>
-          <NotebookSketch class="hidden sm:block" />
+          <img
+            :src="lock400"
+            :srcset="`${lock400} 400w, ${lock800} 800w`"
+            sizes="370px"
+            alt=""
+            width="1200"
+            height="760"
+            class="hidden h-auto w-full max-w-[370px] sm:block"
+          />
           <p class="m-0 mt-5 max-w-[40ch] text-[15px] leading-relaxed text-brown">
             Jeden vstup pro rodiče i vedoucí — po přihlášení se ti ukáže to, na co máš přístup.
           </p>

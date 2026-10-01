@@ -29,6 +29,12 @@ import camp400 from '@/assets/public/tabor-400.webp'
 import camp800 from '@/assets/public/tabor-800.webp'
 import signpost400 from '@/assets/public/rozcestnik-400.webp'
 import signpost800 from '@/assets/public/rozcestnik-800.webp'
+import photoTrip400 from '@/assets/public/foto-vyprava-400.webp'
+import photoTrip800 from '@/assets/public/foto-vyprava-800.webp'
+import photoMeeting400 from '@/assets/public/foto-schuzka-400.webp'
+import photoMeeting800 from '@/assets/public/foto-schuzka-800.webp'
+import photoCamp400 from '@/assets/public/foto-tabor-400.webp'
+import photoCamp800 from '@/assets/public/foto-tabor-800.webp'
 
 // Public home — SPEC §2.1. Reads settings/public, writes nothing.
 const settingsStore = usePublicSettingsStore()
@@ -38,6 +44,14 @@ onMounted(() => settingsStore.load())
 
 // Props for a StorySection with a raster drawing (400 px and 800 px wide).
 const drawing = (small, large) => ({ sketch: small, srcset: `${small} 400w, ${large} 800w` })
+
+// Props for a PolaroidPhoto (400 px and 800 px wide).
+const photo = (small, large, height) => ({
+  src: large,
+  srcset: `${small} 400w, ${large} 800w`,
+  width: 800,
+  height,
+})
 
 // Drawing and side of each StorySection; the DrawingPicker (dev only) can
 // override them to try out variants from design-reference/drawings.
@@ -144,7 +158,12 @@ const showIntro = isFirstPage() && !useRoute().hash
           <p class="prose-body mb-6 max-w-[52ch]">
             Pravidelně se scházíme, vyrážíme na výpravy do přírody a v létě na tábor.
           </p>
-          <PolaroidPhoto caption="Naše parta na výpravě" :tilt="-1.6" />
+          <PolaroidPhoto
+            v-bind="photo(photoTrip400, photoTrip800, 600)"
+            alt="Děti z oddílu na výpravě"
+            caption="Naše parta na výpravě"
+            :tilt="-1.6"
+          />
         </StorySection>
 
         <TrailConnector :from="textSide('start')" :to="textSide('oddily')" class="md:hidden" />
@@ -178,7 +197,12 @@ const showIntro = isFirstPage() && !useRoute().hash
             Nejde nám o jednu dovednost jako v kroužku. Jde o partu, o samostatnost a o to, aby se
             na sebe děti mohly spolehnout.
           </p>
-          <PolaroidPhoto caption="Schůzka v klubovně" :tilt="1.8" />
+          <PolaroidPhoto
+            v-bind="photo(photoMeeting400, photoMeeting800, 533)"
+            alt="Děti na schůzce"
+            caption="Schůzka"
+            :tilt="1.8"
+          />
         </StorySection>
 
         <section id="proc" data-section class="mx-auto max-w-[640px] py-12 text-center md:py-6">
@@ -297,7 +321,12 @@ const showIntro = isFirstPage() && !useRoute().hash
             >
           </p>
           <div class="flex justify-end">
-            <PolaroidPhoto caption="Táborová louka" :tilt="-2.2" />
+            <PolaroidPhoto
+              v-bind="photo(photoCamp400, photoCamp800, 533)"
+              alt="Podsadové stany na táborové louce"
+              caption="Táborová louka"
+              :tilt="-2.2"
+            />
           </div>
         </StorySection>
 

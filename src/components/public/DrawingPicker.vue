@@ -20,10 +20,10 @@ const HERO_SIZES = {
   bleed: 'přes celou šířku',
 }
 const HERO_LAYOUTS = {
+  'sky-right': 'pokřik v obloze vpravo',
+  sky: 'pokřik v obloze uprostřed',
+  split: 'pokřik rozdělený (obloha + pod obrázkem)',
   above: 'pokřik nad obrázkem',
-  overlap: 'pokřik zasunutý do oblohy',
-  sky: 'pokřik v obloze vpravo',
-  split: 'pokřik rozdělený kolem obrázku',
 }
 
 const drawings = import.meta.glob('/design-reference/drawings/*.png', {
@@ -146,7 +146,7 @@ function reset() {
         </select>
         <select
           class="w-full rounded border border-line bg-paper px-1.5 py-1"
-          :value="hero.layout ?? 'above'"
+          :value="hero.layout ?? 'sky-right'"
           @change="hero = { ...hero, layout: $event.target.value }"
         >
           <option v-for="(label, key) in HERO_LAYOUTS" :key="key" :value="key">{{ label }}</option>

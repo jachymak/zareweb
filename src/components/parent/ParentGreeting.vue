@@ -1,6 +1,7 @@
 <script setup>
 import { formatRange, formatToday } from './parentText'
-import signpost from '@/assets/sketches/skica-rozcestnik.svg'
+import signpost150 from '@/assets/public/rozcestnik-3-150.webp'
+import signpost300 from '@/assets/public/rozcestnik-3-300.webp'
 
 // „Ahoj!“, today's date and the nearest upcoming event.
 defineProps({
@@ -26,6 +27,14 @@ defineProps({
         </template>
       </p>
     </div>
-    <img :src="signpost" alt="" class="hidden w-[110px] flex-none sm:block" />
+    <img
+      :src="signpost150"
+      :srcset="`${signpost150} 150w, ${signpost300} 300w`"
+      sizes="110px"
+      alt=""
+      width="1040"
+      height="1200"
+      class="hidden h-auto w-[110px] flex-none sm:block"
+    />
   </div>
 </template>

@@ -2,6 +2,8 @@
 // Tilted photo print with a handwritten caption. Without `src` it shows an empty frame.
 defineProps({
   src: { type: String, default: '' },
+  // Optional `srcset` for `src` (the frame is at most `maxWidth` px wide).
+  srcset: { type: String, default: undefined },
   alt: { type: String, default: '' },
   caption: { type: String, required: true },
   tilt: { type: Number, default: -1.6 },
@@ -20,6 +22,8 @@ defineProps({
     <img
       v-if="src"
       :src="src"
+      :srcset="srcset"
+      :sizes="srcset ? `(min-width: 400px) ${maxWidth}px, calc(100vw - 32px)` : undefined"
       :alt="alt"
       :width="width"
       :height="height"
