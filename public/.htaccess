@@ -1,0 +1,39 @@
+RewriteEngine On
+DirectoryIndex index.html
+
+# Skip rewrite for anything under /el_prihlaska/
+RewriteCond %{REQUEST_URI} ^/el_prihlaska/ [NC]
+RewriteRule ^ - [L]
+
+# The old site stays under /old/. Visits to /old/ from outside (search engines, external
+# links) go to the root, so Google drops /old/ from its index. Clicks from our own pages
+# (the launch page button, links inside the old site) carry our host in the Referer and
+# still reach the old site.
+RewriteCond %{HTTP_HOST}@@%{HTTP_REFERER} !^([^@]+)@@https?://\1/ [NC]
+RewriteRule ^old(/.*)?$ / [R=301,L]
+
+# --- Before launch (docs/DEPLOY.md): delete from here to "end before launch" ---
+# Everyone sees the countdown (launch.html); the new web only shows in a browser with the
+# preview cookie. ?nahled=1 turns it on for 30 days, ?nahled=0 off.
+RewriteCond %{QUERY_STRING} (^|&)nahled=1(&|$)
+RewriteRule ^ %{REQUEST_URI}? [CO=nahled:1:%{SERVER_NAME}:43200:/:secure:httponly,R=302,L]
+RewriteCond %{QUERY_STRING} (^|&)nahled=0(&|$)
+RewriteRule ^ %{REQUEST_URI}? [CO=nahled:0:%{SERVER_NAME}:-1:/:secure:httponly,R=302,L]
+
+RewriteCond %{HTTP_COOKIE} !(^|;\s*)nahled=1(;|$)
+RewriteCond %{REQUEST_URI} !^/(old|el_prihlaska|skautis)(/|$) [NC]
+RewriteCond %{REQUEST_URI} !^/(launch\.html|rozcestnik-800\.webp|favicon\.ico)$
+RewriteRule ^ /launch.html [L]
+# --- end before launch ---
+
+# The web app: paths that aren't files go to index.html (Vue Router, history mode).
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ /index.html [L]
+
+# Pages change with each upload (and with the preview cookie); assets have hashed names.
+<IfModule mod_headers.c>
+  <FilesMatch "\.html$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>

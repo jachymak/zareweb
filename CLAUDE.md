@@ -28,6 +28,7 @@
 ## Sources of truth
 
 - Behavior and requirements: `docs/SPEC.md`
+- Deployment (Firebase project, upload to the skauting.cz hosting, preview behind the countdown, launch): `docs/DEPLOY.md`
 - Visuals: `design-reference/` is inspiration only. Do NOT copy code from it; everything is rewritten from scratch in Vue.
 - Some pages in `design-reference/` are only test pages and do not represent the intended design.
 

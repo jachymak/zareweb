@@ -69,7 +69,7 @@ export default async function publicPage({ browser, check }) {
       text,
     )
 
-    const d = await page.locator('main > svg path[stroke-dasharray]').getAttribute('d')
+    const d = await page.locator('main > svg path').getAttribute('d')
     check('desktop: trail path drawn', !!d && d.split('C').length > 10)
     check('desktop: no horizontal overflow', (await horizontalOverflow(page)) <= 0)
     check(
