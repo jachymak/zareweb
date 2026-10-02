@@ -21,19 +21,22 @@ RewriteCond %{QUERY_STRING} (^|&)stranka=(pridej_se|formular|registrace)(&|$)
 RewriteRule ^index\.php$ /cekaci-listina [R=301,L,QSD]
 RewriteRule ^index\.php$ / [R=301,L,QSD]
 
-# --- Before launch (docs/DEPLOY.md): delete from here to "end before launch" ---
-# Everyone sees the countdown (launch.html); the new web only shows in a browser with the
-# preview cookie. ?nahled=1 turns it on for 30 days, ?nahled=0 off.
+# --- Countdown (launch.html), off since launch — docs/DEPLOY.md "Countdown" ---
+# To show it to everyone again (e.g. during bigger changes), uncomment the four lines
+# below and upload .htaccess. Visitors get launch.html with status 503 (search engines
+# keep the site's pages in their index); a browser with the preview cookie sees the web:
+# ?nahled=1 turns it on for 30 days, ?nahled=0 off.
 RewriteCond %{QUERY_STRING} (^|&)nahled=1(&|$)
 RewriteRule ^ %{REQUEST_URI}? [CO=nahled:1:%{SERVER_NAME}:43200:/:secure:httponly,R=302,L]
 RewriteCond %{QUERY_STRING} (^|&)nahled=0(&|$)
 RewriteRule ^ %{REQUEST_URI}? [CO=nahled:0:%{SERVER_NAME}:-1:/:secure:httponly,R=302,L]
 
-RewriteCond %{HTTP_COOKIE} !(^|;\s*)nahled=1(;|$)
-RewriteCond %{REQUEST_URI} !^/(old|el_prihlaska|skautis)(/|$) [NC]
-RewriteCond %{REQUEST_URI} !^/(launch\.html|rozcestnik-800\.webp|favicon\.(ico|svg)|apple-touch-icon\.png)$
-RewriteRule ^ /launch.html [L]
-# --- end before launch ---
+ErrorDocument 503 /launch.html
+# RewriteCond %{HTTP_COOKIE} !(^|;\s*)nahled=1(;|$)
+# RewriteCond %{REQUEST_URI} !^/(old|el_prihlaska|skautis)(/|$) [NC]
+# RewriteCond %{REQUEST_URI} !^/(launch\.html|rozcestnik-800\.webp|favicon\.(ico|svg)|apple-touch-icon\.png)$
+# RewriteRule ^ - [R=503,L]
+# --- end countdown ---
 
 # Public pages with their own static HTML (scripts/static-pages.js): /historie → historie.html.
 RewriteCond %{REQUEST_FILENAME} !-f
@@ -50,6 +53,9 @@ RewriteRule ^ /index.html [L]
   <FilesMatch "\.html$">
     Header set Cache-Control "no-cache"
   </FilesMatch>
+  <If "%{REQUEST_URI} =~ m#^/launch\.html$#">
+    Header set X-Robots-Tag "noindex"
+  </If>
   <If "%{REQUEST_URI} =~ m#^/old(/|$)#">
     Header set X-Robots-Tag "noindex, nofollow"
   </If>

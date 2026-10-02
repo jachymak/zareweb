@@ -30,19 +30,17 @@ After every change to rules, indexes or functions: `firebase deploy --project pr
 
 The old site stays under `/old/` on the server, reached only by typing `https://zare.skauting.cz/old/` (nothing links to it after launch). `.htaccess` sends it with `X-Robots-Tag: noindex`, so search engines drop it, and visitors coming from other sites (search results, links) are redirected to `/`. Its old root addresses (`/index.php?stranka=…`) redirect to the matching new page.
 
-## Preview before launch
+## Countdown
 
-Until launch, `public/.htaccess` serves the countdown (`public/launch.html`) for every path except `/old/`, `/el_prihlaska/` and `/skautis/`. The new web shows only in a browser with the preview cookie:
+The web launched on 2026-10-03. The countdown page (`public/launch.html`) stays in the repo for later bigger changes; it is off. To turn it on, uncomment the four `RewriteCond` / `RewriteRule` lines in the „Countdown“ block of `public/.htaccess` (and adjust the text of `launch.html`), build and upload. Then every path except `/old/`, `/el_prihlaska/` and `/skautis/` shows `launch.html` with status 503, so search engines keep the pages in their index (meant for days, not months). The web shows only in a browser with the preview cookie:
 
 - `https://zare.skauting.cz/?nahled=1` — turns the preview on in this browser for 30 days,
 - `https://zare.skauting.cz/?nahled=0` — off.
 
-This hides the web, it does not protect it (anyone who knows the parameter sees it); the data is protected by the Firestore rules as always. Testing writes into the production data: delete test accounts, waiting-list entries, albums etc. before launch.
+This hides the web, it does not protect it (anyone who knows the parameter sees it); the data is protected by the Firestore rules as always. Comment the lines out again to turn it off. `/launch.html` itself is sent with `noindex`.
 
-## Launch
+## After launch
 
-1. In `public/.htaccess` delete the block between `--- Before launch` and `--- end before launch ---`.
-2. Delete `public/launch.html` and `public/rozcestnik-800.webp`.
-3. `npm run build` and upload `dist/` again. On the server, delete `launch.html` and `rozcestnik-800.webp` too.
-4. Add the site to Google Search Console and Seznam Webmaster (webmaster.seznam.cz) and submit `https://zare.skauting.cz/sitemap.xml`.
-5. Check the link preview (e.g. paste the URL into a WhatsApp chat or the Facebook Sharing Debugger).
+1. Add the site to Google Search Console and Seznam Webmaster (webmaster.seznam.cz) — verification files go into `public/` — and submit `https://zare.skauting.cz/sitemap.xml`.
+2. Check the link preview (e.g. paste the URL into a WhatsApp chat or the Facebook Sharing Debugger).
+3. Watch the old `/old/` addresses drop out of the index over the following weeks.
