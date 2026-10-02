@@ -10,13 +10,14 @@ defineProps({
 </script>
 
 <template>
-  <section id="cil" data-section class="pt-[120px] md:pt-[136px] md:pb-4">
+  <section id="cil" data-section class="pt-14 md:pt-[136px] md:pb-4">
     <div
       class="mx-auto flex max-w-[960px] flex-col items-center gap-6 md:flex-row md:justify-center md:gap-12"
     >
-      <!-- In the same hand as the cry's first half in HomeHero. -->
+      <!-- In the same hand as the cry's first half in HomeHero; below the
+           drawing on mobile. -->
       <h2
-        class="m-0 text-center font-hand text-[30px] leading-[1.1] font-semibold text-ink sm:text-[44px] md:order-last md:text-left lg:text-[56px]"
+        class="order-last m-0 text-center font-hand text-[30px] leading-[1.1] font-semibold text-ink sm:text-[44px] md:text-left lg:text-[56px]"
       >
         <span class="block">hory, města, vesnice,</span>
         <span class="block">pozná Záře Dejvice!</span>

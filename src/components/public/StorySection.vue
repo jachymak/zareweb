@@ -1,11 +1,9 @@
 <script setup>
 import { computed } from 'vue'
-import TrailConnector from './TrailConnector.vue'
 
 // One stop on the illustrated trail: text on one side, a sketch (or the `aside`
 // slot, e.g. a photo) on the other.
-// On mobile the sketch goes below the text, aligned to the same side, and a
-// short trail connector links them (design study variant M2).
+// On mobile the sketch goes below the text, centred; the sides apply from md.
 const props = defineProps({
   id: { type: String, default: undefined },
   kicker: { type: String, default: '' },
@@ -31,20 +29,18 @@ const textSide = computed(() => (props.sketchSide === 'left' ? 'right' : 'left')
   >
     <div
       class="min-w-0 md:flex-[1_1_400px] md:py-2.5"
-      :class="textSide === 'right' ? 'text-right [&_li]:justify-end [&>*]:ml-auto' : 'text-left'"
+      :class="textSide === 'right' ? 'md:text-right md:[&_li]:justify-end md:[&>*]:ml-auto' : ''"
     >
       <p v-if="kicker" class="kicker mb-2">{{ kicker }}</p>
       <h3 v-if="title" class="section-title mb-4">{{ title }}</h3>
       <slot />
     </div>
 
-    <TrailConnector :from="textSide" :to="textSide" class="md:hidden" />
-
     <div
       data-stop
-      class="relative flex min-w-0 md:py-2.5"
+      class="relative mt-8 flex min-w-0 justify-center md:mt-0 md:py-2.5"
       :class="[
-        textSide === 'right' ? 'justify-end' : 'justify-start',
+        textSide === 'right' ? 'md:justify-end' : 'md:justify-start',
         $slots.aside
           ? 'md:flex-[1_1_360px] md:items-start'
           : srcset
@@ -60,13 +56,15 @@ const textSide = computed(() => (props.sketchSide === 'left' ? 'right' : 'left')
         :data-trail-y="trailEnd?.y"
         :src="sketch"
         :srcset="srcset"
-        :sizes="srcset ? '(min-width: 768px) 400px, 280px' : undefined"
+        :sizes="srcset ? '(min-width: 768px) 400px, 320px' : undefined"
         alt=""
         width="260"
         height="300"
         class="block h-auto md:absolute md:inset-0 md:size-full md:object-contain"
-        :class="srcset ? 'drawing w-[260px] sm:w-[300px]' : 'w-[200px] sm:w-[240px]'"
+        :class="srcset ? 'drawing w-[min(320px,90%)]' : 'w-[200px] sm:w-[240px]'"
       />
+      <!-- Over the drawing, e.g. a link in its empty part. -->
+      <slot name="sketch-note" />
     </div>
   </section>
 </template>

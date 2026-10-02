@@ -10,11 +10,13 @@ const scheduleStore = useMeetingScheduleStore()
 const { schedule } = storeToRefs(scheduleStore)
 onMounted(() => scheduleStore.load())
 
-// „pondělí a čtvrtek · 17:00–19:00“
+// „pondělí a čtvrtek“ and „17:00–19:00“
 function meetings(code) {
   const troop = schedule.value[code]
-  const days = troop.days.map((d) => WEEKDAY_NAMES[d]).join(' a ')
-  return `${days} · ${meetingTimeLong(troop)}`
+  return {
+    days: troop.days.map((d) => WEEKDAY_NAMES[d]).join(' a '),
+    time: meetingTimeLong(troop),
+  }
 }
 </script>
 
@@ -23,15 +25,21 @@ function meetings(code) {
     <li
       v-for="troop in TROOPS"
       :key="troop.code"
-      class="grid grid-cols-1 gap-1 border-line-soft py-4 text-left not-first:border-t sm:grid-cols-[minmax(0,1fr)_auto] sm:gap-x-5"
+      class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 border-line-soft py-3.5 text-left not-first:border-t sm:gap-x-5 sm:py-4"
     >
       <div class="min-w-0">
         <span class="text-base text-muted-2">{{ troop.number }}</span>
-        <div class="text-[22px] leading-tight font-semibold text-ink">{{ troop.name }}</div>
+        <div class="text-[20px] leading-tight font-semibold text-ink sm:text-[22px]">
+          {{ troop.name }}
+        </div>
       </div>
-      <div class="sm:text-right">
+      <div class="text-right">
         <div class="text-base text-muted-2">{{ troop.ages }}</div>
-        <div class="text-[17px] leading-normal">{{ meetings(troop.code) }}</div>
+        <!-- Days and time on two lines on mobile. -->
+        <div class="text-[16px] leading-snug sm:text-[17px] sm:leading-normal">
+          {{ meetings(troop.code).days }}<span class="max-sm:hidden"> · </span
+          ><br class="sm:hidden" />{{ meetings(troop.code).time }}
+        </div>
       </div>
     </li>
   </ul>

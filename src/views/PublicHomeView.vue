@@ -10,7 +10,7 @@ import PublicHeader from '@/components/public/PublicHeader.vue'
 import PublicFooter from '@/components/public/PublicFooter.vue'
 import StorySection from '@/components/public/StorySection.vue'
 import TrailPath from '@/components/public/TrailPath.vue'
-import TrailConnector from '@/components/public/TrailConnector.vue'
+import TrailDivider from '@/components/public/TrailDivider.vue'
 import PolaroidPhoto from '@/components/public/PolaroidPhoto.vue'
 import TroopList from '@/components/public/TroopList.vue'
 import JoinCard from '@/components/public/JoinCard.vue'
@@ -135,9 +135,6 @@ function story(id) {
   return { ...image, sketchSide: o.side ?? sketchSide }
 }
 
-// Mobile trail connectors run from one story's text side to the next one's.
-const textSide = (id) => (story(id).sketchSide === 'left' ? 'right' : 'left')
-
 // The intro greets every fresh load of the home page, but not in-app returns
 // or links to a section.
 const showIntro = isFirstPage() && !useRoute().hash
@@ -167,13 +164,12 @@ const showIntro = isFirstPage() && !useRoute().hash
       <div class="relative z-[1] mx-auto max-w-[1120px] px-4 pb-6 sm:px-6">
         <HomeHero v-bind="hero" />
 
-        <TrailConnector from="center" :to="textSide('start')" class="md:hidden" />
-
         <StorySection
           id="start"
           kicker="kdo jsme"
           title="Ahoj! My jsme Záře!"
           v-bind="story('start')"
+          class="max-md:[&>div:last-child]:mt-0"
         >
           <p class="prose-body mb-3.5 max-w-[52ch]">
             Dva skautské oddíly z Dejvic — jeden pro
@@ -187,8 +183,9 @@ const showIntro = isFirstPage() && !useRoute().hash
           <!-- The two troops beside the greeting; the trail runs between them. -->
           <template #aside>
             <div id="oddily" class="w-full text-left">
-              <p class="kicker mb-2 text-right">dva oddíly</p>
-              <h3 class="section-title mb-4 text-right">Mladší a starší</h3>
+              <TrailDivider class="md:hidden" />
+              <p class="kicker mb-2 md:text-right">dva oddíly</p>
+              <h3 class="section-title mb-4 md:text-right">Mladší a starší</h3>
               <TroopList class="mb-3.5" />
               <p class="m-0 text-[17px] leading-[1.7] text-pretty">
                 Každé dítě chodí na jednu schůzku týdně — podle toho, do kterého oddílu patří.
@@ -197,13 +194,11 @@ const showIntro = isFirstPage() && !useRoute().hash
           </template>
         </StorySection>
 
-        <TrailConnector :from="textSide('start')" to="center" class="md:hidden" />
-
         <!-- Three photos side by side; the trail goes round them (inset on small
              desktops to leave it room). -->
         <section
           data-section
-          class="mx-auto grid max-w-[400px] grid-cols-1 justify-items-center gap-8 py-4 sm:max-w-none sm:grid-cols-3 sm:gap-5 md:py-8 md:max-xl:px-10 lg:gap-8"
+          class="mx-auto grid max-w-[280px] grid-cols-1 justify-items-center gap-8 pt-10 pb-12 sm:max-w-none sm:py-4 sm:grid-cols-3 sm:gap-5 md:py-8 md:max-xl:px-10 lg:gap-8"
         >
           <PolaroidPhoto
             v-bind="photo(photoTrip400, photoTrip800, 600)"
@@ -226,8 +221,6 @@ const showIntro = isFirstPage() && !useRoute().hash
           />
         </section>
 
-        <TrailConnector from="center" :to="textSide('cinnost')" class="md:hidden" />
-
         <!-- Text lower, drawing higher: further from the photos above, but the
              drawing still close under them. -->
         <StorySection
@@ -235,7 +228,7 @@ const showIntro = isFirstPage() && !useRoute().hash
           kicker="co děláme"
           title="Parta, příroda, samostatnost"
           v-bind="story('cinnost')"
-          class="md:[&>div:first-child]:pt-16 md:[&>div:last-child]:-mt-10"
+          class="max-md:[&>div:last-child]:-mt-14 md:[&>div:first-child]:pt-16 md:[&>div:last-child]:-mt-10"
         >
           <p class="prose-body mb-3.5 max-w-[52ch]">
             Na schůzkách hrajeme, vyrábíme, učíme se praktické věci a plánujeme, kam vyrazíme
@@ -286,6 +279,7 @@ const showIntro = isFirstPage() && !useRoute().hash
           kicker="jak to u nás chodí"
           title="Od schůzky k táboru"
           v-bind="story('rok')"
+          class="max-md:[&_img]:w-[230px]"
         >
           <div class="flex max-w-[44ch] flex-col gap-4">
             <p class="m-0 text-[17px] leading-[1.7] sm:text-[17.5px]">
@@ -305,13 +299,14 @@ const showIntro = isFirstPage() && !useRoute().hash
           </div>
         </StorySection>
 
-        <TrailConnector :from="textSide('rok')" :to="textSide('klubovna')" class="md:hidden" />
+        <TrailDivider class="md:hidden" />
 
         <StorySection
           id="klubovna"
           kicker="naše klubovna"
           title="Kafkova 23, Dejvice"
           v-bind="story('klubovna')"
+          class="max-md:[&>div:last-child]:mt-12"
         >
           <p class="prose-body mb-5 max-w-[40ch]">
             Kousek od Kulaťáku. Ve vnitrobloku za klubovnou je hřiště, kam často na schůzkách
@@ -363,13 +358,14 @@ const showIntro = isFirstPage() && !useRoute().hash
           />
         </StorySection>
 
-        <TrailConnector :from="textSide('klubovna')" :to="textSide('tabor')" class="md:hidden" />
+        <TrailDivider class="md:hidden" />
 
         <StorySection
           id="tabor"
           kicker="vrchol roku"
           title="Tábor v jižních Čechách"
           v-bind="story('tabor')"
+          class="max-md:[&>div:last-child]:-mt-6"
         >
           <p class="prose-body mb-3.5 max-w-[48ch]">
             Začátkem července vyrážíme na dva až tři týdny do přírody, na táborovou louku. V
@@ -377,11 +373,19 @@ const showIntro = isFirstPage() && !useRoute().hash
             týpí či podsadových stanech, vaříme na kamnech a myjeme se v řece. Většinou hrajeme
             celotáborovou hru, která se táhne celým táborem.
           </p>
-          <p class="m-0 font-hand text-[24px] leading-tight sm:text-[26px]">
+          <p class="m-0 font-hand text-[24px] leading-tight max-md:hidden sm:text-[26px]">
             <RouterLink to="/historie"
               >historie oddílu a všechny naše tábory od roku 1976</RouterLink
             >
           </p>
+          <!-- On mobile in the drawing's empty sky, left of the smoke. -->
+          <template #sketch-note>
+            <p
+              class="absolute top-[6%] left-0 m-0 w-[48%] font-hand text-[23px] leading-[1.15] md:hidden"
+            >
+              <RouterLink to="/historie">naše historie a všechny tábory od roku 1976</RouterLink>
+            </p>
+          </template>
         </StorySection>
 
         <section id="pridat-se" data-section data-trail-over class="pt-12 pb-10 md:pt-6">

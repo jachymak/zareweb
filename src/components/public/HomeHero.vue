@@ -38,7 +38,7 @@ const sizes = computed(
 const HAND = 'm-0 font-hand leading-[1.1] font-semibold text-ink'
 // Above the drawing on mobile, over its empty top from md up.
 const IN_SKY =
-  'order-first mb-2 text-[30px] sm:text-[44px] md:absolute md:top-[3%] md:mb-0 lg:text-[60px]'
+  'order-first -mb-6 text-[30px] sm:text-[44px] md:absolute md:top-[3%] md:mb-0 lg:text-[60px]'
 const headline = computed(
   () =>
     ({
@@ -52,13 +52,14 @@ const headline = computed(
 </script>
 
 <template>
-  <section id="uvod" data-section class="pt-6 md:pt-10 md:pb-8">
+  <section id="uvod" data-section class="pt-6 pb-10 md:pt-10 md:pb-8">
     <div
       class="relative flex flex-col md:block"
       :class="{ 'mx-auto max-w-[960px]': size === 'narrow' }"
     >
       <h2 v-if="layout === 'above'" :class="[HAND, headline]">
-        Přes louky, lesy, skály šedé, společná nás cesta vede
+        <span class="block">Přes louky, lesy, skály šedé,</span>
+        <span class="block">společná nás cesta vede</span>
       </h2>
 
       <!-- The trail sets off from the foot of the rocks (data-trail-x/y). -->
@@ -80,13 +81,9 @@ const headline = computed(
       </div>
 
       <h2 v-if="layout !== 'above'" :class="[HAND, headline]">
-        <span :class="layout === 'split' ? 'block' : 'sm:block'"
-          >Přes louky, lesy, skály šedé,</span
-        >
-        <template v-if="layout !== 'split'">
-          {{ ' ' }}
-          <span class="sm:block">společná nás cesta vede</span>
-        </template>
+        <!-- Always on two lines, broken after the comma. -->
+        <span class="block">Přes louky, lesy, skály šedé,</span>
+        <span v-if="layout !== 'split'" class="block">společná nás cesta vede</span>
       </h2>
     </div>
 
