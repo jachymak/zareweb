@@ -61,14 +61,14 @@ const STORIES = [
   {
     id: 'cinnost',
     label: 'Co děláme',
-    defaultFile: 'pruvodce-2.png',
+    defaultFile: 'pruvodce-4.png',
     sketchSide: 'right',
     ...drawing(guide400, guide800),
   },
   {
     id: 'rok',
     label: 'Od schůzky k táboru',
-    defaultFile: 'rozcestnik-2.png',
+    defaultFile: 'rozcestnik-3.png',
     sketchSide: 'left',
     ...drawing(signpost400, signpost800),
   },
@@ -89,7 +89,7 @@ const STORIES = [
   {
     id: 'cil',
     label: 'Závěr (konec cesty)',
-    defaultFile: 'dejvice-3.png',
+    defaultFile: 'dejvice-2.png',
     sketchSide: 'left',
     ...drawing(dejvice400, dejvice800),
   },

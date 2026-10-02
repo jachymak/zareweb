@@ -16,7 +16,7 @@ const hero = defineModel('hero', { type: Object, default: () => ({}) })
 const emit = defineEmits(['edit-trail'])
 
 const HERO_SIZES = {
-  narrow: 'jako teď (960 px)',
+  narrow: 'úzké (960 px)',
   text: 'na šířku textu',
   bleed: 'přes celou šířku',
 }
@@ -51,9 +51,11 @@ const open = ref(false)
 
 // Colour intensity of the photos (CSS saturate(), 1 = as taken), applied
 // through --photo-saturation on the page root.
-const saturation = ref(1)
+// Matches the default in PolaroidPhoto.
+const PHOTO_SATURATION = 0.95
+const saturation = ref(PHOTO_SATURATION)
 try {
-  saturation.value = Number(localStorage.getItem(SATURATION_KEY)) || 1
+  saturation.value = Number(localStorage.getItem(SATURATION_KEY)) || PHOTO_SATURATION
 } catch {
   // Private window.
 }
@@ -133,7 +135,7 @@ function side(slot) {
 function reset() {
   overrides.value = {}
   hero.value = {}
-  saturation.value = 1
+  saturation.value = PHOTO_SATURATION
 }
 </script>
 

@@ -12,12 +12,12 @@ import grey2200 from '@/assets/public/skaly-sede-2200.webp'
 // (DrawingPicker); the drawing (open space above the rocks) is never cropped.
 const props = defineProps({
   // 'narrow' (960 px) | 'text' (the text column) | 'bleed' (edge to edge, ≤ 1600 px)
-  size: { type: String, default: 'narrow' },
+  size: { type: String, default: 'text' },
   // 'above' | 'sky' (in the sky, centred) | 'sky-right' (in the sky right of the
   // rocks) | 'split' (first line in the sky, second below the drawing)
   layout: { type: String, default: 'sky-right' },
   // 'colour' | 'grey' — the same drawing in colour or in pencil grey
-  palette: { type: String, default: 'colour' },
+  palette: { type: String, default: 'grey' },
 })
 
 const DRAWINGS = {

@@ -4,17 +4,21 @@ The web is static files on the skauting.cz hosting (Apache + PHP, `zare.skauting
 
 ## Firebase project (once)
 
-1. Create the project, Blaze plan (Cloud Functions need it).
-2. Firestore and the Storage bucket in `europe-west3` (`processPhoto` runs in the bucket's region).
-3. Auth: enable the e-mail/password provider; add `zare.skauting.cz` to the authorized domains.
-4. Put the project id into `.firebaserc` (`default`).
-5. `functions/.env`: `APP_URL=https://zare.skauting.cz` (links in e-mails).
-6. `firebase deploy` — rules, indexes, Storage rules, functions.
-7. `.env.production` (gitignored): the `VITE_FIREBASE_*` values of the web app from Project settings → Your apps, and `VITE_USE_EMULATORS=false`. `npm run build` reads it over `.env`.
+1. Create the project (without Google Analytics), switch to the Blaze plan (Cloud Functions need it) and set a budget alert.
+2. Firestore (production mode) and the Storage bucket in `europe-west3` — the location can't be changed later; `processPhoto` runs in the bucket's region.
+3. Auth: enable the e-mail/password and Google providers; add `zare.skauting.cz` to the authorized domains (`localhost` is there already); Templates → template language Czech (password reset e-mail).
+4. Register a web app (Project settings → Your apps) and put its config into `.env.production` (gitignored) with `VITE_USE_EMULATORS=false`. `npm run build` reads it over `.env`.
+5. `.firebaserc`: add the project as the alias `prod` next to `default`. `default` stays `demo-zareweb`, so the emulators never touch production.
+6. `functions/.env.<project-id>`: `APP_URL=https://zare.skauting.cz` (links in e-mails; only loaded when deployed to that project).
+7. `firebase login`, `firebase deploy --project prod` — rules, indexes, Storage rules, functions. The first deploy enables the needed Google Cloud APIs and may have to be repeated after a few minutes; accept the offered Artifact Registry cleanup policy.
 
 Nothing has to be written into Firestore: missing `settings/*` documents fall back to the defaults in `functions/src/shared/`. Never run the `seed:*` scripts against production.
 
-**First admin:** register on the web, then in the Firebase console set `users/{uid}.role` to `admin`. Everyone else is approved in Administration.
+**Before uploading:** `npx vite --mode production` runs the dev server on localhost against the production project — register, try the functions, photos and skautIS (with `?vyvoj=1`, SPEC §4.8).
+
+**First admin:** register, then in the Firebase console set `users/{uid}.role` to `admin`. Everyone else is approved in Administration.
+
+After every change to rules, indexes or functions: `firebase deploy --project prod` (or `--only firestore`, `--only functions`, …).
 
 ## Upload
 
