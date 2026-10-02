@@ -3,7 +3,7 @@ import { HttpsError, onCall } from 'firebase-functions/https'
 import { logger } from 'firebase-functions'
 import { db } from './admin.js'
 import { APP_URL, sendEmails } from './mail.js'
-import { BASE_OPTIONS } from './options.js'
+import { MAIL_OPTIONS } from './options.js'
 import { hashRenewalToken, newRenewalToken } from './renewalTokens.js'
 import { emailTemplate, renderEmail } from './shared/emails.js'
 import { pragueToday, recruitmentYears } from './shared/schoolYear.js'
@@ -26,7 +26,7 @@ async function commitInBatches(ops) {
 
 // data: { admittedIds: string[] } — ids of active entries admitted this year.
 // Returns { date, admittedCount, emailedCount, deletedCount }.
-export const resetWaitlist = onCall(BASE_OPTIONS, async (request) => {
+export const resetWaitlist = onCall(MAIL_OPTIONS, async (request) => {
   const caller = request.auth?.uid
   if (!caller) throw new HttpsError('unauthenticated', 'Sign in first.')
   const callerDoc = await db.doc(`users/${caller}`).get()

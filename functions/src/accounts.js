@@ -4,7 +4,7 @@ import { HttpsError, onCall } from 'firebase-functions/https'
 import { logger } from 'firebase-functions'
 import { db, requireAdmin } from './admin.js'
 import { APP_URL, sendEmails } from './mail.js'
-import { BASE_OPTIONS } from './options.js'
+import { BASE_OPTIONS, MAIL_OPTIONS } from './options.js'
 import { emailTemplate, renderEmail } from './shared/emails.js'
 import { EMAIL_RE } from './shared/waitlistRules.js'
 
@@ -47,7 +47,7 @@ export const deleteAccount = onCall(BASE_OPTIONS, async (request) => {
 // bez účtu“): an informative e-mail naming their children, with a link to the
 // login page (not personalised — they may register with another address, e.g.
 // Google). Remembered in invitations/{e-mail} so the admin sees who was invited when.
-export const inviteParent = onCall(BASE_OPTIONS, async (request) => {
+export const inviteParent = onCall(MAIL_OPTIONS, async (request) => {
   const caller = await requireAdmin(request)
   const email = typeof request.data?.email === 'string' ? request.data.email.trim() : ''
   if (!EMAIL_RE.test(email)) throw new HttpsError('invalid-argument', 'Invalid e-mail.')

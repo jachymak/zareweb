@@ -2,7 +2,7 @@ import { FieldValue } from 'firebase-admin/firestore'
 import { onDocumentUpdated } from 'firebase-functions/firestore'
 import { db } from './admin.js'
 import { APP_URL, sendEmails } from './mail.js'
-import { BASE_OPTIONS } from './options.js'
+import { MAIL_OPTIONS } from './options.js'
 import { emailTemplate, renderEmail } from './shared/emails.js'
 import { canJoin, formatEventDates, registrationState } from './shared/events.js'
 import { pragueToday } from './shared/schoolYear.js'
@@ -47,7 +47,7 @@ async function recipients(event) {
 }
 
 export const onEventUpdated = onDocumentUpdated(
-  { ...BASE_OPTIONS, document: 'events/{eventId}' },
+  { ...MAIL_OPTIONS, document: 'events/{eventId}' },
   async ({ data, params }) => {
     const before = data.before.data()
     const event = data.after.data()

@@ -2,7 +2,7 @@ import { FieldValue } from 'firebase-admin/firestore'
 import { onDocumentWritten } from 'firebase-functions/firestore'
 import { db } from './admin.js'
 import { APP_URL, sendEmails } from './mail.js'
-import { BASE_OPTIONS } from './options.js'
+import { MAIL_OPTIONS } from './options.js'
 import { emailTemplate, renderEmail } from './shared/emails.js'
 
 // E-mails about accounts — SPEC §2.4, §7:
@@ -58,7 +58,7 @@ async function notifyApproved(uid, user) {
 }
 
 export const onUserWritten = onDocumentWritten(
-  { ...BASE_OPTIONS, document: 'users/{uid}' },
+  { ...MAIL_OPTIONS, document: 'users/{uid}' },
   async ({ data, params }) => {
     const before = data.before.exists ? data.before.data() : null
     const user = data.after.exists ? data.after.data() : null

@@ -5,7 +5,7 @@ import { logger } from 'firebase-functions'
 import { sendEmails } from './mail.js'
 import { emailTemplate, renderEmail } from './shared/emails.js'
 import { db } from './admin.js'
-import { BASE_OPTIONS } from './options.js'
+import { MAIL_OPTIONS } from './options.js'
 import { gradeSchoolYear, pragueToday } from './shared/schoolYear.js'
 import {
   DEFAULT_MAX_AGE,
@@ -38,7 +38,7 @@ const clean = (s) => s.trim().replace(/\s+/g, ' ')
  */
 export const submitWaitlist = onCall(
   {
-    ...BASE_OPTIONS,
+    ...MAIL_OPTIONS,
     // TODO: enforce App Check (invisible reCAPTCHA) once a real Firebase project exists.
     enforceAppCheck: false,
   },
