@@ -362,7 +362,7 @@ Effect (entries are **archived, not deleted**, to keep the original sign-up date
 
 **Retention (GDPR):** the next reset deletes what the previous one archived: entries still `awaitingRenewal` (the parent did not respond for a whole year) and `admitted` ones (the child is in skautIS by then). Admitted children are chosen only in the reset wizard.
 
-**Renewal e-mail text:** `settings/emails.waitlistRenewal` `{ subject, body }` — paragraphs separated by a blank line, `{dite}` = child's name, `{odkaz}` = renewal link; edited in Administration (§4.8 Čekací listina); default in `functions/src/shared/emails.js` while none is saved. Until SMTP exists, `resetWaitlist` only logs the e-mails in the emulator.
+**Renewal e-mail text:** `settings/emails.waitlistRenewal` `{ subject, body }` — paragraphs separated by a blank line, `{dite}` = child's name, `{odkaz}` = renewal link; edited in Administration (§4.8 Čekací listina); default in `functions/src/shared/emails.js` while none is saved. In the emulator `resetWaitlist` only logs the e-mails.
 
 **Narrow screens:** below `lg` the table becomes compact cards (name, age, grade, waiting time; the rest in the expanded detail) with a sort bar above them.
 
@@ -717,7 +717,7 @@ Firebase Blaze plan with Cloud Functions (region `europe-west3`, code in `functi
 | `deletePhotos`              | callable (leader)               | delete photo docs + files, lower the count, move the cover |
 | `deleteAlbum`               | callable (leader)               | delete the album, its photos and all its files           |
 
-E-mails are sent from `zare@skaut.cz` via **SMTP of the skaut.cz Google Workspace** (e.g. Nodemailer in Cloud Functions; credentials in Functions secrets, never in the repo). Gmail limit (~2000 recipients/day) is sufficient.
+E-mails are sent via **SMTP of the skaut.cz Google Workspace** (Nodemailer, `smtp.gmail.com`) from a separate unit account (`MAIL_FROM`, e.g. `web.zare@skaut.cz`, sender name „Skautský oddíl Záře“), so they don't fill the Sent folder of `zare@skaut.cz`; `Reply-To` is `MAIL_REPLY_TO` (`zare@skaut.cz`). Both in `functions/.env.<project>`; the account's app password is the Functions secret `SMTP_PASSWORD`, never in the repo. A failed e-mail is logged and doesn't fail the function. The emulator only logs e-mails. Gmail limit (~2000 recipients/day) is sufficient.
 
 ---
 

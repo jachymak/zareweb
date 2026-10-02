@@ -9,7 +9,8 @@ The web is static files on the skauting.cz hosting (Apache + PHP, `zare.skauting
 3. Auth: enable the e-mail/password and Google providers; add `zare.skauting.cz` to the authorized domains (`localhost` is there already); Templates → template language Czech (password reset e-mail).
 4. Register a web app (Project settings → Your apps) and put its config into `.env.production` (gitignored) with `VITE_USE_EMULATORS=false`. `npm run build` reads it over `.env`.
 5. `.firebaserc`: add the project as the alias `prod` next to `default`. `default` stays `demo-zareweb`, so the emulators never touch production.
-6. `functions/.env.<project-id>`: `APP_URL=https://zare.skauting.cz` (links in e-mails; only loaded when deployed to that project).
+6. `functions/.env.<project-id>`: `APP_URL=https://zare.skauting.cz` (links in e-mails), `MAIL_FROM=web.zare@skaut.cz`, `MAIL_REPLY_TO=zare@skaut.cz`; only loaded when deployed to that project.
+   E-mails: `MAIL_FROM` is a skaut.cz unit account (created in skautIS → the unit → Google služby) with two-step verification and an app password (myaccount.google.com/apppasswords); store it with `firebase functions:secrets:set SMTP_PASSWORD --project prod`. Deploy fails until the secret exists.
 7. `firebase login`, `firebase deploy --project prod` — rules, indexes, Storage rules, functions. The first deploy enables the needed Google Cloud APIs and may have to be repeated after a few minutes; accept the offered Artifact Registry cleanup policy.
 
 Nothing has to be written into Firestore: missing `settings/*` documents fall back to the defaults in `functions/src/shared/`. Never run the `seed:*` scripts against production.
