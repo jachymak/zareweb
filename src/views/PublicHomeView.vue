@@ -17,6 +17,7 @@ import JoinCard from '@/components/public/JoinCard.vue'
 import FaqAccordion from '@/components/public/FaqAccordion.vue'
 import IntroScreen from '@/components/public/IntroScreen.vue'
 import HomeHero from '@/components/public/HomeHero.vue'
+import HomeFinale from '@/components/public/HomeFinale.vue'
 import clubhouseMap from '@/assets/public/mapa-klubovna.jpg'
 import dejvice400 from '@/assets/public/dejvice-400.webp'
 import dejvice800 from '@/assets/public/dejvice-800.webp'
@@ -393,18 +394,11 @@ const showIntro = isFirstPage() && !useRoute().hash
         </section>
 
         <!-- The trail ends here, at the foot of the road into Dejvice. -->
-        <StorySection
-          id="cil"
-          v-bind="story('cil')"
-          :trail-end="{ x: 0.42, y: 1.03 }"
-          class="pt-12 md:pt-10 md:pb-4"
-        >
-          <h2
-            class="m-0 max-w-[20ch] font-hand text-[36px] leading-[1.1] font-semibold text-balance text-ink sm:text-[48px] lg:text-[60px]"
-          >
-            hory, města, vesnice, pozná Záře Dejvice!
-          </h2>
-        </StorySection>
+        <HomeFinale
+          :sketch="story('cil').sketch"
+          :srcset="story('cil').srcset"
+          :trail-end="{ x: 0.32, y: 0.94 }"
+        />
       </div>
     </main>
 

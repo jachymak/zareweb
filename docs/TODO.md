@@ -17,8 +17,6 @@ Klubovna
 - dodělat otroka
 - rámečky
 
-Založení účtu menší formulář
-
 Intro
 - otevrit mezernikem/enterem
 

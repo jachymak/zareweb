@@ -18,7 +18,7 @@ export const TROOPS = [
 ]
 
 export const GROUP_EMAIL = 'zare@skaut.cz'
-export const FIND_OTHER_GROUP_URL = 'https://skautskyoddil.cz'
+export const FIND_OTHER_GROUP_URL = 'https://www.skaut.cz/mapa/'
 
 // Meeting weekdays (SPEC §5 `weekday`); the troops' days are set in Administration.
 export const WEEKDAY_NAMES = {
