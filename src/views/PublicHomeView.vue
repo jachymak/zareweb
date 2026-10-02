@@ -1,9 +1,7 @@
 <script setup>
-import { defineAsyncComponent, onMounted, ref } from 'vue'
-import { storeToRefs } from 'pinia'
+import { defineAsyncComponent, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { isFirstPage } from '@/router'
-import { usePublicSettingsStore } from '@/stores/publicSettings'
 import { FAQ } from '@/content/faq'
 import TRAIL_TWEAKS from '@/content/trailTweaks.json'
 import PublicHeader from '@/components/public/PublicHeader.vue'
@@ -37,11 +35,6 @@ import photoFire400 from '@/assets/public/foto-ohen-400.webp'
 import photoFire800 from '@/assets/public/foto-ohen-800.webp'
 
 // Public home — SPEC §2.1. Reads settings/public, writes nothing.
-const settingsStore = usePublicSettingsStore()
-const { recruitment } = storeToRefs(settingsStore)
-
-onMounted(() => settingsStore.load())
-
 // Props for a StorySection with a raster drawing (400 px and 800 px wide).
 const drawing = (small, large) => ({ sketch: small, srcset: `${small} 400w, ${large} 800w` })
 
@@ -94,6 +87,25 @@ const STORIES = [
     ...drawing(dejvice400, dejvice800),
   },
 ]
+// The troop's year in the „Od schůzky k táboru“ section.
+const YEAR = [
+  {
+    when: 'každý týden',
+    what: 'Schůzka',
+    text: 'Díky schůzkám jsme spolu pořád v kontaktu, i když zrovna nikam nevyrážíme. Často je trávíme venku na hřišti, jindy v klubovně.',
+  },
+  {
+    when: 'jednou až dvakrát za měsíc',
+    what: 'Výprava',
+    text: 'Většinou každý oddíl zvlášť, občas oba spolu. Spíme v chatě i pod plachtou, vyrážíme v pátek a v neděli jsme zpátky.',
+  },
+  {
+    when: 'každé léto',
+    what: 'Tábor',
+    text: 'Několik týdnů v přírodě, na které se pak vzpomíná nejdéle. Pro mnohé vrchol celého roku.',
+  },
+]
+
 const overrides = ref({})
 // { size, layout } of the HomeHero variant under trial.
 const hero = ref({})
@@ -172,13 +184,12 @@ const showIntro = isFirstPage() && !useRoute().hash
           class="max-md:[&>div:last-child]:mt-0"
         >
           <p class="prose-body mb-3.5 max-w-[52ch]">
-            Dva skautské oddíly z Dejvic — jeden pro
-            <strong class="font-semibold text-ink">mladší</strong> a druhý pro
-            <strong class="font-semibold text-ink">starší</strong> děti. Jsme parta kluků a holek,
-            od malých po velké.
+            Dva skautské oddíly z Dejvic. Jsme parta kluků a holek, od malých po velké. Většina z
+            nás tu začínala jako malá vlčuška a dnes sami vedeme ty mladší.
           </p>
           <p class="prose-body m-0 max-w-[52ch]">
-            Pravidelně se scházíme, vyrážíme na výpravy do přírody a v létě na tábor.
+            Pravidelně se scházíme, vyrážíme na výpravy do přírody a v létě na tábor. Jsme parta na
+            celý život.
           </p>
           <!-- The two troops beside the greeting; the trail runs between them. -->
           <template #aside>
@@ -188,7 +199,7 @@ const showIntro = isFirstPage() && !useRoute().hash
               <h3 class="section-title mb-4 md:text-right">Mladší a starší</h3>
               <TroopList class="mb-3.5" />
               <p class="m-0 text-[17px] leading-[1.7] text-pretty">
-                Každé dítě chodí na jednu schůzku týdně — podle toho, do kterého oddílu patří.
+                Každé dítě chodí na jednu schůzku týdně.
               </p>
             </div>
           </template>
@@ -226,18 +237,15 @@ const showIntro = isFirstPage() && !useRoute().hash
         <StorySection
           id="cinnost"
           kicker="co děláme"
-          title="Parta, příroda, samostatnost"
+          title="Nejen uzly a ohně"
           v-bind="story('cinnost')"
           class="max-md:[&>div:last-child]:-mt-14 md:[&>div:first-child]:pt-16 md:[&>div:last-child]:-mt-10"
         >
-          <p class="prose-body mb-3.5 max-w-[52ch]">
-            Na schůzkách hrajeme, vyrábíme, učíme se praktické věci a plánujeme, kam vyrazíme
-            příště. Na výpravách spíme v chatě i v lese pod plachtou, vaříme na ohni a chodíme i v
-            dešti — komfortní zónu posouváme kousek po kousku dál.
-          </p>
           <p class="prose-body m-0 max-w-[52ch]">
-            Nejde nám o jednu dovednost jako v kroužku. Jde o partu, o samostatnost a o to, aby se
-            na sebe děti mohly spolehnout.
+            Skauting nemusí být jen o uzlování a rozdělávání ohňů. Snažíme se, aby dával smysl i
+            dnes. Na schůzkách hrajeme hry, diskutujeme, tvoříme a učíme se nové věci. Na výpravách
+            jdeme dál, i když leje a je kolem tma jako v pytli. Máme spolu srandu, zažíváme
+            dobrodružství, učíme se brát zodpovědnost a mít respekt k ostatním. A víme, že se na sebe můžeme spolehnout.
           </p>
         </StorySection>
 
@@ -281,20 +289,16 @@ const showIntro = isFirstPage() && !useRoute().hash
           v-bind="story('rok')"
           class="max-md:[&_img]:w-[230px]"
         >
-          <div class="flex max-w-[44ch] flex-col gap-4">
-            <p class="m-0 text-[17px] leading-[1.7] sm:text-[17.5px]">
-              <span class="font-hand text-[25px] text-green">každý týden</span> — schůzka v
-              klubovně. Hry, dovednosti a plánování toho, kam vyrazíme příště. Scházíme se
-              pravidelně, protože právě tím parta drží pohromadě.
-            </p>
-            <p class="m-0 text-[17px] leading-[1.7] sm:text-[17.5px]">
-              <span class="font-hand text-[25px] text-green">jednou za měsíc</span> — výprava. Do
-              chaty i do lesa pod plachtu, ve sněhu i v dešti, na vodu i na kolo. Vyrážíme v pátek,
-              v neděli jsme zpátky.
-            </p>
-            <p class="m-0 text-[17px] leading-[1.7] sm:text-[17.5px]">
-              <span class="font-hand text-[25px] text-green">jednou za rok</span> — tábor. Dva až
-              tři týdny na louce v jižních Čechách, vrchol celého roku.
+          <div class="flex max-w-[44ch] flex-col gap-4 md:text-justify md:hyphens-auto">
+            <p
+              v-for="step in YEAR"
+              :key="step.when"
+              class="m-0 text-[17px] leading-[1.7] sm:text-[17.5px]"
+            >
+              <span class="block font-hand text-[25px] leading-tight text-green">{{
+                step.when
+              }}</span>
+              <strong class="font-semibold text-ink">{{ step.what }}.</strong> {{ step.text }}
             </p>
           </div>
         </StorySection>
@@ -309,8 +313,8 @@ const showIntro = isFirstPage() && !useRoute().hash
           class="max-md:[&>div:last-child]:mt-12"
         >
           <p class="prose-body mb-5 max-w-[40ch]">
-            Kousek od Kulaťáku. Ve vnitrobloku za klubovnou je hřiště, kam často na schůzkách
-            chodíme.
+            Klubovnu máme kousek od Kulaťáku. Ve vnitrobloku za ní je hřiště, kam na schůzkách
+            často chodíme.
           </p>
           <!-- Icons from the original web: the Prague metro logo and a bus. -->
           <ul class="m-0 mb-5 flex list-none flex-col gap-3 p-0 text-brown">
@@ -322,7 +326,7 @@ const showIntro = isFirstPage() && !useRoute().hash
                   />
                 </svg>
               </span>
-              <span class="text-[17px] text-text">metro A — Dejvická</span>
+              <span class="text-[17px] text-text">metro A — <strong class="font-semibold text-ink">Dejvická</strong></span>
             </li>
             <li class="flex items-center gap-3">
               <span class="grid w-10 flex-none place-items-center opacity-65">
@@ -335,7 +339,7 @@ const showIntro = isFirstPage() && !useRoute().hash
                   />
                 </svg>
               </span>
-              <span class="text-[17px] text-text">tramvaj a autobus — Vítězné náměstí</span>
+              <span class="text-[17px] text-text">tram/bus — <strong class="font-semibold text-ink">Vítězné náměstí</strong></span>
             </li>
           </ul>
           <!-- Drawn from OpenStreetMap by scripts/clubhouse-map.js; inline so it
@@ -360,14 +364,17 @@ const showIntro = isFirstPage() && !useRoute().hash
           class="max-md:[&>div:last-child]:-mt-6"
         >
           <p class="prose-body mb-3.5 max-w-[48ch]">
-            Začátkem července vyrážíme na dva až tři týdny do přírody, na táborovou louku. V
-            posledních letech míváme tábory rozdělené — jeden u Soběnova a druhý u Slavče. Spíme v
-            týpí či podsadových stanech, vaříme na kamnech a myjeme se v řece. Většinou hrajeme
-            celotáborovou hru, která se táhne celým táborem.
+            Začátkem července vyrážíme na dva až tři týdny do přírody. Na Kovářovu louku
+            u&nbsp;Soběnova jezdíme už přes 40 let. Dnes tam táboří vlčušky, skauti a&nbsp;skautky mají
+            svůj tábor u&nbsp;Slavče.
+          </p>
+          <p class="prose-body mb-3.5 max-w-[48ch]">
+            Spíme v&nbsp;týpí či podsadových stanech, vaříme na kamnech a&nbsp;myjeme se v&nbsp;řece.
+            Celý tábor obvykle provází celotáborová hra.
           </p>
           <p class="m-0 font-hand text-[24px] leading-tight max-md:hidden sm:text-[26px]">
             <RouterLink to="/historie"
-              >historie oddílu a všechny naše tábory od roku 1976</RouterLink
+              >historie oddílu od roku 1976</RouterLink
             >
           </p>
           <!-- On mobile in the drawing's empty sky, left of the smoke. -->
@@ -375,13 +382,13 @@ const showIntro = isFirstPage() && !useRoute().hash
             <p
               class="absolute top-[6%] left-0 m-0 w-[48%] font-hand text-[23px] leading-[1.15] md:hidden"
             >
-              <RouterLink to="/historie">naše historie a všechny tábory od roku 1976</RouterLink>
+              <RouterLink to="/historie">historie oddílu od&nbsp;roku&nbsp;1976</RouterLink>
             </p>
           </template>
         </StorySection>
 
         <section id="pridat-se" data-section data-trail-over class="pt-12 pb-10 md:pt-6">
-          <JoinCard :recruitment="recruitment" />
+          <JoinCard />
         </section>
 
         <!-- Narrower on small desktops, so the trail can pass beside it. -->

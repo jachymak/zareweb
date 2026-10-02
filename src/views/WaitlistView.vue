@@ -54,6 +54,7 @@ onMounted(() => settingsStore.load())
         </p>
         <p
           v-if="recruitment"
+          data-testid="recruitment-note"
           class="m-0 mt-3.5 inline-block -rotate-[.4deg] rounded-[10px] bg-gold-light px-3.5 py-2 text-[15.5px] leading-normal text-ink"
         >
           Nováčky na školní rok {{ recruitment.doneYear }} už máme nabrané. Nové zápisy zařadíme do

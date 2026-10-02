@@ -1,5 +1,5 @@
-// Public home page (SPEC §2.1): the intro, content, trail, FAQ, members link,
-// and the recruitment years read from settings/public.
+// Public home page (SPEC §2.1): the intro, content, trail, FAQ, members link;
+// the recruitment years from settings/public on the waiting-list page it links to.
 
 import { formatSchoolYear, recruitmentYears } from '../functions/src/shared/schoolYear.js'
 import {
@@ -31,7 +31,8 @@ async function passIntro(page, check, label) {
     const r = title.parentElement.getBoundingClientRect()
     return {
       covers: layer.getBoundingClientRect().height === innerHeight,
-      webp: img?.currentSrc.endsWith('.webp'),
+      // The dev server appends ?t=… to assets changed on disk.
+      webp: !!img && new URL(img.currentSrc).pathname.endsWith('.webp'),
       titleInside: r.left >= 0 && r.right <= innerWidth,
       locked: getComputedStyle(document.documentElement).overflow === 'hidden',
     }
@@ -60,25 +61,19 @@ export default async function publicPage({ browser, check }) {
     page.on('request', (r) => r.url().includes('127.0.0.1:8080') && firestoreRequests.push(r))
     await page.reload({ waitUntil: 'load' })
     await passIntro(page, check, 'desktop')
-    await note(page).waitFor({ timeout: 10000 })
-    const text = (await note(page).innerText()).replace(/\s+/g, ' ')
+    await page.locator('#oddily li').first().waitFor({ timeout: 10000 })
     check('desktop: Firestore emulator was queried', firestoreRequests.length > 0)
-    check(
-      'desktop: recruitment note from settings/public',
-      text.includes(done) && text.includes(next),
-      text,
-    )
 
     const d = await page.locator('main > svg path').getAttribute('d')
     check('desktop: trail path drawn', !!d && d.split('C').length > 10)
     check('desktop: no horizontal overflow', (await horizontalOverflow(page)) <= 0)
     check(
-      'desktop: all 7 sketches and the hero drawing loaded',
+      'desktop: all 5 drawings and the hero drawing loaded',
       await page.evaluate(
         () =>
           [...document.querySelectorAll('[data-stop] img, [data-trail-start] img')].filter(
             (i) => i.complete && i.naturalWidth > 0,
-          ).length === 8,
+          ).length === 6,
       ),
     )
 
@@ -110,11 +105,31 @@ export default async function publicPage({ browser, check }) {
       'desktop: CTA → /cekaci-listina',
       await page.getByRole('heading', { name: 'Čekací listina' }).isVisible(),
     )
+    await note(page).waitFor({ timeout: 10000 })
+    const text = (await note(page).innerText()).replace(/\s+/g, ' ')
+    check(
+      'waiting list: recruitment note from settings/public',
+      text.includes(done) && text.includes(next),
+      text,
+    )
 
     // Round trip: change the data in Firestore, the page follows.
     const OTHER_RESET = '2025-03-10'
     const [done2, next2] = expectedYears(OTHER_RESET)
     await setReset(OTHER_RESET)
+    await page.reload({ waitUntil: 'load' })
+    await note(page).waitFor()
+    const text2 = (await note(page).innerText()).replace(/\s+/g, ' ')
+    check(
+      'round trip: changed lastWaitlistReset shows new years',
+      text2.includes(done2) && text2.includes(next2),
+      text2,
+    )
+    await setReset(RESET)
+    await page.reload({ waitUntil: 'load' })
+    await note(page).waitFor()
+    check('round trip: restored value shows again', (await note(page).innerText()).includes(done))
+
     await page.getByRole('link', { name: '← Zpět na stránku oddílu' }).click()
     await page.waitForURL(/\/$/)
     check(
@@ -134,17 +149,6 @@ export default async function publicPage({ browser, check }) {
     await page.keyboard.press('Enter')
     await introButton(page).waitFor({ state: 'detached', timeout: 3000 })
     check('desktop: Enter leaves the intro', true)
-    await note(page).waitFor()
-    const text2 = (await note(page).innerText()).replace(/\s+/g, ' ')
-    check(
-      'round trip: changed lastWaitlistReset shows new years',
-      text2.includes(done2) && text2.includes(next2),
-      text2,
-    )
-    await setReset(RESET)
-    await page.reload({ waitUntil: 'load' })
-    await note(page).waitFor()
-    check('round trip: restored value shows again', (await note(page).innerText()).includes(done))
     check('desktop: no console errors', errors.length === 0, errors.join(' | '))
     await ctx.close()
   }
@@ -154,8 +158,6 @@ export default async function publicPage({ browser, check }) {
     const { ctx, page, errors } = await openPage(browser, '/', { width, height: 800, mobile: true })
     await page.screenshot({ path: `${SCREENSHOTS}public-intro-${width}.png` })
     await passIntro(page, check, `mobile ${width}`)
-    await note(page).waitFor({ timeout: 10000 })
-    check(`mobile ${width}: recruitment note shown`, (await note(page).innerText()).includes(next))
     check(`mobile ${width}: no horizontal overflow`, (await horizontalOverflow(page)) <= 0)
     check(
       `mobile ${width}: desktop trail hidden`,
@@ -203,12 +205,12 @@ export default async function publicPage({ browser, check }) {
   // ---- settings/public missing ----
   {
     await deleteDoc('settings/public')
-    const { ctx, page, errors } = await openPage(browser, '/')
+    const { ctx, page, errors } = await openPage(browser, '/cekaci-listina')
     await page.waitForTimeout(1000)
     check(
       'missing settings/public: note hidden, page renders',
       (await note(page).count()) === 0 &&
-        (await page.getByRole('heading', { name: 'Momentálně máme plno' }).isVisible()),
+        (await page.getByRole('heading', { name: 'Čekací listina' }).isVisible()),
     )
     check('missing settings/public: no errors', errors.length === 0, errors.join(' | '))
     await ctx.close()

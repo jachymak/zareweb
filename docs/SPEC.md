@@ -81,11 +81,11 @@ Decorative: a hand-drawn trail connecting drawings along the page, opening and c
 
 **Dynamic content**
 
-- „Chcete se přidat?“ block: *„Nováčky na školní rok {doneYear} už máme nabrané. Nové zápisy zařadíme do výběru na rok {nextYear}.“* — see §6.1.
+- „Chcete se přidat?“ block: short, static — the recruitment years and the selection details are on the waiting-list page (§2.2).
 - Buttons: „Zapsat na čekací listinu“ → page 2; „…nebo najít jiný oddíl“ → `https://skautskyoddil.cz`.
 - FAQ: accordion, one item open at a time. Content static (6 Q&A in the design).
 
-A link under the Tábor section („historie oddílu a všechny naše tábory od roku 1976“) leads to page 19; the history has no stop of its own on the trail.
+A link under the Tábor section („historie oddílu od roku 1976“) leads to page 19; the history has no stop of its own on the trail.
 
 **Footer:** group name + troops, středisko Šipka (logo + link), contact `zare@skaut.cz` with a note not to use it for sign-up interest (link to waiting list), supporter logos.
 
