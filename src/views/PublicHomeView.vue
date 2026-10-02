@@ -152,6 +152,7 @@ const showIntro = isFirstPage() && !useRoute().hash
       <TrailPath
         :key="JSON.stringify([overrides, hero])"
         :tweaks="trailTweaks"
+        :bend="!trailEditing"
         class="hidden md:block"
         @route="trailRoute = $event"
       />
@@ -198,10 +199,11 @@ const showIntro = isFirstPage() && !useRoute().hash
 
         <TrailConnector :from="textSide('start')" to="center" class="md:hidden" />
 
-        <!-- Three photos side by side; the trail goes round them. -->
+        <!-- Three photos side by side; the trail goes round them (inset on small
+             desktops to leave it room). -->
         <section
           data-section
-          class="mx-auto grid max-w-[400px] grid-cols-1 justify-items-center gap-8 py-4 sm:max-w-none sm:grid-cols-3 sm:gap-5 md:py-8 lg:gap-8"
+          class="mx-auto grid max-w-[400px] grid-cols-1 justify-items-center gap-8 py-4 sm:max-w-none sm:grid-cols-3 sm:gap-5 md:py-8 md:max-xl:px-10 lg:gap-8"
         >
           <PolaroidPhoto
             v-bind="photo(photoTrip400, photoTrip800, 600)"
@@ -247,7 +249,12 @@ const showIntro = isFirstPage() && !useRoute().hash
         </StorySection>
 
         <!-- Set apart by a soft painted wash (no outline, unlike the join card). -->
-        <section id="proc" data-section class="relative mx-auto my-10 max-w-[1060px] md:my-4">
+        <section
+          id="proc"
+          data-section
+          data-trail-over
+          class="relative mx-auto my-10 max-w-[1060px] md:my-4"
+        >
           <svg
             viewBox="0 0 100 100"
             preserveAspectRatio="none"
@@ -377,11 +384,12 @@ const showIntro = isFirstPage() && !useRoute().hash
           </p>
         </StorySection>
 
-        <section id="pridat-se" data-section class="pt-12 pb-10 md:pt-6">
+        <section id="pridat-se" data-section data-trail-over class="pt-12 pb-10 md:pt-6">
           <JoinCard :recruitment="recruitment" />
         </section>
 
-        <section id="otazky" data-section class="mx-auto max-w-[800px] pt-5">
+        <!-- Narrower on small desktops, so the trail can pass beside it. -->
+        <section id="otazky" data-section class="mx-auto max-w-[800px] pt-5 md:max-lg:px-8">
           <p class="m-0 mb-1 text-center font-hand text-[27px] text-red sm:text-[30px]">
             ptejte se, rádi odpovíme
           </p>

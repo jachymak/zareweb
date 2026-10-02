@@ -6,8 +6,9 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 // src/content/trailTweaks.json (written by the dev server, see vite.config.js).
 // Shown over the page from md up.
 const props = defineProps({
-  // Last route from TrailPath: { points, removed, width }; a point is
-  // { key, x, y, h: {x, y}, rx, ry, added?, custom?, ownHandle? }.
+  // Last route from TrailPath: { points, removed, width, obstacles }; a point
+  // is { key, x, y, h: {x, y}, rx, ry, added?, custom?, ownHandle? }, an
+  // obstacle a box { l, r, t, b } the trail keeps out of.
   route: { type: Object, default: null },
   // Tweaks as the page loaded them from the file.
   saved: { type: Object, required: true },
@@ -158,7 +159,25 @@ function color(point) {
 </script>
 
 <template>
-  <div class="pointer-events-none absolute inset-0 z-30">
+  <div data-trail-over class="pointer-events-none absolute inset-0 z-30">
+    <!-- Where the trail shouldn't go: the page bends it out of these boxes
+         (not while editing), so routing round them keeps it where drawn. -->
+    <svg class="absolute inset-0 size-full overflow-visible">
+      <rect
+        v-for="(o, i) in route?.obstacles ?? []"
+        :key="i"
+        :x="o.l"
+        :y="o.t"
+        :width="o.r - o.l"
+        :height="o.b - o.t"
+        rx="6"
+        fill="var(--color-red)"
+        fill-opacity="0.07"
+        stroke="var(--color-red)"
+        stroke-opacity="0.35"
+        stroke-dasharray="4 4"
+      />
+    </svg>
     <!-- Handle arms of the selected point. -->
     <svg v-if="selected && !isRemoved" class="absolute inset-0 size-full overflow-visible">
       <line
@@ -218,6 +237,7 @@ function color(point) {
   </div>
 
   <div
+    data-trail-over
     class="fixed bottom-3 left-3 z-50 w-[320px] rounded-xl border border-line bg-paper p-3 text-[14px] shadow-xl"
   >
     <div class="mb-1 flex items-center justify-between">
