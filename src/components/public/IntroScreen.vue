@@ -1,9 +1,12 @@
 <script setup>
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import ZareLogo from '@/components/ZareLogo.vue'
-import intro1280 from '@/assets/public/intro-1280.webp'
-import intro1920 from '@/assets/public/intro-1920.webp'
-import intro2560 from '@/assets/public/intro-2560.webp'
+import leto1280 from '@/assets/public/intro-leto-1280.webp'
+import leto1920 from '@/assets/public/intro-leto-1920.webp'
+import leto2560 from '@/assets/public/intro-leto-2560.webp'
+import podzim1280 from '@/assets/public/intro-podzim-1280.webp'
+import podzim1920 from '@/assets/public/intro-podzim-1920.webp'
+import podzim2280 from '@/assets/public/intro-podzim-2280.webp'
 
 // Full-screen painting over the public home (SPEC §2.1). The page is already
 // rendered underneath; „hurá na web“ zooms the painting away to reveal it.
@@ -11,7 +14,33 @@ const open = ref(true) // painting and text shown
 const gone = ref(false) // the layer is removed once the painting has left
 const loaded = ref(false)
 
-const srcset = `${intro1280} 1280w, ${intro1920} 1920w, ${intro2560} 2560w`
+// One painting per season, picked by the month; a season without its own
+// painting shows the summer one.
+const paintings = {
+  leto: {
+    srcset: `${leto1280} 1280w, ${leto1920} 1920w, ${leto2560} 2560w`,
+    src: leto1920,
+    look: 'contrast-[1.22]',
+    shade: 'bg-[radial-gradient(ellipse_at_0%_100%,rgba(18,26,20,.72),rgba(18,26,20,0)_70%)]',
+  },
+  podzim: {
+    srcset: `${podzim1280} 1280w, ${podzim1920} 1920w, ${podzim2280} 2280w`,
+    src: podzim1920,
+    // keep the church in view on a narrow screen
+    look: 'contrast-[1.1] object-[70%_50%]',
+    // the light meadow needs a darker corner behind the text
+    shade: 'bg-[radial-gradient(ellipse_at_0%_100%,rgba(18,26,20,.84),rgba(18,26,20,0)_72%)]',
+  },
+}
+// Months 0–11 → season: Dec–Feb winter, Mar–May spring, Jun–Aug summer, Sep–Nov autumn.
+const SEASONS = ['zima', 'jaro', 'leto', 'podzim']
+function season() {
+  // In development `?obdobi=podzim` previews another season's painting.
+  const forced = import.meta.env.DEV && new URLSearchParams(location.search).get('obdobi')
+  if (forced) return forced
+  return SEASONS[Math.floor(((new Date().getMonth() + 1) % 12) / 3)]
+}
+const painting = paintings[season()] ?? paintings.leto
 // The image covers the screen, so on a tall screen it is wider than the viewport.
 const sizes = 'max(100vw, 177vh)'
 
@@ -50,18 +79,19 @@ function enter() {
     >
       <div v-if="open" class="absolute inset-0 bg-[#2b3a33]">
         <img
-          :srcset="srcset"
+          :srcset="painting.srcset"
           :sizes="sizes"
-          :src="intro1920"
+          :src="painting.src"
           alt=""
           fetchpriority="high"
-          class="absolute inset-0 size-full object-cover contrast-[1.22] transition-opacity duration-500"
-          :class="loaded ? 'opacity-100' : 'opacity-0'"
+          class="absolute inset-0 size-full object-cover transition-opacity duration-500"
+          :class="[painting.look, loaded ? 'opacity-100' : 'opacity-0']"
           @load="loaded = true"
         />
         <!-- darkening behind the text -->
         <div
-          class="absolute bottom-0 left-0 h-[360px] w-[780px] max-w-[170vw] bg-[radial-gradient(ellipse_at_0%_100%,rgba(18,26,20,.72),rgba(18,26,20,0)_70%)]"
+          class="absolute bottom-0 left-0 h-[360px] w-[780px] max-w-[170vw]"
+          :class="painting.shade"
         />
       </div>
     </Transition>
