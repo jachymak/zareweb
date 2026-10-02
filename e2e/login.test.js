@@ -203,7 +203,8 @@ export default async function login({ browser, check }) {
     await cardTitle(page, 'Založení účtu').waitFor()
     check(
       'register: explains how approval works',
-      await page.getByText('Jak to funguje').isVisible(),
+      // In the card on mobile, next to it (instead of the picture) from `sm` up.
+      (await page.getByText('Jak to funguje').filter({ visible: true }).count()) === 1,
     )
     await page.screenshot({ path: `${SCREENSHOTS}login-register-desktop.png`, fullPage: true })
 
