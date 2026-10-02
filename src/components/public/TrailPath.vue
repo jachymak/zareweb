@@ -1,5 +1,5 @@
 <script setup>
-import { onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue'
+import { onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
 
 // Dashed hand-drawn trail behind the page content (desktop layout).
 // It is routed through every `[data-stop]` (the sketches) inside the parent
@@ -9,6 +9,21 @@ import { onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue'
 // its `data-trail-x` / `data-trail-y` (fractions of its box), and ends in a
 // `[data-trail-end]` image, at a point given the same way (fractions of the
 // picture as `object-fit` lays it out), marked with a small cross.
+// Hand tweaks on top (`tweaks`, see src/content/trailTweaks.json, edited with
+// the dev TrailEditor). Each waypoint has a stable key, offsets are
+// [fraction of the width, px]:
+//   move:   { key: offset }  shifts a waypoint
+//   handle: { key: offset }  its Bézier handle (the curve's direction there;
+//                            mirrored on the other side), instead of the automatic one
+//   add:    [{ id, after, d }]  an extra point, `d` from the point `after`
+//   remove: [key]            waypoints left out
+
+const props = defineProps({
+  tweaks: { type: Object, default: () => ({}) },
+})
+// For the editor: the final waypoints ({ key, x, y, h, added?, custom? }),
+// the removed ones and the width.
+const emit = defineEmits(['route'])
 
 const svg = useTemplateRef('svg')
 const d = ref('')
@@ -56,14 +71,15 @@ function waypoints(wrap) {
     el,
     ...box(el, origin),
   }))
-  const stops = [...wrap.querySelectorAll('[data-stop]')].map((el) => {
+  const stops = [...wrap.querySelectorAll('[data-stop]')].map((el, i) => {
     const b = box(el, origin)
     const section = sections.find((s) => s.el.contains(el)) ?? b
     const onLeft = b.cx < width / 2
     // The trail passes a sketch on the text side — except the one it ends in,
     // which it goes round on the outer side, to come in from below.
     const inner = !el.querySelector('[data-trail-end]')
-    return { lane: onLeft === inner ? b.r + GUTTER : b.l - GUTTER, cy: b.cy, section }
+    const id = section.el?.id || `stop${i}`
+    return { id, lane: onLeft === inner ? b.r + GUTTER : b.l - GUTTER, cy: b.cy, section }
   })
 
   const pts = []
@@ -76,9 +92,15 @@ function waypoints(wrap) {
       Number(start.dataset.trailX ?? 0.5),
       Number(start.dataset.trailY ?? 1),
     )
-    pts.push({ x, y })
+    pts.push({ key: 'trailhead', x, y })
     // Into the first stop's lane before its section starts, clear of the text.
-    if (stops[0]) pts.push({ x: stops[0].lane, y: Math.max(y + 60, stops[0].section.t + 40) })
+    if (stops[0]) {
+      pts.push({
+        key: 'trailhead:out',
+        x: stops[0].lane,
+        y: Math.max(y + 60, stops[0].section.t + 40),
+      })
+    }
   }
   stops.forEach((stop, i) => {
     const prev = stops[i - 1]
@@ -91,20 +113,22 @@ function waypoints(wrap) {
         const inY = Math.min(...between.map((s) => s.t)) - CLEARANCE / 2
         const outY = Math.max(...between.map((s) => s.b)) + CLEARANCE / 2
         // Straight down the lane to the turn, not bulging into the text beside it.
-        pts.push({ x: prev.lane, y: inY, straight: true }, { x: outer, y: inY + 40 })
-        pts.push({ x: outer, y: outY - 40 }, { x: stop.lane, y: outY })
+        pts.push({ key: `${stop.id}:in`, x: prev.lane, y: inY, straight: true })
+        pts.push({ key: `${stop.id}:a`, x: outer, y: inY + 40 })
+        pts.push({ key: `${stop.id}:b`, x: outer, y: outY - 40 })
+        pts.push({ key: `${stop.id}:out`, x: stop.lane, y: outY })
       } else {
-        pts.push({ x: (prev.lane + stop.lane) / 2, y: (top + bottom) / 2 })
+        pts.push({ key: `${stop.id}:mid`, x: (prev.lane + stop.lane) / 2, y: (top + bottom) / 2 })
       }
     }
-    pts.push({ x: stop.lane, y: stop.cy })
+    pts.push({ key: stop.id, x: stop.lane, y: stop.cy })
   })
 
   const end = wrap.querySelector('[data-trail-end]')
   if (end) {
     const fx = Number(end.dataset.trailX ?? 0.5)
     const fy = Number(end.dataset.trailY ?? 1)
-    pts.push(pointIn(end, box(end, origin), fx, fy))
+    pts.push({ key: 'end', ...pointIn(end, box(end, origin), fx, fy) })
   }
 
   // Monotonic in y, so the curve never doubles back.
@@ -120,21 +144,63 @@ function waypoints(wrap) {
   return out
 }
 
-// Catmull-Rom spline through the points, as cubic Béziers.
+// Moved, added and removed points; returns { points, removed }. Added points
+// sit at an offset (`d`) from the untweaked spot (rx, ry) of the nearest
+// computed point before them, so moving any other point never drags them along.
+function applyTweaks(pts, tweaks, width) {
+  const move = tweaks?.move ?? {}
+  const all = pts.map((p) => {
+    const m = move[p.key]
+    const at = m ? { x: p.x + m[0] * width, y: p.y + m[1], custom: true } : {}
+    return { ...p, rx: p.x, ry: p.y, ...at }
+  })
+  for (const a of tweaks?.add ?? []) {
+    const i = all.findIndex((p) => p.key === a.after)
+    if (i < 0) continue
+    const { rx, ry } = all[i]
+    all.splice(i + 1, 0, {
+      key: a.id,
+      added: true,
+      x: rx + a.d[0] * width,
+      y: ry + a.d[1],
+      rx,
+      ry,
+    })
+  }
+  const gone = new Set(tweaks?.remove ?? [])
+  return {
+    points: all.filter((p) => !gone.has(p.key)),
+    removed: all.filter((p) => gone.has(p.key)),
+  }
+}
+
+// Bézier handle of each point (`h`, the vector to its outgoing control point):
+// from the tweaks, or automatic — a Catmull-Rom spline through the points.
+function withHandles(pts, handles, width) {
+  const k = 1 / 6
+  return pts.map((p, i) => {
+    const h = handles?.[p.key]
+    if (h) return { ...p, h: { x: h[0] * width, y: h[1] }, custom: true, ownHandle: true }
+    const prev = pts[i - 1] ?? p
+    const next = pts[i + 1] ?? p
+    return { ...p, h: { x: (next.x - prev.x) * k, y: (next.y - prev.y) * k } }
+  })
+}
+
 function smoothPath(pts) {
   if (pts.length < 2) return ''
   const f = (n) => n.toFixed(1)
   let path = `M${f(pts[0].x)} ${f(pts[0].y)}`
   for (let i = 0; i < pts.length - 1; i++) {
-    const p0 = pts[i - 1] ?? pts[i]
-    const p1 = pts[i]
-    const p2 = pts[i + 1]
-    const p3 = pts[i + 2] ?? p2
-    const k = 1 / 6
-    // Points marked `straight` are reached in a straight line.
-    const cx = (x) => f(p2.straight ? p1.x : x)
-    path += ` C${cx(p1.x + (p2.x - p0.x) * k)} ${f(p1.y + (p2.y - p0.y) * k)}`
-    path += ` ${cx(p2.x - (p3.x - p1.x) * k)} ${f(p2.y - (p3.y - p1.y) * k)} ${f(p2.x)} ${f(p2.y)}`
+    const [p1, p2] = [pts[i], pts[i + 1]]
+    let c1 = p1.x + p1.h.x
+    let c2 = p2.x - p2.h.x
+    // Points marked `straight` are reached in a straight line (unless reshaped by hand).
+    if (p2.straight) {
+      if (!p1.ownHandle) c1 = p1.x
+      if (!p2.ownHandle) c2 = p1.x
+    }
+    path += ` C${f(c1)} ${f(p1.y + p1.h.y)} ${f(c2)} ${f(p2.y - p2.h.y)} ${f(p2.x)} ${f(p2.y)}`
   }
   return path
 }
@@ -143,9 +209,13 @@ function route() {
   const el = svg.value
   // Hidden on narrow screens — nothing to draw.
   if (!el || !el.getClientRects().length) return
-  const pts = waypoints(el.parentElement)
+  const wrap = el.parentElement
+  const width = wrap.getBoundingClientRect().width
+  const { points, removed } = applyTweaks(waypoints(wrap), props.tweaks, width)
+  const pts = withHandles(points, props.tweaks?.handle, width)
   d.value = smoothPath(pts)
-  goal.value = el.parentElement.querySelector('[data-trail-end]') ? pts.at(-1) : null
+  goal.value = wrap.querySelector('[data-trail-end]') ? pts.at(-1) : null
+  emit('route', { points: pts, removed, width })
 }
 
 let observer
@@ -154,6 +224,8 @@ function scheduleRoute() {
   cancelAnimationFrame(frame)
   frame = requestAnimationFrame(route)
 }
+
+watch(() => props.tweaks, scheduleRoute, { deep: true })
 
 onMounted(() => {
   observer = new ResizeObserver(scheduleRoute)

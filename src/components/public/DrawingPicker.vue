@@ -13,6 +13,7 @@ const props = defineProps({
 const overrides = defineModel({ type: Object, default: () => ({}) })
 // HomeHero props: { size?, layout? }
 const hero = defineModel('hero', { type: Object, default: () => ({}) })
+const emit = defineEmits(['edit-trail'])
 
 const HERO_SIZES = {
   narrow: 'jako teď (960 px)',
@@ -159,6 +160,13 @@ function reset() {
           </button>
         </div>
       </div>
+      <button
+        type="button"
+        class="mb-2 w-full rounded-lg bg-green px-3 py-1.5 font-medium text-paper"
+        @click="((open = false), emit('edit-trail'))"
+      >
+        Upravit cestu
+      </button>
       <div class="mb-2 flex flex-col gap-1.5 rounded-lg bg-cream p-2">
         <label class="flex items-center gap-2">
           <span class="flex-none font-medium text-ink">Barvy fotek</span>

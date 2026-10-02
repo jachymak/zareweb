@@ -5,6 +5,7 @@ import { useRoute } from 'vue-router'
 import { isFirstPage } from '@/router'
 import { usePublicSettingsStore } from '@/stores/publicSettings'
 import { FAQ } from '@/content/faq'
+import TRAIL_TWEAKS from '@/content/trailTweaks.json'
 import PublicHeader from '@/components/public/PublicHeader.vue'
 import PublicFooter from '@/components/public/PublicFooter.vue'
 import StorySection from '@/components/public/StorySection.vue'
@@ -99,6 +100,31 @@ const DrawingPicker = import.meta.env.DEV
   ? defineAsyncComponent(() => import('@/components/public/DrawingPicker.vue'))
   : null
 
+// Hand tweaks of the trail; the TrailEditor (dev only) edits and saves them.
+const trailTweaks = ref(TRAIL_TWEAKS)
+const trailRoute = ref(null)
+const TrailEditor = import.meta.env.DEV
+  ? defineAsyncComponent(() => import('@/components/public/TrailEditor.vue'))
+  : null
+// Kept across the reload that saving the tweaks file triggers.
+const EDITING_KEY = 'zare:trail-editing'
+const trailEditing = ref(readEditing())
+function readEditing() {
+  try {
+    return import.meta.env.DEV && sessionStorage.getItem(EDITING_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+function setTrailEditing(on) {
+  trailEditing.value = on
+  try {
+    sessionStorage.setItem(EDITING_KEY, on ? '1' : '')
+  } catch {
+    // Private window.
+  }
+}
+
 function story(id) {
   const { sketch, srcset, sketchSide } = STORIES.find((s) => s.id === id)
   const o = overrides.value[id] ?? {}
@@ -122,7 +148,19 @@ const showIntro = isFirstPage() && !useRoute().hash
     <PublicHeader />
 
     <main class="relative">
-      <TrailPath :key="JSON.stringify([overrides, hero])" class="hidden md:block" />
+      <TrailPath
+        :key="JSON.stringify([overrides, hero])"
+        :tweaks="trailTweaks"
+        class="hidden md:block"
+        @route="trailRoute = $event"
+      />
+      <TrailEditor
+        v-if="TrailEditor && trailEditing"
+        v-model:tweaks="trailTweaks"
+        :route="trailRoute"
+        :saved="TRAIL_TWEAKS"
+        @close="setTrailEditing(false)"
+      />
 
       <div class="relative z-[1] mx-auto max-w-[1120px] px-4 pb-6 sm:px-6">
         <HomeHero v-bind="hero" />
@@ -356,6 +394,7 @@ const showIntro = isFirstPage() && !useRoute().hash
 
         <!-- The trail ends here, at the foot of the road into Dejvice. -->
         <StorySection
+          id="cil"
           v-bind="story('cil')"
           :trail-end="{ x: 0.42, y: 1.03 }"
           class="pt-12 md:pt-10 md:pb-4"
@@ -375,6 +414,7 @@ const showIntro = isFirstPage() && !useRoute().hash
       v-model="overrides"
       v-model:hero="hero"
       :slots="STORIES.filter((s) => s.label)"
+      @edit-trail="setTrailEditing(true)"
     />
   </div>
 </template>
