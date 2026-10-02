@@ -19,6 +19,7 @@ const HERO_SIZES = {
   text: 'na šířku textu',
   bleed: 'přes celou šířku',
 }
+const HERO_PALETTES = { colour: 'skály barevné', grey: 'skály šedé' }
 const HERO_LAYOUTS = {
   'sky-right': 'pokřik v obloze vpravo',
   sky: 'pokřik v obloze uprostřed',
@@ -44,7 +45,29 @@ const options = [
 
 const KEY = 'zare:drawing-picker'
 const HERO_KEY = 'zare:hero-picker'
+const SATURATION_KEY = 'zare:photo-saturation'
 const open = ref(false)
+
+// Colour intensity of the photos (CSS saturate(), 1 = as taken), applied
+// through --photo-saturation on the page root.
+const saturation = ref(1)
+try {
+  saturation.value = Number(localStorage.getItem(SATURATION_KEY)) || 1
+} catch {
+  // Private window.
+}
+watch(
+  saturation,
+  (value) => {
+    document.documentElement.style.setProperty('--photo-saturation', value)
+    try {
+      localStorage.setItem(SATURATION_KEY, value)
+    } catch {
+      // Private window.
+    }
+  },
+  { immediate: true },
+)
 
 const byName = Object.fromEntries(options.map((o) => [o.name, o]))
 // Picking a slot's own default drawing is the same as no override.
@@ -109,6 +132,7 @@ function side(slot) {
 function reset() {
   overrides.value = {}
   hero.value = {}
+  saturation.value = 1
 }
 </script>
 
@@ -136,7 +160,30 @@ function reset() {
         </div>
       </div>
       <div class="mb-2 flex flex-col gap-1.5 rounded-lg bg-cream p-2">
+        <label class="flex items-center gap-2">
+          <span class="flex-none font-medium text-ink">Barvy fotek</span>
+          <input
+            v-model.number="saturation"
+            type="range"
+            min="0"
+            max="1.5"
+            step="0.05"
+            class="min-w-0 flex-1 accent-green"
+          />
+          <span class="w-11 flex-none text-right tabular-nums">
+            {{ Math.round(saturation * 100) }} %
+          </span>
+        </label>
         <a href="#uvod" class="font-medium text-ink">Úvod (skály a pokřik)</a>
+        <select
+          class="w-full rounded border border-line bg-paper px-1.5 py-1"
+          :value="hero.palette ?? 'colour'"
+          @change="hero = { ...hero, palette: $event.target.value }"
+        >
+          <option v-for="(label, key) in HERO_PALETTES" :key="key" :value="key">
+            {{ label }}
+          </option>
+        </select>
         <select
           class="w-full rounded border border-line bg-paper px-1.5 py-1"
           :value="hero.size ?? 'narrow'"

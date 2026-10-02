@@ -28,7 +28,7 @@ defineProps({
       :width="width"
       :height="height"
       loading="lazy"
-      class="block h-auto w-full"
+      class="block h-auto w-full [filter:saturate(var(--photo-saturation,1))]"
     />
     <div v-else class="grid aspect-[4/3] w-full place-items-center bg-sand" aria-hidden="true">
       <svg

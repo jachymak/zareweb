@@ -2,18 +2,21 @@
 import { computed } from 'vue'
 import TrailConnector from './TrailConnector.vue'
 
-// One stop on the illustrated trail: text on one side, a sketch on the other.
+// One stop on the illustrated trail: text on one side, a sketch (or the `aside`
+// slot, e.g. a photo) on the other.
 // On mobile the sketch goes below the text, aligned to the same side, and a
 // short trail connector links them (design study variant M2).
 const props = defineProps({
   id: { type: String, default: undefined },
   kicker: { type: String, default: '' },
   title: { type: String, default: '' },
-  sketch: { type: String, required: true },
+  sketch: { type: String, default: undefined },
   // Raster drawing (design-reference/drawings) instead of a line sketch: a
   // `srcset`, shown larger.
   srcset: { type: String, default: undefined },
   sketchSide: { type: String, default: 'right' }, // 'left' | 'right' (desktop)
+  // { x, y }: the trail (TrailPath) ends in the sketch at these fractions of it.
+  trailEnd: { type: Object, default: null },
 })
 
 const textSide = computed(() => (props.sketchSide === 'left' ? 'right' : 'left'))
@@ -28,7 +31,7 @@ const textSide = computed(() => (props.sketchSide === 'left' ? 'right' : 'left')
   >
     <div
       class="min-w-0 md:flex-[1_1_400px] md:py-2.5"
-      :class="textSide === 'right' ? 'text-right' : 'text-left'"
+      :class="textSide === 'right' ? 'text-right [&_li]:justify-end [&>*]:ml-auto' : 'text-left'"
     >
       <p v-if="kicker" class="kicker mb-2">{{ kicker }}</p>
       <h3 v-if="title" class="section-title mb-4">{{ title }}</h3>
@@ -42,10 +45,19 @@ const textSide = computed(() => (props.sketchSide === 'left' ? 'right' : 'left')
       class="relative flex min-w-0 md:py-2.5"
       :class="[
         textSide === 'right' ? 'justify-end' : 'justify-start',
-        srcset ? 'md:min-h-[440px] md:flex-[1_1_360px]' : 'md:min-h-80 md:flex-[1_1_260px]',
+        $slots.aside
+          ? 'md:flex-[1_1_360px] md:items-start'
+          : srcset
+            ? 'md:min-h-[440px] md:flex-[1_1_360px]'
+            : 'md:min-h-80 md:flex-[1_1_260px]',
       ]"
     >
+      <slot v-if="$slots.aside" name="aside" />
       <img
+        v-else
+        :data-trail-end="trailEnd ? '' : undefined"
+        :data-trail-x="trailEnd?.x"
+        :data-trail-y="trailEnd?.y"
         :src="sketch"
         :srcset="srcset"
         :sizes="srcset ? '(min-width: 768px) 400px, 280px' : undefined"

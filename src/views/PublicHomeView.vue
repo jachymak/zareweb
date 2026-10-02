@@ -16,8 +16,6 @@ import JoinCard from '@/components/public/JoinCard.vue'
 import FaqAccordion from '@/components/public/FaqAccordion.vue'
 import IntroScreen from '@/components/public/IntroScreen.vue'
 import HomeHero from '@/components/public/HomeHero.vue'
-import sketchClubhouse from '@/assets/sketches/skica-klubovna.svg'
-import sketchGoal from '@/assets/sketches/skica-cil.svg'
 import clubhouseMap from '@/assets/public/mapa-klubovna.jpg'
 import dejvice400 from '@/assets/public/dejvice-400.webp'
 import dejvice800 from '@/assets/public/dejvice-800.webp'
@@ -56,20 +54,8 @@ const photo = (small, large, height) => ({
 // Drawing and side of each StorySection; the DrawingPicker (dev only) can
 // override them to try out variants from design-reference/drawings.
 const STORIES = [
-  {
-    id: 'start',
-    label: 'Kdo jsme',
-    defaultFile: 'dejvice-2.png',
-    sketchSide: 'right',
-    ...drawing(dejvice400, dejvice800),
-  },
-  {
-    id: 'oddily',
-    label: 'Mladší a starší',
-    defaultFile: 'skica-klubovna.svg',
-    sketchSide: 'left',
-    sketch: sketchClubhouse,
-  },
+  // A photo instead of a drawing (not in the DrawingPicker).
+  { id: 'start', sketchSide: 'right' },
   {
     id: 'cinnost',
     label: 'Co děláme',
@@ -94,16 +80,16 @@ const STORIES = [
   {
     id: 'tabor',
     label: 'Tábor',
-    defaultFile: 'tabor-2.png',
+    defaultFile: 'tabor-3.png',
     sketchSide: 'left',
     ...drawing(camp400, camp800),
   },
   {
     id: 'cil',
-    label: 'Závěr',
-    defaultFile: 'skica-cil.svg',
+    label: 'Závěr (konec cesty)',
+    defaultFile: 'dejvice-3.png',
     sketchSide: 'left',
-    sketch: sketchGoal,
+    ...drawing(dejvice400, dejvice800),
   },
 ]
 const overrides = ref({})
@@ -155,68 +141,98 @@ const showIntro = isFirstPage() && !useRoute().hash
             <strong class="font-semibold text-ink">starší</strong> děti. Jsme parta kluků a holek,
             od malých po velké.
           </p>
-          <p class="prose-body mb-6 max-w-[52ch]">
+          <p class="prose-body m-0 max-w-[52ch]">
             Pravidelně se scházíme, vyrážíme na výpravy do přírody a v létě na tábor.
           </p>
+          <!-- The two troops beside the greeting; the trail runs between them. -->
+          <template #aside>
+            <div id="oddily" class="w-full text-left">
+              <p class="kicker mb-2 text-right">dva oddíly</p>
+              <h3 class="section-title mb-4 text-right">Mladší a starší</h3>
+              <TroopList class="mb-3.5" />
+              <p class="m-0 text-[17px] leading-[1.7] text-pretty">
+                Každé dítě chodí na jednu schůzku týdně — podle toho, do kterého oddílu patří.
+              </p>
+            </div>
+          </template>
+        </StorySection>
+
+        <TrailConnector :from="textSide('start')" to="center" class="md:hidden" />
+
+        <!-- Three photos side by side; the trail goes round them. -->
+        <section
+          data-section
+          class="mx-auto grid max-w-[400px] grid-cols-1 justify-items-center gap-8 py-4 sm:max-w-none sm:grid-cols-3 sm:gap-5 md:py-8 lg:gap-8"
+        >
           <PolaroidPhoto
             v-bind="photo(photoTrip400, photoTrip800, 600)"
             alt="Děti z oddílu na výpravě"
             caption="Naše parta na výpravě"
-            :tilt="-1.6"
+            :tilt="-1.8"
           />
-        </StorySection>
+          <PolaroidPhoto
+            v-bind="photo(photoMeeting400, photoMeeting800, 533)"
+            alt="Děti na schůzce"
+            caption="Schůzka"
+            :tilt="1.4"
+            class="sm:mt-6"
+          />
+          <PolaroidPhoto
+            v-bind="photo(photoCamp400, photoCamp800, 533)"
+            alt="Podsadové stany na táborové louce"
+            caption="Táborová louka"
+            :tilt="-1.1"
+          />
+        </section>
 
-        <TrailConnector :from="textSide('start')" :to="textSide('oddily')" class="md:hidden" />
+        <TrailConnector from="center" :to="textSide('cinnost')" class="md:hidden" />
 
-        <StorySection
-          id="oddily"
-          kicker="dva oddíly"
-          title="Mladší a starší"
-          v-bind="story('oddily')"
-        >
-          <TroopList class="mb-3.5" />
-          <p class="ml-auto max-w-[46ch] text-[17px] leading-[1.7] text-pretty">
-            Každé dítě chodí na jednu schůzku týdně — podle toho, do kterého oddílu patří.
-          </p>
-        </StorySection>
-
-        <TrailConnector :from="textSide('oddily')" :to="textSide('cinnost')" class="md:hidden" />
-
+        <!-- Text lower, drawing higher: further from the photos above, but the
+             drawing still close under them. -->
         <StorySection
           id="cinnost"
           kicker="co děláme"
           title="Parta, příroda, samostatnost"
           v-bind="story('cinnost')"
+          class="md:[&>div:first-child]:pt-16 md:[&>div:last-child]:-mt-10"
         >
           <p class="prose-body mb-3.5 max-w-[52ch]">
             Na schůzkách hrajeme, vyrábíme, učíme se praktické věci a plánujeme, kam vyrazíme
             příště. Na výpravách spíme v chatě i v lese pod plachtou, vaříme na ohni a chodíme i v
             dešti — komfortní zónu posouváme kousek po kousku dál.
           </p>
-          <p class="prose-body mb-5 max-w-[52ch]">
+          <p class="prose-body m-0 max-w-[52ch]">
             Nejde nám o jednu dovednost jako v kroužku. Jde o partu, o samostatnost a o to, aby se
             na sebe děti mohly spolehnout.
           </p>
-          <PolaroidPhoto
-            v-bind="photo(photoMeeting400, photoMeeting800, 533)"
-            alt="Děti na schůzce"
-            caption="Schůzka"
-            :tilt="1.8"
-          />
         </StorySection>
 
-        <section id="proc" data-section class="mx-auto max-w-[640px] py-12 text-center md:py-6">
-          <p class="kicker mb-2">proč skauting</p>
-          <h3 class="section-title mb-4">Proč nechat dítě vyrůst ve skautu?</h3>
-          <p class="prose-body mb-3.5">
-            Skauting je celosvětově největší výchovné hnutí pro mládež. Na rozdíl od zájmových
-            kroužků přináší rozmanité aktivity a jeho cílem je celkový rozvoj dětí — od fyzického,
-            přes týmové a sociální dovednosti, až po důraz na hodnoty a morálku. To vše podává lehce
-            a přirozeně, formou her v partě vrstevníků.
-          </p>
-          <p class="m-0 text-[17px]">
-            <a href="https://www.skaut.cz/skauting/proc-skauting/">Proč se stát skautem?</a>
-          </p>
+        <!-- Set apart by a soft painted wash (no outline, unlike the join card). -->
+        <section id="proc" data-section class="relative mx-auto my-10 max-w-[1060px] md:my-4">
+          <svg
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+            aria-hidden="true"
+            class="absolute inset-0 size-full"
+          >
+            <path
+              d="M4 9 C18 3 38 6 58 3 C76 1 90 5 96 10 C99 32 96 56 98 79 C99 90 94 96 86 97 C64 99 42 95 21 98 C9 99 3 94 2 84 C1 60 5 34 4 9 Z"
+              fill="var(--color-sand)"
+            />
+          </svg>
+          <div class="relative px-6 py-9 text-center sm:px-12 md:py-11">
+            <p class="kicker mb-2">proč skauting</p>
+            <h3 class="section-title mb-4">Proč nechat dítě vyrůst ve skautu?</h3>
+            <p class="prose-body mb-3.5 text-pretty">
+              Skauting je celosvětově největší výchovné hnutí pro mládež. Na rozdíl od zájmových
+              kroužků přináší rozmanité aktivity a jeho cílem je celkový rozvoj dětí — od fyzického,
+              přes týmové a sociální dovednosti, až po důraz na hodnoty a morálku. To vše podává
+              lehce a přirozeně, formou her v partě vrstevníků.
+            </p>
+            <p class="m-0 text-[17px]">
+              <a href="https://www.skaut.cz/skauting/proc-skauting/">Proč se stát skautem?</a>
+            </p>
+          </div>
         </section>
 
         <StorySection
@@ -225,7 +241,7 @@ const showIntro = isFirstPage() && !useRoute().hash
           title="Od schůzky k táboru"
           v-bind="story('rok')"
         >
-          <div class="ml-auto flex max-w-[44ch] flex-col gap-4">
+          <div class="flex max-w-[44ch] flex-col gap-4">
             <p class="m-0 text-[17px] leading-[1.7] sm:text-[17.5px]">
               <span class="font-hand text-[25px] text-green">každý týden</span> — schůzka v
               klubovně. Hry, dovednosti a plánování toho, kam vyrazíme příště. Scházíme se
@@ -309,25 +325,17 @@ const showIntro = isFirstPage() && !useRoute().hash
           title="Tábor v jižních Čechách"
           v-bind="story('tabor')"
         >
-          <p class="prose-body mb-3.5 ml-auto max-w-[48ch]">
+          <p class="prose-body mb-3.5 max-w-[48ch]">
             Začátkem července vyrážíme na dva až tři týdny do přírody, na táborovou louku. V
             posledních letech míváme tábory rozdělené — jeden u Soběnova a druhý u Slavče. Spíme v
             týpí či podsadových stanech, vaříme na kamnech a myjeme se v řece. Většinou hrajeme
             celotáborovou hru, která se táhne celým táborem.
           </p>
-          <p class="mb-6 font-hand text-[24px] leading-tight sm:text-[26px]">
+          <p class="m-0 font-hand text-[24px] leading-tight sm:text-[26px]">
             <RouterLink to="/historie"
               >historie oddílu a všechny naše tábory od roku 1976</RouterLink
             >
           </p>
-          <div class="flex justify-end">
-            <PolaroidPhoto
-              v-bind="photo(photoCamp400, photoCamp800, 533)"
-              alt="Podsadové stany na táborové louce"
-              caption="Táborová louka"
-              :tilt="-2.2"
-            />
-          </div>
         </StorySection>
 
         <section id="pridat-se" data-section class="pt-12 pb-10 md:pt-6">
@@ -346,9 +354,14 @@ const showIntro = isFirstPage() && !useRoute().hash
           <FaqAccordion :items="FAQ" />
         </section>
 
-        <StorySection v-bind="story('cil')" class="pt-12 md:pt-10 md:pb-4">
+        <!-- The trail ends here, at the foot of the road into Dejvice. -->
+        <StorySection
+          v-bind="story('cil')"
+          :trail-end="{ x: 0.42, y: 1.03 }"
+          class="pt-12 md:pt-10 md:pb-4"
+        >
           <h2
-            class="m-0 ml-auto max-w-[20ch] font-hand text-[36px] leading-[1.1] font-semibold text-balance text-ink sm:text-[48px] lg:text-[60px]"
+            class="m-0 max-w-[20ch] font-hand text-[36px] leading-[1.1] font-semibold text-balance text-ink sm:text-[48px] lg:text-[60px]"
           >
             hory, města, vesnice, pozná Záře Dejvice!
           </h2>
@@ -357,6 +370,11 @@ const showIntro = isFirstPage() && !useRoute().hash
     </main>
 
     <PublicFooter />
-    <DrawingPicker v-if="DrawingPicker" v-model="overrides" v-model:hero="hero" :slots="STORIES" />
+    <DrawingPicker
+      v-if="DrawingPicker"
+      v-model="overrides"
+      v-model:hero="hero"
+      :slots="STORIES.filter((s) => s.label)"
+    />
   </div>
 </template>

@@ -1,19 +1,30 @@
 <script setup>
 import { computed } from 'vue'
-import rocks1000 from '@/assets/public/skaly-nosky-1000.webp'
-import rocks1600 from '@/assets/public/skaly-nosky-1600.webp'
-import rocks2200 from '@/assets/public/skaly-nosky-2200.webp'
+import colour1000 from '@/assets/public/skaly-barevne-1000.webp'
+import colour1600 from '@/assets/public/skaly-barevne-1600.webp'
+import colour2200 from '@/assets/public/skaly-barevne-2200.webp'
+import grey1000 from '@/assets/public/skaly-sede-1000.webp'
+import grey1600 from '@/assets/public/skaly-sede-1600.webp'
+import grey2200 from '@/assets/public/skaly-sede-2200.webp'
 
 // Home page opening: the scout cry and the drawing of the rocks the trail sets
-// off from. `size` and `layout` are design variants under trial (DrawingPicker);
-// the drawing (open space above the rocks) is never cropped.
+// off from. `size`, `layout` and `palette` are design variants under trial
+// (DrawingPicker); the drawing (open space above the rocks) is never cropped.
 const props = defineProps({
   // 'narrow' (960 px) | 'text' (the text column) | 'bleed' (edge to edge, ≤ 1600 px)
   size: { type: String, default: 'narrow' },
   // 'above' | 'sky' (in the sky, centred) | 'sky-right' (in the sky right of the
   // rocks) | 'split' (first line in the sky, second below the drawing)
   layout: { type: String, default: 'sky-right' },
+  // 'colour' | 'grey' — the same drawing in colour or in pencil grey
+  palette: { type: String, default: 'colour' },
 })
+
+const DRAWINGS = {
+  colour: [colour1000, colour1600, colour2200],
+  grey: [grey1000, grey1600, grey2200],
+}
+const rocks = computed(() => DRAWINGS[props.palette] ?? DRAWINGS.colour)
 
 const sizes = computed(
   () =>
@@ -58,8 +69,8 @@ const headline = computed(
         :class="{ 'relative left-1/2 w-screen max-w-[1600px] -translate-x-1/2': size === 'bleed' }"
       >
         <img
-          :src="rocks1000"
-          :srcset="`${rocks1000} 1000w, ${rocks1600} 1600w, ${rocks2200} 2200w`"
+          :src="rocks[0]"
+          :srcset="`${rocks[0]} 1000w, ${rocks[1]} 1600w, ${rocks[2]} 2200w`"
           :sizes="sizes"
           alt="Kresba pískovcových skal nad krajinou"
           width="2500"
