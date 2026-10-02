@@ -34,10 +34,13 @@ const paintings = {
 }
 // Months 0–11 → season: Dec–Feb winter, Mar–May spring, Jun–Aug summer, Sep–Nov autumn.
 const SEASONS = ['zima', 'jaro', 'leto', 'podzim']
+// Temporarily the summer painting all year; null = by the month again.
+const FIXED_SEASON = 'leto'
 function season() {
   // In development `?obdobi=podzim` previews another season's painting.
   const forced = import.meta.env.DEV && new URLSearchParams(location.search).get('obdobi')
   if (forced) return forced
+  if (FIXED_SEASON) return FIXED_SEASON
   return SEASONS[Math.floor(((new Date().getMonth() + 1) % 12) / 3)]
 }
 const painting = paintings[season()] ?? paintings.leto
