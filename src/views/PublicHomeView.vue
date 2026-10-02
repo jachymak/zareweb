@@ -233,13 +233,14 @@ const showIntro = isFirstPage() && !useRoute().hash
         </section>
 
         <!-- Text lower, drawing higher: further from the photos above, but the
-             drawing still close under them. -->
+             drawing still close under them. On mobile the drawing is cropped at the
+             sides so the figures (left of the canvas centre) sit centred. -->
         <StorySection
           id="cinnost"
           kicker="co děláme"
           title="Nejen uzly a ohně"
           v-bind="story('cinnost')"
-          class="max-md:[&>div:last-child]:-mt-14 md:[&>div:first-child]:pt-16 md:[&>div:last-child]:-mt-10"
+          class="max-md:[&>div:last-child]:-mt-14 max-md:[&_img]:aspect-[600/924] max-md:[&_img]:w-[min(240px,68%)] max-md:[&_img]:object-cover max-md:[&_img]:object-[22.5%_0] md:[&>div:first-child]:pt-16 md:[&>div:last-child]:-mt-10"
         >
           <p class="prose-body m-0 max-w-[52ch]">
             Skauting nemusí být jen o uzlování a rozdělávání ohňů. Snažíme se, aby dával smysl i
@@ -361,7 +362,7 @@ const showIntro = isFirstPage() && !useRoute().hash
           kicker="vrchol roku"
           title="Tábor v jižních Čechách"
           v-bind="story('tabor')"
-          class="max-md:[&>div:last-child]:-mt-6"
+          class="max-md:[&>div:last-child]:-mt-2"
         >
           <p class="prose-body mb-3.5 max-w-[48ch]">
             Začátkem července vyrážíme na dva až tři týdny do přírody. Na Kovářovu louku
