@@ -110,6 +110,17 @@ export default async function publicPage({ browser, check }) {
     )
     await page.reload({ waitUntil: 'load' })
     check('desktop: intro again after reload', await introButton(page).isVisible())
+    await page.keyboard.press('Space')
+    await introButton(page).waitFor({ state: 'detached', timeout: 3000 })
+    check(
+      'desktop: Space leaves the intro without scrolling',
+      await page.evaluate(() => scrollY === 0),
+    )
+    await page.reload({ waitUntil: 'load' })
+    await introButton(page).waitFor({ timeout: 10000 })
+    await page.keyboard.press('Enter')
+    await introButton(page).waitFor({ state: 'detached', timeout: 3000 })
+    check('desktop: Enter leaves the intro', true)
     await note(page).waitFor()
     const text2 = (await note(page).innerText()).replace(/\s+/g, ' ')
     check(

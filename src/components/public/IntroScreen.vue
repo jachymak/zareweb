@@ -17,12 +17,27 @@ const sizes = 'max(100vw, 177vh)'
 
 // The page underneath must not scroll while the intro covers it.
 const lockScroll = (locked) => (document.documentElement.style.overflow = locked ? 'hidden' : '')
-onMounted(() => lockScroll(true))
-onBeforeUnmount(() => lockScroll(false))
+onMounted(() => {
+  lockScroll(true)
+  window.addEventListener('keydown', onKey)
+})
+onBeforeUnmount(() => {
+  lockScroll(false)
+  window.removeEventListener('keydown', onKey)
+})
+
+// Space or Enter does the same as the button.
+function onKey(e) {
+  if (e.key !== ' ' && e.key !== 'Enter') return
+  if (e.repeat || e.altKey || e.ctrlKey || e.metaKey) return
+  e.preventDefault()
+  enter()
+}
 
 function enter() {
   open.value = false
   lockScroll(false)
+  window.removeEventListener('keydown', onKey)
 }
 </script>
 
