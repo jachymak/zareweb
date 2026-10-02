@@ -1,5 +1,4 @@
 <script setup>
-import { ref } from 'vue'
 import ZareLogo from '@/components/ZareLogo.vue'
 
 const links = [
@@ -11,12 +10,12 @@ const links = [
   { href: '#tabor', label: 'Tábor' },
   { href: '#otazky', label: 'Pro rodiče' },
 ]
-
-const menuOpen = ref(false)
 </script>
 
 <template>
-  <header class="sticky top-0 z-30 bg-cream/95 backdrop-blur-sm">
+  <header
+    class="relative z-30 border-line bg-cream/95 backdrop-blur-sm max-lg:border-b lg:sticky lg:top-0"
+  >
     <div class="mx-auto flex max-w-[1120px] items-center gap-4 px-4 py-3 sm:px-6 lg:py-3.5">
       <a
         href="#uvod"
@@ -43,53 +42,13 @@ const menuOpen = ref(false)
         </RouterLink>
       </nav>
 
-      <button
-        type="button"
-        class="-mr-2 grid size-11 cursor-pointer place-items-center bg-transparent lg:hidden"
-        :aria-expanded="menuOpen"
-        aria-controls="public-menu"
-        :aria-label="menuOpen ? 'Zavřít menu' : 'Otevřít menu'"
-        @click="menuOpen = !menuOpen"
+      <!-- Below lg only the way in for members, no section menu. -->
+      <RouterLink
+        to="/prihlaseni"
+        class="flex-none border-b-2 border-gold pb-px font-hand text-[21px] font-bold text-ink no-underline lg:hidden"
       >
-        <svg
-          viewBox="0 0 24 24"
-          class="w-6 text-ink"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-        >
-          <path v-if="menuOpen" d="M6 6 L18 18 M18 6 L6 18" />
-          <path v-else d="M3 6 H21 M3 12 H21 M3 18 H21" />
-        </svg>
-      </button>
+        pro členy
+      </RouterLink>
     </div>
-
-    <nav
-      v-show="menuOpen"
-      id="public-menu"
-      class="border-t border-line-soft px-4 pt-1 pb-4 sm:px-6 lg:hidden"
-      aria-label="Sekce stránky"
-    >
-      <ul class="m-0 grid list-none grid-cols-2 gap-x-4 p-0">
-        <li v-for="link in links" :key="link.href">
-          <a
-            :href="link.href"
-            class="block py-2.5 text-base text-text no-underline"
-            @click="menuOpen = false"
-          >
-            {{ link.label }}
-          </a>
-        </li>
-        <li>
-          <RouterLink
-            to="/prihlaseni"
-            class="inline-block py-1.5 font-hand text-[22px] font-bold text-ink no-underline"
-          >
-            <span class="border-b-2 border-gold">pro členy</span>
-          </RouterLink>
-        </li>
-      </ul>
-    </nav>
   </header>
 </template>

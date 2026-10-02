@@ -1,4 +1,4 @@
-// Public home page (SPEC §2.1): the intro, content, trail, FAQ, mobile menu,
+// Public home page (SPEC §2.1): the intro, content, trail, FAQ, members link,
 // and the recruitment years read from settings/public.
 
 import { formatSchoolYear, recruitmentYears } from '../functions/src/shared/schoolYear.js'
@@ -172,15 +172,21 @@ export default async function publicPage({ browser, check }) {
     check(`mobile ${width}: standalone tap targets ≥ 24px`, small.length === 0, small.join(', '))
     await page.screenshot({ path: `${SCREENSHOTS}public-${width}.png` })
 
-    await page.getByRole('button', { name: 'Otevřít menu' }).click()
-    await page.locator('#public-menu').getByRole('link', { name: 'Pro rodiče' }).click()
-    await page.waitForTimeout(2500) // smooth scroll over the whole page
-    const faqTop = await page.locator('#otazky').evaluate((el) => el.getBoundingClientRect().top)
     check(
-      `mobile ${width}: menu link scrolls to FAQ and closes menu`,
-      faqTop >= 0 && faqTop < 200 && !(await page.locator('#public-menu').isVisible()),
-      `top=${Math.round(faqTop)}`,
+      `mobile ${width}: no section menu, only the members link`,
+      (await page.locator('header button').count()) === 0 &&
+        (await page.locator('header').getByRole('link', { name: 'pro členy' }).isVisible()),
     )
+    check(
+      `mobile ${width}: Instagram link in the footer`,
+      (await page
+        .locator('footer')
+        .getByRole('link', { name: 'Záře na Instagramu' })
+        .getAttribute('href')) === 'https://www.instagram.com/222zare',
+    )
+    await page.locator('header').getByRole('link', { name: 'pro členy' }).click()
+    await page.waitForURL('**/prihlaseni')
+    check(`mobile ${width}: members link opens the login`, page.url().endsWith('/prihlaseni'))
     check(`mobile ${width}: no console errors`, errors.length === 0, errors.join(' | '))
     await ctx.close()
   }

@@ -58,3 +58,6 @@ e2e/screenshots/
 
 # skautIS probe output (personal data)
 .skautis-probe.json
+
+# Overpass data for scripts/clubhouse-map.js
+.clubhouse-map-osm.json

@@ -18,7 +18,7 @@ import FaqAccordion from '@/components/public/FaqAccordion.vue'
 import IntroScreen from '@/components/public/IntroScreen.vue'
 import HomeHero from '@/components/public/HomeHero.vue'
 import HomeFinale from '@/components/public/HomeFinale.vue'
-import clubhouseMap from '@/assets/public/mapa-klubovna.jpg'
+import clubhouseMap from '@/assets/public/mapa-klubovna.svg?raw'
 import dejvice400 from '@/assets/public/dejvice-400.webp'
 import dejvice800 from '@/assets/public/dejvice-800.webp'
 import guide400 from '@/assets/public/pruvodce-400.webp'
@@ -31,10 +31,10 @@ import signpost400 from '@/assets/public/rozcestnik-400.webp'
 import signpost800 from '@/assets/public/rozcestnik-800.webp'
 import photoTrip400 from '@/assets/public/foto-vyprava-400.webp'
 import photoTrip800 from '@/assets/public/foto-vyprava-800.webp'
-import photoMeeting400 from '@/assets/public/foto-schuzka-400.webp'
-import photoMeeting800 from '@/assets/public/foto-schuzka-800.webp'
-import photoCamp400 from '@/assets/public/foto-tabor-400.webp'
-import photoCamp800 from '@/assets/public/foto-tabor-800.webp'
+import photoGame400 from '@/assets/public/foto-hra-400.webp'
+import photoGame800 from '@/assets/public/foto-hra-800.webp'
+import photoFire400 from '@/assets/public/foto-ohen-400.webp'
+import photoFire800 from '@/assets/public/foto-ohen-800.webp'
 
 // Public home — SPEC §2.1. Reads settings/public, writes nothing.
 const settingsStore = usePublicSettingsStore()
@@ -198,25 +198,25 @@ const showIntro = isFirstPage() && !useRoute().hash
              desktops to leave it room). -->
         <section
           data-section
-          class="mx-auto grid max-w-[280px] grid-cols-1 justify-items-center gap-8 pt-10 pb-12 sm:max-w-none sm:py-4 sm:grid-cols-3 sm:gap-5 md:py-8 md:max-xl:px-10 lg:gap-8"
+          class="mx-auto grid max-w-[280px] grid-cols-1 items-start justify-items-center gap-8 pt-10 pb-12 sm:max-w-none sm:py-4 sm:grid-cols-3 sm:gap-5 md:py-8 md:max-xl:px-10 lg:gap-8"
         >
           <PolaroidPhoto
-            v-bind="photo(photoTrip400, photoTrip800, 600)"
-            alt="Děti z oddílu na výpravě"
-            caption="Naše parta na výpravě"
+            v-bind="photo(photoTrip400, photoTrip800, 533)"
+            alt="Děti s krosnami a karimatkami jdou loukou na výpravě"
+            caption="Na výpravě"
             :tilt="-1.8"
           />
           <PolaroidPhoto
-            v-bind="photo(photoMeeting400, photoMeeting800, 533)"
-            alt="Děti na schůzce"
-            caption="Schůzka"
+            v-bind="photo(photoGame400, photoGame800, 533)"
+            alt="Vedoucí v kostýmech hrají dětem divadlo na táborové louce"
+            caption="Celotáborová hra"
             :tilt="1.4"
             class="sm:mt-6"
           />
           <PolaroidPhoto
-            v-bind="photo(photoCamp400, photoCamp800, 533)"
-            alt="Podsadové stany na táborové louce"
-            caption="Táborová louka"
+            v-bind="photo(photoFire400, photoFire800, 533)"
+            alt="Skauti v krojích kolem táborového ohně"
+            caption="U táborového ohně"
             :tilt="-1.1"
           />
         </section>
@@ -312,50 +312,42 @@ const showIntro = isFirstPage() && !useRoute().hash
             Kousek od Kulaťáku. Ve vnitrobloku za klubovnou je hřiště, kam často na schůzkách
             chodíme.
           </p>
-          <ul class="m-0 mb-5 flex list-none flex-col gap-3 p-0">
+          <!-- Icons from the original web: the Prague metro logo and a bus. -->
+          <ul class="m-0 mb-5 flex list-none flex-col gap-3 p-0 text-brown">
             <li class="flex items-center gap-3">
-              <svg
-                viewBox="0 0 34 34"
-                class="size-[30px] flex-none"
-                fill="none"
-                stroke="var(--color-brown)"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <circle cx="17" cy="17" r="13" />
-                <path d="M10 22 L12 12 L17 19 L22 12 L24 22" />
-              </svg>
-              <span class="text-[17px]">metro A — Dejvická</span>
+              <span class="grid w-10 flex-none place-items-center opacity-65">
+                <svg viewBox="0 0 320.2 160.8" class="w-9" fill="currentColor" aria-hidden="true">
+                  <path
+                    d="M96.94 97.69 222.5 98.17 159.5 160.8 96.94 97.69zM274 47.12 230.1 46.95 229.9 90.82 274 47.12zM45.89 46.24 89.69 46.41 89.5 90.21 45.89 46.24zM320.2 1.234 230.3.8878 230.1 39.5 281.5 39.7 320.2 1.234zM0 0 89.86.3459 89.71 38.96 38.46 38.76 0 0zM159.9 36.94 194.4.7542 222.8.853 222.5 90.71 197 90.61 197.2 35 159.8 72.84 122.6 34.72 122.4 90.33 96.98 90.23 97.33.3753 125.7.4906 159.9 36.94z"
+                  />
+                </svg>
+              </span>
+              <span class="text-[17px] text-text">metro A — Dejvická</span>
             </li>
             <li class="flex items-center gap-3">
-              <svg
-                viewBox="0 0 34 34"
-                class="size-[30px] flex-none"
-                fill="none"
-                stroke="var(--color-brown)"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M9 6 L25 6 L25 24 L9 24 Z M9 12 L25 12 M13 28 L21 28 M17 6 L17 2" />
-                <circle cx="13" cy="26" r="2" />
-                <circle cx="21" cy="26" r="2" />
-              </svg>
-              <span class="text-[17px]">tramvaj a autobus — Vítězné náměstí</span>
+              <span class="grid w-10 flex-none place-items-center opacity-65">
+                <svg viewBox="0 0 16 16" class="size-[26px]" fill="currentColor" aria-hidden="true">
+                  <path
+                    d="M5 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0m8 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0m-6-1a1 1 0 1 0 0 2h2a1 1 0 1 0 0-2zm1-6c-1.876 0-3.426.109-4.552.226A.5.5 0 0 0 3 4.723v3.554a.5.5 0 0 0 .448.497C4.574 8.891 6.124 9 8 9s3.426-.109 4.552-.226A.5.5 0 0 0 13 8.277V4.723a.5.5 0 0 0-.448-.497A44 44 0 0 0 8 4m0-1c-1.837 0-3.353.107-4.448.22a.5.5 0 1 1-.104-.994A44 44 0 0 1 8 2c1.876 0 3.426.109 4.552.226a.5.5 0 1 1-.104.994A43 43 0 0 0 8 3"
+                  />
+                  <path
+                    d="M15 8a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1V2.64c0-1.188-.845-2.232-2.064-2.372A44 44 0 0 0 8 0C5.9 0 4.208.136 3.064.268 1.845.408 1 1.452 1 2.64V4a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1v3.5c0 .818.393 1.544 1 2v2a.5.5 0 0 0 .5.5h2a.5.5 0 0 0 .5-.5V14h6v1.5a.5.5 0 0 0 .5.5h2a.5.5 0 0 0 .5-.5v-2c.607-.456 1-1.182 1-2zM8 1c2.056 0 3.71.134 4.822.261.676.078 1.178.66 1.178 1.379v8.86a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 11.5V2.64c0-.72.502-1.301 1.178-1.379A43 43 0 0 1 8 1"
+                  />
+                </svg>
+              </span>
+              <span class="text-[17px] text-text">tramvaj a autobus — Vítězné náměstí</span>
             </li>
           </ul>
-          <PolaroidPhoto
-            :src="clubhouseMap"
-            alt="Mapa — Kafkova 544/23, Dejvice"
-            caption="Od Dejvické tři minuty pěšky"
-            :tilt="-1.2"
-            :max-width="380"
-            :width="988"
-            :height="518"
-          />
+          <!-- Drawn from OpenStreetMap by scripts/clubhouse-map.js; inline so it
+               uses the page's fonts and colours. Opens the address on Mapy.cz. -->
+          <PolaroidPhoto caption="Od Dejvické tři minuty pěšky" :tilt="-1.2" :max-width="380">
+            <a
+              href="https://mapy.cz/zakladni?q=Kafkova%20544%2F23%2C%20Praha%206"
+              title="Otevřít na Mapy.cz"
+              class="block [&>svg]:block [&>svg]:h-auto [&>svg]:w-full"
+              v-html="clubhouseMap"
+            />
+          </PolaroidPhoto>
         </StorySection>
 
         <TrailDivider class="md:hidden" />

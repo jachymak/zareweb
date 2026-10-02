@@ -23,6 +23,7 @@
 - `npm run seed:photos` – replaces `albums` (+ photos) and all Storage files under `originals/`, `previews/`, `thumbs/` with 6 albums of generated photos (on the past `seed:activity` events, last year's camp, one hidden album), waits for `processPhoto` (~45 s). Needs the Functions + Storage emulators. Run after `seed:activity`
 - `npm run seed:waitlist` – replaces `waitlist` and `waitlistResets` with ~35 active entries dated relative to today (notes, renewals) plus one awaiting renewal and one admitted
 - `npm run seed:renewal` – create a waiting-list entry awaiting renewal and print its renewal link (`-- --too-old` for a child past the age limit); a quicker way than running the reset
+- `npm run map:clubhouse` – redraw the clubhouse map on the public home (`src/assets/public/mapa-klubovna.svg`) from OpenStreetMap data (Overpass API, cached in `.clubhouse-map-osm.json`; `-- --refresh` downloads it again): streets, buildings, greenery and a handwritten note with an arrow at the clubhouse; the view, street labels and the note are constants in `scripts/clubhouse-map.js`
 - `npm run skautis:probe -- <token> [unitId]` – dump raw skautIS API data (user, roles, members, parents, contacts) for a login token to `.skautis-probe.json`; without a token prints the login link
 
 ## Sources of truth

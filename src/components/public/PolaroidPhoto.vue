@@ -1,5 +1,6 @@
 <script setup>
-// Tilted photo print with a handwritten caption. Without `src` it shows an empty frame.
+// Tilted photo print with a handwritten caption. The default slot replaces the
+// photo (e.g. a map); without either it shows an empty frame.
 defineProps({
   src: { type: String, default: '' },
   // Optional `srcset` for `src` (the frame is at most `maxWidth` px wide).
@@ -19,8 +20,9 @@ defineProps({
     class="m-0 w-full bg-paper px-3 pt-3 pb-2 shadow-[0_10px_26px_rgba(34,48,31,.13)]"
     :style="{ maxWidth: `${maxWidth}px`, transform: `rotate(${tilt}deg)` }"
   >
+    <slot v-if="$slots.default" />
     <img
-      v-if="src"
+      v-else-if="src"
       :src="src"
       :srcset="srcset"
       :sizes="srcset ? `(min-width: 400px) ${maxWidth}px, calc(100vw - 32px)` : undefined"

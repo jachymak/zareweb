@@ -19,6 +19,7 @@
     "seed:activity": "node --env-file-if-exists=.env scripts/seed-activity.js",
     "seed:waitlist": "node --env-file-if-exists=.env scripts/seed-waitlist.js",
     "seed:photos": "node --env-file-if-exists=.env scripts/seed-photos.js",
+    "map:clubhouse": "node scripts/clubhouse-map.js",
     "skautis:probe": "node --env-file-if-exists=.env scripts/skautis-probe.js"
   },
   "dependencies": {

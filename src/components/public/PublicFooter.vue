@@ -16,17 +16,17 @@ const supporters = [
 <template>
   <footer class="bg-cream">
     <div
-      class="mx-auto grid max-w-[1120px] grid-cols-1 gap-7 px-4 pt-9 pb-8 sm:grid-cols-2 sm:gap-8 sm:px-6 sm:pt-11 sm:pb-9 md:grid-cols-3"
+      class="mx-auto grid max-w-[1120px] grid-cols-[minmax(0,1fr)_auto] gap-x-6 gap-y-7 px-4 pt-9 pb-8 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_auto] sm:gap-8 sm:px-6 sm:pt-11 sm:pb-9 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto] lg:gap-10"
     >
-      <!-- The header already names the troop on mobile. -->
-      <div class="min-w-0 max-sm:hidden">
+      <!-- Only from lg: the header names the troop on narrower screens. -->
+      <div class="min-w-0 max-lg:hidden">
         <p class="m-0 mb-1.5 font-hand text-[30px] leading-tight text-ink">Skautský oddíl Záře</p>
         <p class="m-0 text-base leading-relaxed text-muted">
           220. oddíl Vlčušky<br />222. oddíl skautů a skautek
         </p>
       </div>
-
-      <div class="min-w-0">
+      <!-- Full width on mobile; the contact and Instagram share the row below. -->
+      <div class="col-span-2 min-w-0 sm:col-span-1">
         <p class="m-0 mb-2 text-[12.5px] tracking-[.14em] text-muted-2 uppercase">Naše středisko</p>
         <div class="flex items-center gap-3.5">
           <a
@@ -48,9 +48,34 @@ const supporters = [
           <a :href="`mailto:${GROUP_EMAIL}`">{{ GROUP_EMAIL }}</a>
         </p>
         <p class="m-0 text-[14.5px] leading-normal text-muted-2">
-          Nepište nám, prosím, ohledně zájmu o oddíl — k tomu slouží
-          <RouterLink to="/cekaci-listina">čekací listina</RouterLink>, díky.
+          Zájem o oddíl jen přes{{ ' ' }}<br class="sm:hidden" />
+          <RouterLink to="/cekaci-listina">čekací listinu</RouterLink>, díky.
         </p>
+      </div>
+
+      <div class="min-w-0">
+        <p class="m-0 mb-1 text-[12.5px] tracking-[.14em] text-muted-2 uppercase">Sledujte nás</p>
+        <a
+          href="https://www.instagram.com/222zare"
+          aria-label="Záře na Instagramu"
+          title="Záře na Instagramu"
+          class="-ml-1.5 grid size-[52px] place-items-center text-brown hover:text-ink"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            class="size-[42px]"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.3"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <rect x="3" y="3" width="18" height="18" rx="5" />
+            <circle cx="12" cy="12" r="4" />
+            <circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" />
+          </svg>
+        </a>
       </div>
     </div>
 
