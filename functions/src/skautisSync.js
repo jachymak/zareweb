@@ -3,7 +3,7 @@ import { HttpsError, onCall } from 'firebase-functions/https'
 import { logger } from 'firebase-functions'
 import { db, requireAdmin } from './admin.js'
 import { BASE_OPTIONS } from './options.js'
-import { SKAUTIS_TEST } from './shared/skautis.js'
+import { SKAUTIS } from './shared/skautis.js'
 import { SkautisError, skautisClient } from './skautis/client.js'
 import { FIXTURE_TOKENS, fixtureClient } from './skautis/fixture.js'
 import { loadFromSkautis } from './skautis/load.js'
@@ -15,14 +15,6 @@ import { MEMBER_FIELDS, PERSON_FIELDS, planSummary, planSync } from './skautis/p
 // applySkautisSync then writes exactly that (compared again with the current
 // data). Admins only.
 
-const SKAUTIS = {
-  url: process.env.SKAUTIS_URL ?? SKAUTIS_TEST.url,
-  appId: process.env.SKAUTIS_APP_ID ?? SKAUTIS_TEST.appId,
-  units: {
-    vlc: process.env.SKAUTIS_UNIT_VLC ?? SKAUTIS_TEST.units.vlc,
-    ss: process.env.SKAUTIS_UNIT_SS ?? SKAUTIS_TEST.units.ss,
-  },
-}
 const GUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const PENDING = 'skautisSync/pending'
 const PENDING_MAX_AGE_MS = 60 * 60 * 1000

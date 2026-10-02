@@ -179,7 +179,7 @@ export default async function skautisSuite({ browser, check }) {
   const href = await login.getAttribute('href')
   check(
     'cancel shows the login link again',
-    href?.startsWith('https://test-is.skaut.cz/Login/?appid='),
+    href?.startsWith('https://is.skaut.cz/Login/?appid=0e8e3482-a558-469f-bc63-b6985a39a6ed'),
     href,
   )
   check('cancel writes nothing', (await getDoc('members/900105')) === null)

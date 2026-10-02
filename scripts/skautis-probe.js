@@ -1,6 +1,6 @@
 // Explores the skautIS web service with a login token, to learn the real
-// data shapes (SPEC §4.8 skautIS). Talks to the test skautIS unless
-// SKAUTIS_URL / SKAUTIS_APP_ID say otherwise.
+// data shapes (SPEC §4.8 skautIS). Talks to the production skautIS (the
+// only app there is) — the output holds real personal data.
 //
 //   node --env-file-if-exists=.env scripts/skautis-probe.js
 //     → prints the login URL; log in there, then copy the token from the URL
@@ -11,10 +11,10 @@
 //       .skautis-probe.json
 
 import { writeFile } from 'node:fs/promises'
-import { SKAUTIS_TEST, skautisLoginUrl } from '../functions/src/shared/skautis.js'
+import { SKAUTIS, skautisLoginUrl } from '../functions/src/shared/skautis.js'
 
-const BASE = process.env.SKAUTIS_URL || SKAUTIS_TEST.url
-const APP_ID = process.env.SKAUTIS_APP_ID || SKAUTIS_TEST.appId
+const BASE = SKAUTIS.url
+const APP_ID = SKAUTIS.appId
 const [token, unitArg] = process.argv.slice(2)
 const SAMPLE = 5
 

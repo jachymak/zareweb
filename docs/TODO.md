@@ -35,5 +35,4 @@ Informace pro nováčky - samostatná stránka
 Stránka s historií oddílu
     
 skautIS
-- po schválení ostré aplikace: doplnit VITE_SKAUTIS_* a SKAUTIS_* (is.skaut.cz, 116.22.220/222)
 - později požádat podporu o PersonParentAll (kontakty na rodiče), synchronizace je pak načte sama
