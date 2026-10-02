@@ -1,7 +1,3 @@
-Stránka pro veřejnost
-- Odkaz u čekací listiny změnit
-- Scrollování po kliknutí dojede pod nadpis
-
 Stránka pro členy
 - hezčí footer (viz návrh)
 - u nejbližších akcí trochu lepší rozložení, aby nebyl text tak namačkaný na rámeček
@@ -16,9 +12,6 @@ Stránka pro vedoucí
 Klubovna
 - dodělat otroka
 - rámečky
-
-Intro
-- otevrit mezernikem/enterem
 
 Fotky
 - potenciální vylepšení: ruční přesouvání fotek v už nahraném albu (drag & drop ve správě alba; vlastní pořadí by přebilo řazení podle data pořízení / názvu souboru)

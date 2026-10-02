@@ -12,11 +12,13 @@ const openIndex = ref(0)
 const baseId = useId()
 
 // Keeps the clicked question where it was on screen when a longer answer above
-// it closes (mobile).
+// it closes (mobile). From md up the page stays still and the answer simply
+// moves under the question; scrolling there would jump the whole page.
 async function open(i, event) {
   const button = event.currentTarget
   const top = button.getBoundingClientRect().top
   openIndex.value = i
+  if (!window.matchMedia('(width < 48rem)').matches) return
   await nextTick()
   window.scrollBy({ top: button.getBoundingClientRect().top - top, behavior: 'instant' })
 }

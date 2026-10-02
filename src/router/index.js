@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory, START_LOCATION } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import PublicHomeView from '@/views/PublicHomeView.vue'
+import { sectionScrollTop } from './sectionScroll'
 
 const LEADERS = ['leader', 'admin']
 
@@ -125,8 +126,8 @@ const router = createRouter({
     if (savedPosition) return savedPosition
     // Pages that load their content later scroll to the hash themselves.
     // Only plain ids — the skautIS login passes its token in the hash.
-    if (/^#[\w-]+$/.test(to.hash) && document.querySelector(to.hash))
-      return { el: to.hash, behavior: 'smooth' }
+    const top = sectionScrollTop(to.hash)
+    if (top !== null) return { top, behavior: 'smooth' }
     return { top: 0 }
   },
 })

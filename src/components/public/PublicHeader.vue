@@ -1,5 +1,6 @@
 <script setup>
 import ZareLogo from '@/components/ZareLogo.vue'
+import { scrollToSection } from '@/router/sectionScroll'
 
 const links = [
   { href: '#start', label: 'Kdo jsme' },
@@ -31,6 +32,7 @@ const links = [
           :key="link.href"
           :href="link.href"
           class="text-[15.5px] text-text no-underline"
+          @click="scrollToSection($event, link.href)"
         >
           {{ link.label }}
         </a>
