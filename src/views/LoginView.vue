@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/auth'
 import HandDrawnBox from '@/components/HandDrawnBox.vue'
 import ZareLogo from '@/components/ZareLogo.vue'
 import ForgotPasswordForm from '@/components/auth/ForgotPasswordForm.vue'
+import HowApprovalWorks from '@/components/auth/HowApprovalWorks.vue'
 import LoginForm from '@/components/auth/LoginForm.vue'
 import NoAccess from '@/components/auth/NoAccess.vue'
 import PendingApproval from '@/components/auth/PendingApproval.vue'
@@ -70,7 +71,10 @@ async function signOut() {
             {{ intro[1] }}
           </h1>
           <p class="prose-body m-0 mb-6 max-w-[42ch]">{{ intro[2] }}</p>
+          <!-- Registration: the explainer takes the picture's place, so the card stays short. -->
+          <HowApprovalWorks v-if="screen === 'register'" class="hidden max-w-[440px] sm:block" />
           <img
+            v-else
             :src="lock400"
             :srcset="`${lock400} 400w, ${lock800} 800w`"
             sizes="370px"
