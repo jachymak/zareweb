@@ -68,7 +68,7 @@ const section = 'mx-auto max-w-[960px] px-4 sm:px-6'
       <div :class="section" class="pt-[22px]">
         <ChildCards v-if="children.length" :stats="childStats" :settings="settings" />
         <p v-else class="m-0 text-[16px] text-muted">
-          K účtu zatím nemáte přiřazené žádné dítě. Správce oddílu to brzy napraví.
+          K účtu nemáte přiřazené žádné dítě, a tak tu vidíte akce, aktuality a fotky obou oddílů.
         </p>
       </div>
 

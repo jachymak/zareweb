@@ -229,6 +229,15 @@ const BADGE = {
           schválit jako rodiče
         </button>
         <button
+          v-else-if="!chosenLeader"
+          type="button"
+          class="btn-link"
+          :disabled="busy"
+          @click="$emit('approve', [])"
+        >
+          schválit jako rodiče bez dětí
+        </button>
+        <button
           v-if="chosenLeader"
           type="button"
           class="cursor-pointer rounded-full border-0 bg-green px-4 py-1.5 text-[15px] font-medium text-cream disabled:cursor-wait disabled:opacity-70"

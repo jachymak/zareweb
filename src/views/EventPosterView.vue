@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { previewHome } from '@/composables/useMemberPage'
 import { getEvent, getPoster } from '@/services/events'
 import { getPerson } from '@/services/skautisPeople'
 import AreaHeader from '@/components/AreaHeader.vue'
@@ -66,9 +67,7 @@ const preview = computed(() => event.value?.posterStatus !== 'published')
 const organizer = computed(() => organizers.value[0])
 const back = computed(() => {
   if (isLeader.value) return { to: '/vedouci', label: 'zpět na vedoucovskou stránku' }
-  const home = previewOf.value
-    ? { name: 'leader-preview', query: { dite: previewOf.value } }
-    : { name: 'parent-home' }
+  const home = previewOf.value ? previewHome(previewOf.value) : { name: 'parent-home' }
   return { to: { ...home, hash: '#vypravnik' }, label: 'zpět do výpravníku' }
 })
 

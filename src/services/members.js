@@ -67,12 +67,9 @@ export function approveParent(uid, memberIds) {
   return batch.commit()
 }
 
-// Unpairing a parent's last child sends the account back to pending.
-export function unpairParent(memberId, uid, { backToPending = false } = {}) {
-  const batch = writeBatch(db)
-  batch.update(doc(members, memberId), { parentUids: arrayRemove(uid) })
-  if (backToPending) batch.update(doc(users, uid), { role: 'pending' })
-  return batch.commit()
+// A parent may stay without children (e.g. the child moved on to the leaders).
+export function unpairParent(memberId, uid) {
+  return updateDoc(doc(members, memberId), { parentUids: arrayRemove(uid) })
 }
 
 // Parents' contacts from skautIS — leaders only.

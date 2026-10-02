@@ -198,18 +198,18 @@ export default async function admin({ browser, check }) {
     )
 
     await parentCard.getByRole('button', { name: 'Odebrat Matěj Pokorný' }).click()
+    await new Promise((r) => setTimeout(r, 500))
     check(
-      'unpair: last child removed → back to pending',
-      (await until(async () => (await roleOf(newEmail)) === 'pending')) &&
-        (await parentUidsOf('900202')).length === 0,
+      'unpair: last child removed, account stays a parent',
+      (await until(async () => (await parentUidsOf('900202')).length === 0)) &&
+        (await roleOf(newEmail)) === 'parent',
     )
   }
 
-  // ---- reject, reactivate, delete ----
+  // ---- revoke, reactivate, approve without children, reject, delete ----
   {
-    await filter(page, 'Čekající').click()
-    await card(page, newEmail).getByRole('button', { name: 'zamítnout' }).click()
-    check('reject: role none', await until(async () => (await roleOf(newEmail)) === 'none'))
+    await card(page, newEmail).getByRole('button', { name: 'odebrat přístup' }).click()
+    check('revoke: role none', await until(async () => (await roleOf(newEmail)) === 'none'))
 
     await filter(page, 'Bez přístupu').click()
     await card(page, newEmail).getByRole('button', { name: 'znovu aktivovat' }).click()
@@ -218,6 +218,35 @@ export default async function admin({ browser, check }) {
       await until(async () => (await roleOf(newEmail)) === 'pending'),
     )
 
+    await filter(page, 'Čekající').click()
+    await card(page, newEmail)
+      .getByRole('button', { name: 'schválit jako rodiče bez dětí' })
+      .click()
+    check(
+      'approve without children: role parent',
+      await until(async () => (await roleOf(newEmail)) === 'parent'),
+    )
+    {
+      const parent = await openAs(browser, newEmail)
+      await parent.page.getByText('K účtu nemáte přiřazené žádné dítě', { exact: false }).waitFor()
+      check(
+        'parent without children: both troops, events without sign-up toggles',
+        (await parent.page.getByText('Vidíte akce obou oddílů.').isVisible()) &&
+          (await parent.page.getByRole('heading', { name: 'Nejbližší akce' }).isVisible()) &&
+          (await parent.page.getByText('přihlásit', { exact: true }).count()) === 0,
+      )
+      check(
+        'parent without children: no console errors',
+        parent.errors.length === 0,
+        parent.errors.join(' | '),
+      )
+      await parent.ctx.close()
+    }
+
+    await filter(page, 'Rodiče').click()
+    await card(page, newEmail).getByRole('button', { name: 'odebrat přístup' }).click()
+    await filter(page, 'Bez přístupu').click()
+    await card(page, newEmail).getByRole('button', { name: 'znovu aktivovat' }).click()
     await filter(page, 'Čekající').click()
     await card(page, newEmail).getByRole('button', { name: 'zamítnout' }).click()
     await filter(page, 'Bez přístupu').click()

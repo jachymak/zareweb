@@ -167,12 +167,7 @@ const linkLeader = (account, person) =>
 const approveAsLeader = (account, person) =>
   run(account, () => approveLeader(account.id, person.id))
 
-const unpair = (account, member) =>
-  run(account, () =>
-    unpairParent(member.id, account.id, {
-      backToPending: account.role === 'parent' && childrenOf(account.id).length === 1,
-    }),
-  )
+const unpair = (account, member) => run(account, () => unpairParent(member.id, account.id))
 
 const setRole = (account, role) => run(account, () => setUserRole(account.id, role))
 const reactivate = (account) => run(account, () => setUserRole(account.id, 'pending'))
@@ -207,9 +202,10 @@ async function invite(email) {
     <h2 id="accounts-title" class="sr-only">Účty a párování</h2>
     <p class="m-0 mb-4 max-w-[70ch] text-[15.5px] leading-normal text-muted">
       Účet si může založit kdokoli; bez schválení nic nevidí. Rodiče schválíš tak, že mu vybereš
-      děti a dáš „schválit jako rodiče“ — nepřiřazené děti rodič ve své sekci nevidí. Vedoucímu
-      vyber jeho záznam ze skautISu a dej „schválit jako vedoucího“. Návrhy vycházejí z e-mailů ve
-      skautISu a z poznámky, kterou uživatel napsal.
+      děti a dáš „schválit jako rodiče“ — nepřiřazené děti rodič ve své sekci nevidí; rodič bez dětí
+      vidí akce, aktuality a fotky obou oddílů. Vedoucímu vyber jeho záznam ze skautISu a dej
+      „schválit jako vedoucího“. Návrhy vycházejí z e-mailů ve skautISu a z poznámky, kterou
+      uživatel napsal.
     </p>
 
     <p v-if="loadError" role="alert" class="text-red">{{ loadError }}</p>

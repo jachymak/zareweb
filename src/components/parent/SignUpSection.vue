@@ -31,7 +31,9 @@ const childrenFor = (event) =>
   <section aria-labelledby="signup-title">
     <SectionHeading id="signup-title" kicker="přihlašování otevřené" title="Nejbližší akce" />
     <p v-if="!events.length" class="m-0 text-[16px] text-muted">
-      Teď se nedá přihlásit na žádnou akci. Až vedoucí přihlašování spustí, přijde vám e-mail.
+      Teď se nedá přihlásit na žádnou akci.<template v-if="children.length">
+        Až vedoucí přihlašování spustí, přijde vám e-mail.</template
+      >
     </p>
     <SignUpEvent
       v-for="event in events"

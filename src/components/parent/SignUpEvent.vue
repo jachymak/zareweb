@@ -11,7 +11,8 @@ import {
   SAVE_ERROR,
 } from './parentText'
 
-// One event open for sign-up: a toggle per eligible child. After the deadline
+// One event open for sign-up: a toggle per eligible child (none for a parent
+// without children — then just the event, its poster and deadline). After the deadline
 // the toggles are locked and clicking one says whom to write to. In the
 // leaders' preview a click only explains what it would do for the parent.
 const props = defineProps({
@@ -74,7 +75,7 @@ function click({ member, signedUp }) {
       <div
         class="mt-[13px] flex flex-wrap items-center gap-x-3.5 gap-y-2 border-t border-dashed border-line-soft pt-3"
       >
-        <span class="font-hand text-[21px] text-muted-2">
+        <span v-if="children.length" class="font-hand text-[21px] text-muted-2">
           {{ children.length > 1 ? 'přihlásit:' : 'přihlásit' }}
         </span>
         <button

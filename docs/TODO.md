@@ -22,8 +22,6 @@ Založení účtu menší formulář
 Intro
 - otevrit mezernikem/enterem
 
-Když není přiřazené dítě, zobrazovat data pro oba oddíly
-
 Fotky
 - potenciální vylepšení: ruční přesouvání fotek v už nahraném albu (drag & drop ve správě alba; vlastní pořadí by přebilo řazení podle data pořízení / názvu souboru)
 

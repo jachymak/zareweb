@@ -60,7 +60,19 @@ export default async function preview({ browser, check }) {
 
   // ---- picking a child ----
   {
-    check('pick: asks to pick a child first', await page.getByText('nahoře vyber dítě').isVisible())
+    await page.getByText('K účtu nemáte přiřazené žádné dítě', { exact: false }).waitFor()
+    check(
+      'no child picked: a parent without children — both troops, no sign-up',
+      (await page.getByText('Vidíte akce obou oddílů.').isVisible()) &&
+        (await page.getByText('přihlásit', { exact: true }).count()) === 0 &&
+        (await page.getByTestId('preview-bar').innerText()).includes('nemá přiřazené žádné dítě'),
+    )
+    await eventCard(page, 'Výprava do Středohoří').getByRole('link', { name: 'plakátek' }).click()
+    await page.waitForURL(/\/clenove\/akce\/seed-stredohori\?nahled=bez-deti$/)
+    await page.getByRole('link', { name: '← zpět do výpravníku' }).click()
+    await page.waitForURL(/\/vedouci\/nahled#vypravnik$/)
+    await page.getByRole('heading', { name: 'Výpravník' }).waitFor()
+    check('no child picked: poster and back keep the preview', true)
     await pick(page, '900102')
     check(
       'pick: parent header, siblings shown too',

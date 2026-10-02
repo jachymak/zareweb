@@ -10,6 +10,7 @@ import { listAlbums } from '@/services/photos'
 import { listContacts } from '@/services/contacts'
 import { listLeaders } from '@/services/skautisPeople'
 import { getAppSettings } from '@/services/settings'
+import { TROOPS } from '@/constants/troops'
 
 // Data of the parent home (SPEC §3.1) for the given children.
 // `loadChildren` resolves to their `members` docs — the signed-in parent's
@@ -30,7 +31,12 @@ export function useParentArea(loadChildren) {
   const leaders = ref({}) // skautisPeople by id
   const participants = ref({}) // { eventId: { memberId: doc | null } }
 
-  const troops = computed(() => [...new Set(children.value.map((c) => c.troop))])
+  const childTroops = computed(() => [...new Set(children.value.map((c) => c.troop))])
+  // Troops whose events, news and albums are shown: the children's, or both
+  // for a parent without children (e.g. the child moved on to the leaders).
+  const troops = computed(() =>
+    childTroops.value.length ? childTroops.value : TROOPS.map((t) => t.code),
+  )
 
   // Access can be revoked while loading; the page is left then, so the
   // failed reads are not an error worth reporting.
@@ -48,7 +54,7 @@ export function useParentArea(loadChildren) {
           listAlbums({ publishedOnly: true }),
           listContacts(),
           listLeaders({ activeOnly: false }),
-          ...troops.value.map((troop) =>
+          ...childTroops.value.map((troop) =>
             listMeetings({ troop, fromDate: schoolYear.from, toDate: today }),
           ),
         ])
