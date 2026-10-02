@@ -22,7 +22,7 @@ RewriteRule ^ %{REQUEST_URI}? [CO=nahled:0:%{SERVER_NAME}:-1:/:secure:httponly,R
 
 RewriteCond %{HTTP_COOKIE} !(^|;\s*)nahled=1(;|$)
 RewriteCond %{REQUEST_URI} !^/(old|el_prihlaska|skautis)(/|$) [NC]
-RewriteCond %{REQUEST_URI} !^/(launch\.html|rozcestnik-800\.webp|favicon\.ico)$
+RewriteCond %{REQUEST_URI} !^/(launch\.html|rozcestnik-800\.webp|favicon\.(ico|svg)|apple-touch-icon\.png)$
 RewriteRule ^ /launch.html [L]
 # --- end before launch ---
 
