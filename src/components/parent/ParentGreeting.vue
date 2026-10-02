@@ -1,7 +1,7 @@
 <script setup>
 import { formatRange, formatToday } from './parentText'
-import signpost150 from '@/assets/public/rozcestnik-3-150.webp'
-import signpost300 from '@/assets/public/rozcestnik-3-300.webp'
+import camp400 from '@/assets/area/tabor-stany-400.webp'
+import camp800 from '@/assets/area/tabor-stany-800.webp'
 
 // „Ahoj!“, today's date and the nearest upcoming event.
 defineProps({
@@ -11,8 +11,10 @@ defineProps({
 </script>
 
 <template>
-  <div class="flex items-end gap-x-[30px] gap-y-2.5">
-    <div class="min-w-0 flex-1">
+  <!-- The drawing hangs beside the text, reaching into the space around it
+       rather than making the block taller. -->
+  <div class="relative sm:mt-8 lg:mt-12">
+    <div class="min-w-0 sm:pr-[260px] lg:pr-[280px]">
       <h1 class="m-0 mb-0.5 font-hand text-[40px] leading-none font-bold text-ink sm:text-[50px]">
         Ahoj!
       </h1>
@@ -28,13 +30,13 @@ defineProps({
       </p>
     </div>
     <img
-      :src="signpost150"
-      :srcset="`${signpost150} 150w, ${signpost300} 300w`"
-      sizes="110px"
+      :src="camp400"
+      :srcset="`${camp400} 400w, ${camp800} 800w`"
+      sizes="(min-width: 1024px) 250px, 230px"
       alt=""
-      width="1040"
-      height="1200"
-      class="hidden h-auto w-[110px] flex-none sm:block"
+      width="1300"
+      height="832"
+      class="absolute right-0 -bottom-3 hidden h-auto w-[230px] sm:block lg:w-[250px]"
     />
   </div>
 </template>

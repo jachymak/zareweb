@@ -8,7 +8,7 @@ import { onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
 // It sets off from a `[data-trail-start]` element, if any, at the point given by
 // its `data-trail-x` / `data-trail-y` (fractions of its box), and ends in a
 // `[data-trail-end]` image, at a point given the same way (fractions of the
-// picture as `object-fit` lays it out), marked with a small cross.
+// picture as `object-fit` lays it out).
 // Hand tweaks on top (`tweaks`, see src/content/trailTweaks.json, edited with
 // the dev TrailEditor). Each waypoint has a stable key, offsets are
 // [fraction of the width, px]:
@@ -27,7 +27,6 @@ const emit = defineEmits(['route'])
 
 const svg = useTemplateRef('svg')
 const d = ref('')
-const goal = ref(null) // { x, y } of the trail's end, if it has one
 
 const GUTTER = 24 // distance of the trail from a sketch
 const CLEARANCE = 30 // distance from blocks it goes around
@@ -214,7 +213,6 @@ function route() {
   const { points, removed } = applyTweaks(waypoints(wrap), props.tweaks, width)
   const pts = withHandles(points, props.tweaks?.handle, width)
   d.value = smoothPath(pts)
-  goal.value = wrap.querySelector('[data-trail-end]') ? pts.at(-1) : null
   emit('route', { points: pts, removed, width })
 }
 
@@ -252,13 +250,5 @@ onBeforeUnmount(() => {
     stroke-linejoin="round"
   >
     <path :d="d" stroke-dasharray="3 11 1.5 14 5 12 2 16 3.5 11 1.5 13" />
-    <!-- Hand-drawn cross where the trail ends, like on a treasure map. -->
-    <path
-      v-if="goal"
-      :transform="`translate(${goal.x} ${goal.y})`"
-      d="M-9 -8 C-4 -3 3 3 9 9 M8 -9 C3 -3 -3 3 -8 8"
-      stroke="var(--color-red)"
-      stroke-width="3.6"
-    />
   </svg>
 </template>
