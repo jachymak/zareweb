@@ -23,7 +23,11 @@ After every change to rules, indexes or functions: `firebase deploy --project pr
 
 ## Upload
 
-`npm run build`, then upload the contents of `dist/` into the web root (next to `old/` and `el_prihlaska/`, which stay). `dist/` includes `.htaccess` and `skautis/prihlaseni.php`.
+`npm run build` (also writes the static HTML of the public pages and `sitemap.xml`, SPEC §8), then upload the contents of `dist/` into the web root (next to `old/` and `el_prihlaska/`, which stay). `dist/` includes `.htaccess` and `skautis/prihlaseni.php`.
+
+## Old site
+
+The old site stays under `/old/` on the server, reached only by typing `https://zare.skauting.cz/old/` (nothing links to it after launch). `.htaccess` sends it with `X-Robots-Tag: noindex`, so search engines drop it, and visitors coming from other sites (search results, links) are redirected to `/`. Its old root addresses (`/index.php?stranka=…`) redirect to the matching new page.
 
 ## Preview before launch
 
@@ -39,3 +43,5 @@ This hides the web, it does not protect it (anyone who knows the parameter sees 
 1. In `public/.htaccess` delete the block between `--- Before launch` and `--- end before launch ---`.
 2. Delete `public/launch.html` and `public/rozcestnik-800.webp`.
 3. `npm run build` and upload `dist/` again. On the server, delete `launch.html` and `rozcestnik-800.webp` too.
+4. Add the site to Google Search Console and Seznam Webmaster (webmaster.seznam.cz) and submit `https://zare.skauting.cz/sitemap.xml`.
+5. Check the link preview (e.g. paste the URL into a WhatsApp chat or the Facebook Sharing Debugger).

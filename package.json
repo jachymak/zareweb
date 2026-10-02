@@ -6,7 +6,7 @@
   "scripts": {
     "start": "bash scripts/start.sh",
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node scripts/static-pages.js",
     "preview": "vite preview",
     "test:e2e": "node e2e/run.js",
     "format": "prettier --write --experimental-cli src/",

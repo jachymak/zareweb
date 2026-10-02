@@ -723,7 +723,7 @@ E-mails are sent via **SMTP of the skaut.cz Google Workspace** (Nodemailer, `smt
 
 ## 8. Non-functional requirements
 
-- **Prerendering:** public pages (`/`, `/cekaci-listina`) are prerendered to static HTML at build time for search engines (e.g. `vite-ssg`); the rest of the app is a client-side SPA. **Deferred to just before production** (decided 2026-09-27, the public pages are still changing); until then public-page code should touch `window` / `document` only after mounting, so it can later render at build time.
+- **Static HTML for crawlers** (instead of prerendering, decided 2026-10-02 — no change to how the app starts): `npm run build` runs `scripts/static-pages.js`, which writes the public pages `/`, `/cekaci-listina`, `/historie` as `dist/index.html`, `dist/cekaci-listina.html`, `dist/historie.html` (served by `.htaccess`) with their own title and description (`src/content/pageMeta.js`, also set by the router on in-app navigation), canonical URL, Open Graph link preview (`public/og-image.jpg`), Organization JSON-LD on the home page, and a plain text version of the page inside `#app` for crawlers without JavaScript (Seznam, link previews). Browsers with JavaScript hide that text (`index.html`) and Vue replaces it on mount. The home page text is kept in the script by hand — only content that doesn't change year to year; when the home page text changes, update it there too. Plus `dist/sitemap.xml` and `public/robots.txt` (login, members, leaders and renewal pages disallowed).
 - **Language:** UI in Czech; code, data and docs in English.
 - **Responsiveness:** usable from 360 px width (see `CLAUDE.md`).
 

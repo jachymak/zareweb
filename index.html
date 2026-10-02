@@ -11,6 +11,17 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- The static text of a page (scripts/static-pages.js) is for crawlers without
+         JavaScript; with it, the app replaces the text, so it stays hidden until then. -->
+    <script>document.documentElement.classList.add('js')</script>
+    <style>
+      .js .static-page { display: none }
+      .static-page { max-width: 720px; margin: 0 auto; padding: 32px 16px; line-height: 1.6 }
+      .static-page h1 { font-size: 2em; margin: 0 0 .5em }
+      .static-page h2 { font-size: 1.4em; margin: 1.5em 0 .5em }
+      .static-page h3 { font-size: 1.1em; margin: 1.2em 0 .3em }
+      .static-page p, .static-page ul { margin: 0 0 1em }
+    </style>
   </head>
   <body>
     <div id="app"></div>

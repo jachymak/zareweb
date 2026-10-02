@@ -1,5 +1,4 @@
 Stránka pro členy
-- hezčí footer (viz návrh)
 - u nejbližších akcí trochu lepší rozložení, aby nebyl text tak namačkaný na rámeček
 - odhlašování z akce po uzávěrce
 - "přihlásí to je divné"

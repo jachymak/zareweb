@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory, START_LOCATION } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { DEFAULT_TITLE, PAGE_META } from '@/content/pageMeta'
 import PublicHomeView from '@/views/PublicHomeView.vue'
 import { sectionScrollTop } from './sectionScroll'
 
@@ -154,6 +155,7 @@ router.beforeEach(async (to) => {
 let firstPage = true
 router.afterEach((to, from) => {
   firstPage = from === START_LOCATION
+  document.title = PAGE_META[to.path]?.title ?? DEFAULT_TITLE
 })
 export const isFirstPage = () => firstPage
 

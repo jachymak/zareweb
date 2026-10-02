@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /prihlaseni
+Disallow: /clenove
+Disallow: /vedouci
+Disallow: /cekaci-listina/obnovit/
+
+Sitemap: https://zare.skauting.cz/sitemap.xml

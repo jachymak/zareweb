@@ -11,7 +11,7 @@
 
 - `npm start` – everything for a normal local run in one terminal (`scripts/start.sh`): emulators in the background (log `.emulators.log`, reused if already running), test data on the first run (`npm start -- --seed` re-seeds), then the dev server; Ctrl+C stops all and saves emulator data. **Keep it in sync**: when a normal run needs a new step (seed, service, …), add it there; tests only go into its header comment.
 - `npm run dev` – dev server
-- `npm run build` – production build
+- `npm run build` – production build, then `scripts/static-pages.js` (static HTML of the public pages for crawlers, sitemap; SPEC §8)
 - `npm run preview` – preview the production build
 - `npm run format` – format `src/` with Prettier (config in `.prettierrc.json`)
 - `npm run emulators` – Firebase Auth + Firestore + Functions + Storage emulators (UI at http://127.0.0.1:4000); data persisted in `emulator-data/`. Changing a function's options (e.g. region) needs an emulator restart.
