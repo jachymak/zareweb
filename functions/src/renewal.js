@@ -2,7 +2,7 @@ import { FieldValue, Timestamp } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/https'
 import { logger } from 'firebase-functions'
 import { db } from './admin.js'
-import { BASE_OPTIONS } from './options.js'
+import { BASE_OPTIONS, ENFORCE_APP_CHECK } from './options.js'
 import { hashRenewalToken, isWellFormedToken } from './renewalTokens.js'
 import { gradeSchoolYear, pragueToday } from './shared/schoolYear.js'
 import { DEFAULT_MAX_AGE, normalizePhone, validateWaitlistEntry } from './shared/waitlistRules.js'
@@ -12,8 +12,7 @@ import { DEFAULT_MAX_AGE, normalizePhone, validateWaitlistEntry } from './shared
 
 const OPTIONS = {
   ...BASE_OPTIONS,
-  // TODO: enforce App Check once a real Firebase project exists.
-  enforceAppCheck: false,
+  enforceAppCheck: ENFORCE_APP_CHECK,
 }
 
 // Fields the parent may change; name, gender and date of birth are read-only.

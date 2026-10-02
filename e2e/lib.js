@@ -188,6 +188,12 @@ export async function assertRunning() {
       throw new Error(`${name} is not running at ${url}`)
     }
   }
+  // The tests click through the app: against production (`vite --mode production`) they
+  // would change real data and send real e-mails.
+  const firebaseModule = await (await fetch(`${APP_URL}/src/services/firebase.js`)).text()
+  if (!/"VITE_USE_EMULATORS": *"true"/.test(firebaseModule)) {
+    throw new Error('the dev server is not using the emulators (VITE_USE_EMULATORS) — run `npm run dev`')
+  }
 }
 
 // ---- dates (tests must not depend on the day they run) ----

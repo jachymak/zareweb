@@ -1,8 +1,8 @@
 <script setup>
-import { computed, reactive, ref, useTemplateRef, watch } from 'vue'
+import { computed, onMounted, reactive, ref, useTemplateRef, watch } from 'vue'
 import { pragueToday } from '@shared/schoolYear'
 import { ageOn, parseBirthDate, suggestGrade, validateWaitlistEntry } from '@shared/waitlistRules'
-import { submitWaitlist } from '@/services/waitlist'
+import { prepareWaitlist, submitWaitlist } from '@/services/waitlist'
 import { useFormErrors } from '@/composables/useFormErrors'
 import HandDrawnBox from '@/components/HandDrawnBox.vue'
 import FormStep from '@/components/form/FormStep.vue'
@@ -25,6 +25,9 @@ const props = defineProps({
   initialParent: { type: Object, default: () => ({}) },
 })
 const emit = defineEmits(['submitted']) // ({ firstName, parent: { parentName, email, phone } })
+
+// App Check is ready by the time the form is sent.
+onMounted(() => prepareWaitlist().catch(() => {}))
 
 const form = reactive({
   firstName: '',

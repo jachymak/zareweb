@@ -26,3 +26,20 @@ if (env.VITE_USE_EMULATORS === 'true') {
   connectFunctionsEmulator(functions, '127.0.0.1', 5001)
   connectStorageEmulator(storage, '127.0.0.1', 9199)
 }
+
+// App Check (SPEC §2.2) guards the public functions (waiting list, renewal), so it is
+// started only before calling them, not on every page. Fraud Defense (reCAPTCHA
+// Enterprise), key in VITE_RECAPTCHA_SITE_KEY; none with the emulators.
+let appCheck = null
+export function ensureAppCheck() {
+  if (env.VITE_USE_EMULATORS === 'true' || !env.VITE_RECAPTCHA_SITE_KEY) return Promise.resolve()
+  appCheck ??= import('firebase/app-check').then(
+    ({ initializeAppCheck, ReCaptchaEnterpriseProvider }) => {
+      initializeAppCheck(app, {
+        provider: new ReCaptchaEnterpriseProvider(env.VITE_RECAPTCHA_SITE_KEY),
+        isTokenAutoRefreshEnabled: false,
+      })
+    },
+  )
+  return appCheck
+}

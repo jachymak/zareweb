@@ -10,7 +10,7 @@ import {
   where,
 } from 'firebase/firestore'
 import { httpsCallable } from 'firebase/functions'
-import { db, functions } from './firebase'
+import { db, ensureAppCheck, functions } from './firebase'
 import { fromQuery } from './utils'
 
 const waitlist = collection(db, 'waitlist')
@@ -20,7 +20,11 @@ const waitlist = collection(db, 'waitlist')
 // `details.errors` (same keys as validateWaitlistEntry).
 const submitWaitlistCallable = httpsCallable(functions, 'submitWaitlist')
 
+// Starts App Check early (the form calls it on mount), so the sign-up isn't slowed by it.
+export const prepareWaitlist = () => ensureAppCheck()
+
 export async function submitWaitlist(entry) {
+  await ensureAppCheck()
   const { data } = await submitWaitlistCallable(entry)
   return data.status
 }
@@ -33,15 +37,18 @@ const confirmRenewalCallable = httpsCallable(functions, 'confirmRenewal')
 const withdrawRenewalCallable = httpsCallable(functions, 'withdrawRenewal')
 
 export async function getRenewal(token) {
+  await ensureAppCheck()
   return (await getRenewalCallable({ token })).data
 }
 
 // answers: { grade, parentName, email, phone, knowsSomeone, knowsWhom }
 export async function confirmRenewal(token, answers) {
+  await ensureAppCheck()
   await confirmRenewalCallable({ token, ...answers })
 }
 
 export async function withdrawRenewal(token) {
+  await ensureAppCheck()
   await withdrawRenewalCallable({ token })
 }
 

@@ -11,7 +11,8 @@ The web is static files on the skauting.cz hosting (Apache + PHP, `zare.skauting
 5. `.firebaserc`: add the project as the alias `prod` next to `default`. `default` stays `demo-zareweb`, so the emulators never touch production.
 6. `functions/.env.<project-id>`: `APP_URL=https://zare.skauting.cz` (links in e-mails), `MAIL_FROM=web.zare@skaut.cz`, `MAIL_REPLY_TO=zare@skaut.cz`; only loaded when deployed to that project.
    E-mails: `MAIL_FROM` is a skaut.cz unit account (created in skautIS → the unit → Google služby) with two-step verification and an app password (myaccount.google.com/apppasswords); store it with `firebase functions:secrets:set SMTP_PASSWORD --project prod`. Deploy fails until the secret exists.
-7. `firebase login`, `firebase deploy --project prod` — rules, indexes, Storage rules, functions. The first deploy enables the needed Google Cloud APIs and may have to be repeated after a few minutes; accept the offered Artifact Registry cleanup policy.
+7. App Check: in Google Cloud (project `zare-web`) Security → reCAPTCHA (Fraud Defense) → create a Web key for `zare.skauting.cz` and `localhost` (no checkbox challenge); Firebase console → App Check → the web app → Fraud Defense: paste the key, TTL 1 day. The key goes into `.env.production` as `VITE_RECAPTCHA_SITE_KEY`. Don't enforce anything on the App Check „APIs“ tab — enforcement is only in the public functions.
+8. `firebase login`, `firebase deploy --project prod` — rules, indexes, Storage rules, functions. The first deploy enables the needed Google Cloud APIs and may have to be repeated after a few minutes; accept the offered Artifact Registry cleanup policy.
 
 Nothing has to be written into Firestore: missing `settings/*` documents fall back to the defaults in `functions/src/shared/`. Never run the `seed:*` scripts against production.
 
