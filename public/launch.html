@@ -111,14 +111,6 @@
         color: var(--muted);
       }
 
-      .done {
-        margin: 30px 0 0;
-        font-family: 'Caveat', cursive;
-        font-size: 32px;
-        font-weight: 700;
-        color: var(--ink);
-      }
-
       .illustration {
         display: block;
         width: 100%;
@@ -179,7 +171,6 @@
         <li><span class="num" id="m">–</span><span class="unit" id="m-unit">minut</span></li>
         <li><span class="num" id="s">–</span><span class="unit" id="s-unit">sekund</span></li>
       </ul>
-      <p class="done" id="done" hidden>Už to bude! Zkuste stránku za chvíli obnovit.</p>
 
       <img class="illustration" src="/rozcestnik-800.webp" alt="" width="800" height="923">
 
@@ -203,14 +194,9 @@
         ['s', 1, ['sekunda', 'sekundy', 'sekund']],
       ]
 
+      // Past the target the clock quietly counts up instead (a prank until the real launch).
       function tick() {
-        var left = Math.max(0, Math.floor((target - Date.now()) / 1000))
-        if (left === 0) {
-          document.getElementById('countdown').hidden = true
-          document.getElementById('done').hidden = false
-          clearInterval(timer)
-          return
-        }
+        var left = Math.floor(Math.abs(target - Date.now()) / 1000)
         units.forEach(function (u) {
           var value = Math.floor(left / u[1])
           left -= value * u[1]
@@ -219,7 +205,7 @@
         })
       }
 
-      var timer = setInterval(tick, 1000)
+      setInterval(tick, 1000)
       tick()
     </script>
   </body>
