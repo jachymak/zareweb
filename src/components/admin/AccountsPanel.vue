@@ -2,8 +2,10 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import {
+  approveLeader,
   deleteAccount,
   inviteParent,
+  linkUserToPerson,
   revokeAccess,
   setUserRole,
   subscribeInvitations,
@@ -16,10 +18,11 @@ import {
   subscribeMembers,
   unpairParent,
 } from '@/services/members'
+import { subscribeLeaders } from '@/services/skautisPeople'
 import AccountCard from './AccountCard.vue'
 import AccountFilter from './AccountFilter.vue'
 import UnpairedChildren from './UnpairedChildren.vue'
-import { FILTERS, suggestChildren } from './accounts'
+import { FILTERS, suggestChildren, suggestLeaders } from './accounts'
 
 // „Účty a párování“ — SPEC §4.8. Accounts and members are live, so a new
 // registration shows up (and an approval reaches the user) immediately.
@@ -27,6 +30,7 @@ const auth = useAuthStore()
 
 const accounts = ref(null)
 const members = ref(null)
+const leaders = ref([])
 const parentContacts = ref({})
 const invitations = ref([])
 const loadError = ref('')
@@ -40,6 +44,10 @@ onMounted(() => {
   unsubscribe = [
     subscribeUsers((list) => (accounts.value = list), fail),
     subscribeMembers((list) => (members.value = list), fail),
+    subscribeLeaders(
+      (list) => (leaders.value = list),
+      (e) => console.error('Loading leaders failed', e),
+    ),
     subscribeInvitations(
       (list) => (invitations.value = list),
       (e) => console.error('Loading invitations failed', e),
@@ -65,6 +73,19 @@ watch(memberIds, async (ids) => {
 })
 
 const loading = computed(() => !loadError.value && (!accounts.value || !members.value))
+
+// skautIS leaders already linked to some account (one account per leader).
+const linkedLeaders = computed(
+  () => new Set((accounts.value ?? []).map((a) => a.personId).filter(Boolean)),
+)
+const leaderOf = (account) =>
+  account.personId
+    ? (leaders.value.find((p) => p.id === account.personId) ?? {
+        id: account.personId,
+        name: 'vedoucí, který už ve skautISu není',
+        active: false,
+      })
+    : null
 
 const childrenOf = (uid) => (members.value ?? []).filter((m) => m.parentUids?.includes(uid))
 
@@ -107,6 +128,9 @@ function cardProps(account) {
     children: childrenOf(account.id),
     suggestions: suggestChildren(account, all, parentContacts.value),
     candidates: all.filter((m) => !m.parentUids?.includes(account.id)),
+    leader: leaderOf(account),
+    leaderSuggestions: suggestLeaders(account, leaders.value, linkedLeaders.value),
+    leaderCandidates: leaders.value.filter((p) => !linkedLeaders.value.has(p.id)),
     self: account.id === auth.user?.uid,
   }
 }
@@ -137,6 +161,11 @@ const approve = (account, chosen) =>
       chosen.map((m) => m.id),
     ),
   )
+
+const linkLeader = (account, person) =>
+  run(account, () => linkUserToPerson(account.id, person?.id ?? null))
+const approveAsLeader = (account, person) =>
+  run(account, () => approveLeader(account.id, person.id))
 
 const unpair = (account, member) =>
   run(account, () =>
@@ -178,8 +207,9 @@ async function invite(email) {
     <h2 id="accounts-title" class="sr-only">Účty a párování</h2>
     <p class="m-0 mb-4 max-w-[70ch] text-[15.5px] leading-normal text-muted">
       Účet si může založit kdokoli; bez schválení nic nevidí. Rodiče schválíš tak, že mu vybereš
-      děti a dáš „schválit jako rodiče“ — nepřiřazené děti rodič ve své sekci nevidí. Návrhy
-      vycházejí z e-mailů rodičů ve skautISu a z poznámky, kterou uživatel napsal.
+      děti a dáš „schválit jako rodiče“ — nepřiřazené děti rodič ve své sekci nevidí. Vedoucímu
+      vyber jeho záznam ze skautISu a dej „schválit jako vedoucího“. Návrhy vycházejí z e-mailů ve
+      skautISu a z poznámky, kterou uživatel napsal.
     </p>
 
     <p v-if="loadError" role="alert" class="text-red">{{ loadError }}</p>
@@ -207,6 +237,8 @@ async function invite(email) {
           @pair="(m) => pair(account, m)"
           @approve="(chosen) => approve(account, chosen)"
           @unpair="(m) => unpair(account, m)"
+          @link-leader="(p) => linkLeader(account, p)"
+          @approve-leader="(p) => approveAsLeader(account, p)"
           @set-role="(r) => setRole(account, r)"
           @revoke="revoke(account)"
           @reactivate="reactivate(account)"

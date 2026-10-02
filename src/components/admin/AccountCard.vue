@@ -1,18 +1,22 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
-import ChildChip from './ChildChip.vue'
-import ChildPicker from './ChildPicker.vue'
-import { ROLE_LABELS, childName, formatDate, troopTag } from './accounts'
+import PersonChip from './PersonChip.vue'
+import PersonPicker from './PersonPicker.vue'
+import { ROLE_LABELS, formatDate, personName, troopTag } from './accounts'
 
 // One account in „účty a párování“ — SPEC §4.8. Emits the admin's actions;
-// the parent component writes them. Children picked for a pending account are
-// only chosen here; „schválit jako rodiče“ pairs them all and approves the
-// account in one write, so the approval e-mail lists them all.
+// the parent component writes them. Children (or a skautIS leader) picked for
+// a pending account are only chosen here; „schválit jako rodiče“ pairs them
+// all and approves the account in one write, so the approval e-mail lists them
+// all; „schválit jako vedoucího“ links the leader the same way.
 const props = defineProps({
   account: { type: Object, required: true },
   children: { type: Array, default: () => [] }, // paired members
   suggestions: { type: Array, default: () => [] }, // [{ member, reasons }]
   candidates: { type: Array, default: () => [] }, // members that can be paired
+  leader: { type: Object, default: null }, // linked skautisPeople doc
+  leaderSuggestions: { type: Array, default: () => [] }, // [{ person, reasons }]
+  leaderCandidates: { type: Array, default: () => [] }, // leaders that can be linked
   self: { type: Boolean, default: false }, // the signed-in admin's own account
   busy: { type: Boolean, default: false },
   error: { type: String, default: '' },
@@ -21,6 +25,8 @@ const emit = defineEmits([
   'pair',
   'approve',
   'unpair',
+  'link-leader',
+  'approve-leader',
   'set-role',
   'revoke',
   'reactivate',
@@ -30,19 +36,40 @@ const emit = defineEmits([
 const role = computed(() => props.account.role ?? 'pending')
 const isLeader = computed(() => ['leader', 'admin'].includes(role.value))
 const canPair = computed(() => ['pending', 'parent'].includes(role.value))
+const canLink = computed(() => role.value === 'pending' || isLeader.value)
 
-const picking = ref(false)
+const picking = ref(null) // 'child' | 'leader'
 
-// Children chosen for a pending account, not saved until approval.
+// Children — or one leader — chosen for a pending account, not saved until
+// approval. Choosing one kind drops the other.
 const chosen = ref([])
-watch(role, (r) => r !== 'pending' && (chosen.value = []))
+const chosenLeader = ref(null)
+watch(role, (r) => r !== 'pending' && ((chosen.value = []), (chosenLeader.value = null)))
 const isChosen = (m) => chosen.value.some((c) => c.id === m.id)
 const openCandidates = computed(() => props.candidates.filter((m) => !isChosen(m)))
-const openSuggestions = computed(() => props.suggestions.filter((s) => !isChosen(s.member)))
+const shownLeader = computed(() => props.leader ?? chosenLeader.value)
+
+// Children and leaders the account probably belongs to, in one list.
+const openSuggestions = computed(() => [
+  ...(canPair.value ? props.suggestions : [])
+    .filter((s) => !isChosen(s.member))
+    .map(({ member, reasons }) => ({ person: member, reasons, leader: false })),
+  ...(canLink.value && !shownLeader.value ? props.leaderSuggestions : []).map((s) => ({
+    ...s,
+    reasons: ['vedoucí', ...s.reasons],
+    leader: true,
+  })),
+])
 
 function pick(member) {
   if (role.value !== 'pending') return emit('pair', member)
+  chosenLeader.value = null
   if (!isChosen(member)) chosen.value = [...chosen.value, member]
+}
+function pickLeader(person) {
+  if (role.value !== 'pending') return emit('link-leader', person)
+  chosen.value = []
+  chosenLeader.value = person
 }
 const confirmingDelete = ref(false)
 
@@ -90,63 +117,79 @@ const BADGE = {
       Poznámku zatím nenapsal/a.
     </p>
 
-    <!-- children -->
+    <!-- children, skautIS leader -->
     <div
-      v-if="canPair || children.length"
+      v-if="canPair || canLink || children.length"
       data-testid="children"
       class="mt-3 flex flex-wrap items-center gap-2"
     >
-      <ChildChip
+      <PersonChip
         v-for="m in children"
         :key="m.id"
-        :member="m"
+        :person="m"
         :disabled="busy"
         @remove="$emit('unpair', m)"
       />
-      <ChildChip
+      <PersonChip
         v-for="m in chosen"
         :key="m.id"
-        :member="m"
+        :person="m"
         :disabled="busy"
         @remove="chosen = chosen.filter((c) => c.id !== m.id)"
+      />
+      <PersonChip
+        v-if="shownLeader"
+        :person="shownLeader"
+        :disabled="busy"
+        @remove="leader ? $emit('link-leader', null) : (chosenLeader = null)"
       />
       <button
         v-if="canPair && !picking"
         type="button"
         class="cursor-pointer rounded-full border-[1.5px] border-dashed border-[#9ec0a8] bg-transparent px-[13px] py-1 font-hand text-[19px] font-bold text-green"
-        @click="picking = true"
+        @click="picking = 'child'"
       >
         + přiřadit dítě
       </button>
+      <button
+        v-if="canLink && !shownLeader && !picking"
+        type="button"
+        class="cursor-pointer rounded-full border-[1.5px] border-dashed border-[#9ec0a8] bg-transparent px-[13px] py-1 font-hand text-[19px] font-bold text-green"
+        @click="picking = 'leader'"
+      >
+        + přiřadit vedoucího
+      </button>
     </div>
-    <ChildPicker
+    <PersonPicker
       v-if="picking"
-      :members="openCandidates"
+      :people="picking === 'leader' ? leaderCandidates : openCandidates"
+      :leaders="picking === 'leader'"
       :disabled="busy"
-      @pick="(m) => (pick(m), (picking = false))"
-      @close="picking = false"
+      @pick="(p) => ((picking === 'leader' ? pickLeader : pick)(p), (picking = null))"
+      @close="picking = null"
     />
 
     <!-- suggestions -->
-    <div v-if="canPair && openSuggestions.length" class="mt-3" data-testid="suggestions">
+    <div v-if="openSuggestions.length" class="mt-3" data-testid="suggestions">
       <p class="m-0 mb-1.5 text-[12.5px] tracking-widest text-[#8a7b5e] uppercase">Návrhy</p>
       <ul class="m-0 flex list-none flex-col gap-1.5 p-0">
         <li
-          v-for="{ member, reasons } in openSuggestions"
-          :key="member.id"
+          v-for="{ person, reasons, leader: isPerson } in openSuggestions"
+          :key="person.id"
           class="flex flex-wrap items-center gap-x-3 gap-y-1 text-[15px]"
         >
           <span class="min-w-0">
-            <b class="mr-1 font-hand text-[19px] font-bold text-ink">{{ member.nickname }}</b>
-            {{ childName(member) }} · {{ troopTag(member.troop) }}
+            <b class="mr-1 font-hand text-[19px] font-bold text-ink">{{ person.nickname }}</b>
+            {{ personName(person) }}
+            <template v-if="person.troop"> · {{ troopTag(person.troop) }}</template>
             <span class="text-[14px] text-brown">— {{ reasons.join(', ') }}</span>
           </span>
           <button
             type="button"
             class="btn-link"
-            :aria-label="`Přiřadit ${childName(member)}`"
+            :aria-label="`Přiřadit ${personName(person)}`"
             :disabled="busy"
-            @click="pick(member)"
+            @click="(isPerson ? pickLeader : pick)(person)"
           >
             přiřadit
           </button>
@@ -157,7 +200,17 @@ const BADGE = {
       <template v-if="chosen.length">
         Vybrané děti se uloží až se schválením — e-mail o schválení pak přijde se všemi.
       </template>
-      <template v-else>Vyber děti, které k účtu patří, a pak ho schval jako rodiče.</template>
+      <template v-else-if="chosenLeader">
+        Vedoucí ze skautISu se k účtu propojí až se schválením.
+      </template>
+      <template v-else>
+        Vyber děti, které k účtu patří, a schval ho jako rodiče — nebo vyber vedoucího ze skautISu a
+        schval ho jako vedoucího.
+      </template>
+    </p>
+    <p v-else-if="isLeader && !leader" class="m-0 mt-2 text-[14px] text-muted">
+      Účet není propojený s vedoucím ze skautISu — na stránkách vedoucích pak chybí přezdívka a
+      oddíl.
     </p>
 
     <!-- actions -->
@@ -176,6 +229,16 @@ const BADGE = {
           schválit jako rodiče
         </button>
         <button
+          v-if="chosenLeader"
+          type="button"
+          class="cursor-pointer rounded-full border-0 bg-green px-4 py-1.5 text-[15px] font-medium text-cream disabled:cursor-wait disabled:opacity-70"
+          :disabled="busy"
+          @click="$emit('approve-leader', chosenLeader)"
+        >
+          schválit jako vedoucího
+        </button>
+        <button
+          v-else
           type="button"
           class="btn-link"
           :disabled="busy"

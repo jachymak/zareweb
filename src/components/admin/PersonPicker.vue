@@ -1,17 +1,20 @@
 <script setup>
 import { computed, onMounted, ref, useTemplateRef } from 'vue'
-import { childName, searchMembers, troopTag } from './accounts'
+import { personName, searchLeaders, searchMembers, troopTag } from './accounts'
 
-// Search among imported children and pick one to pair.
+// Search among imported children (or leaders) and pick one to pair.
 const props = defineProps({
-  members: { type: Array, required: true }, // candidates (not paired yet)
+  people: { type: Array, required: true }, // candidates (not paired yet)
+  leaders: { type: Boolean, default: false }, // `skautisPeople` instead of `members`
   disabled: { type: Boolean, default: false },
 })
 defineEmits(['pick', 'close'])
 
 const MAX_RESULTS = 8
 const text = ref('')
-const results = computed(() => searchMembers(props.members, text.value).slice(0, MAX_RESULTS))
+const results = computed(() =>
+  (props.leaders ? searchLeaders : searchMembers)(props.people, text.value).slice(0, MAX_RESULTS),
+)
 
 const input = useTemplateRef('input')
 onMounted(() => input.value?.focus())
@@ -24,23 +27,23 @@ onMounted(() => input.value?.focus())
         ref="input"
         v-model="text"
         type="search"
-        aria-label="Hledat dítě"
+        :aria-label="leaders ? 'Hledat vedoucího' : 'Hledat dítě'"
         placeholder="jméno nebo přezdívka"
         class="field-input py-2.5 text-base"
       />
       <button type="button" class="btn-link flex-none" @click="$emit('close')">zavřít</button>
     </div>
     <ul class="m-0 mt-2 flex list-none flex-col p-0">
-      <li v-for="m in results" :key="m.id">
+      <li v-for="p in results" :key="p.id">
         <button
           type="button"
           class="flex w-full cursor-pointer items-baseline gap-2 rounded-md border-0 bg-transparent px-2 py-2 text-left text-[15.5px] text-ink hover:bg-paper disabled:cursor-wait"
           :disabled="disabled"
-          @click="$emit('pick', m)"
+          @click="$emit('pick', p)"
         >
-          <b class="font-hand text-[19px] font-bold">{{ m.nickname || m.firstName }}</b>
-          <span class="min-w-0 flex-1">{{ childName(m) }}</span>
-          <span class="text-[14px] text-brown">{{ troopTag(m.troop) }}</span>
+          <b class="font-hand text-[19px] font-bold">{{ p.nickname || p.firstName || p.name }}</b>
+          <span class="min-w-0 flex-1">{{ personName(p) }}</span>
+          <span class="text-[14px] text-brown">{{ troopTag(p.troop) }}</span>
         </button>
       </li>
       <li v-if="!results.length" class="px-2 py-2 text-[15px] text-muted">Nic nenalezeno.</li>

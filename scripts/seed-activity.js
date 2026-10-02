@@ -288,7 +288,7 @@ export const PACKING_TEMPLATES = {
 }
 
 // Test leader accounts of `seed-users.js` linked to their skautIS person (users.personId),
-// as the admin links them in „role vedoucích“.
+// as the admin links them in „účty a párování“.
 export const LEADER_ACCOUNTS = { 'vedouci@zare.test': '800001', 'spravce@zare.test': '800011' }
 
 // Newest first as parents see them; `important` is pinned on top.

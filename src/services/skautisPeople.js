@@ -1,4 +1,4 @@
-import { collection, doc, getDoc, getDocs, query, updateDoc, where } from 'firebase/firestore'
+import { collection, doc, getDoc, getDocs, onSnapshot, query, where } from 'firebase/firestore'
 import { db } from './firebase'
 import { fromDoc, fromQuery } from './utils'
 
@@ -14,7 +14,7 @@ export async function listLeaders({ activeOnly = true } = {}) {
   return fromQuery(await getDocs(q))
 }
 
-// Only web-specific fields; skautIS fields are overwritten by the sync.
-export function updateLeaderProfile(personId, { troop, roleTitle }) {
-  return updateDoc(doc(people, personId), { troop, roleTitle })
+// All leaders incl. inactive ones, live (Administration — pairing accounts).
+export function subscribeLeaders(callback, onError) {
+  return onSnapshot(people, (snap) => callback(fromQuery(snap)), onError)
 }

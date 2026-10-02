@@ -30,6 +30,8 @@ export function normalizeText(s = '') {
 }
 
 export const childName = (m) => `${m.firstName} ${m.lastName}`
+// Full name of a child (`members`) or a leader (`skautisPeople`).
+export const personName = (p) => p.name ?? childName(p)
 export const troopTag = (code) => troopByCode(code)?.tag ?? code
 
 // Children that probably belong to the account, not paired with it yet:
@@ -58,6 +60,28 @@ export function suggestChildren(account, members, parentContacts) {
   return suggestions
 }
 
+// Leaders from skautIS that probably own the account: their e-mail in
+// skautIS equals the account e-mail, or the account name / note names them
+// (full name or nickname). `linked` = person ids already linked to an account.
+// Returns [{ person, reasons: string[] }], active leaders only.
+export function suggestLeaders(account, people, linked) {
+  const email = account.email?.trim().toLowerCase()
+  const text = ` ${normalizeText(`${account.displayName ?? ''} ${account.note ?? ''}`)} `
+  const hasWords = (w) => w && text.includes(` ${w} `)
+
+  const suggestions = []
+  for (const p of people) {
+    if (!p.active || linked.has(p.id)) continue
+    const reasons = []
+    if (email && p.email?.trim().toLowerCase() === email) reasons.push('e-mail ve skautISu')
+    if (hasWords(normalizeText(p.name)) || hasWords(normalizeText(p.nickname))) {
+      reasons.push('jméno účtu nebo poznámky')
+    }
+    if (reasons.length) suggestions.push({ person: p, reasons })
+  }
+  return suggestions
+}
+
 // Members matching a search text (name or nickname), active only.
 export function searchMembers(members, text) {
   const q = normalizeText(text)
@@ -65,6 +89,15 @@ export function searchMembers(members, text) {
     .filter((m) => m.active)
     .filter((m) => !q || normalizeText(`${childName(m)} ${m.nickname}`).includes(q))
     .sort((a, b) => a.lastName.localeCompare(b.lastName, 'cs'))
+}
+
+// Leaders matching a search text (name or nickname), active only.
+export function searchLeaders(people, text) {
+  const q = normalizeText(text)
+  return people
+    .filter((p) => p.active)
+    .filter((p) => !q || normalizeText(`${p.name} ${p.nickname}`).includes(q))
+    .sort((a, b) => (a.nickname || a.name).localeCompare(b.nickname || b.name, 'cs'))
 }
 
 export function formatDate(ts) {

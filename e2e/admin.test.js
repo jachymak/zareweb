@@ -1,7 +1,8 @@
 // Administration — accounts & pairing (SPEC §4.8): access, suggestions,
 // pairing approves a pending account live, picker, unpairing, reject /
-// reactivate / delete, leader roles, security rules, mobile widths.
-// Accounts from `scripts/seed-users.js`, children from `scripts/seed-members.js`.
+// reactivate / delete, pairing leaders with skautIS, leader roles, security
+// rules, mobile widths. Accounts from `scripts/seed-users.js`, children from
+// `scripts/seed-members.js`, skautIS leaders from `scripts/seed-activity.js`.
 
 import {
   SCREENSHOTS,
@@ -25,6 +26,12 @@ const ADMIN_URL = '/vedouci/administrace'
 const userDoc = async (email) =>
   (await listDocs('users')).find((d) => fieldValue(d.fields.email) === email)
 const roleOf = async (email) => fieldValue((await userDoc(email))?.fields.role)
+const personIdOf = async (email) => fieldValue((await userDoc(email))?.fields.personId)
+const leaderId = async (nickname) =>
+  (await listDocs('skautisPeople'))
+    .find((d) => fieldValue(d.fields.nickname) === nickname)
+    ?.name.split('/')
+    .at(-1)
 const parentUidsOf = async (memberId) =>
   (
     (await listDocs('members')).find((d) => d.name.endsWith(`/${memberId}`))?.fields.parentUids
@@ -63,6 +70,7 @@ export default async function admin({ browser, check }) {
   await clearCollection('users')
   runScript('seed-users.js')
   runScript('seed-members.js')
+  runScript('seed-activity.js')
 
   // ---- access ----
   {
@@ -178,7 +186,7 @@ export default async function admin({ browser, check }) {
       await fresh.getByText('Nic nenalezeno.').isVisible(),
     )
     await search.fill('vyd')
-    await fresh.getByRole('button', { name: /Vydra/ }).click()
+    await fresh.getByRole('button', { name: /Vydra Matěj Pokorný/ }).click()
     await fresh.getByRole('button', { name: 'schválit jako rodiče' }).click()
     await filter(page, 'Rodiče').click()
     const parentCard = card(page, newEmail)
@@ -237,6 +245,86 @@ export default async function admin({ browser, check }) {
     )
   }
 
+  // ---- pairing leaders with skautIS ----
+  {
+    const leaderEmail = 'jasmina@example.cz' // her e-mail in skautIS
+    const jasmina = await leaderId('Jasmína')
+    const { uid } = await signUpRest(leaderEmail, PASSWORD)
+    await patchDoc(`users/${uid}`, {
+      email: { stringValue: leaderEmail },
+      displayName: { stringValue: 'Jasmína K.' },
+      role: { stringValue: 'pending' },
+      note: { stringValue: 'vedu skauty' },
+      createdAt: { timestampValue: new Date().toISOString() },
+    })
+    await filter(page, 'Čekající').click()
+    const pending = card(page, leaderEmail)
+    await pending.getByTestId('suggestions').waitFor({ timeout: 10000 })
+    const suggestions = await pending.getByTestId('suggestions').innerText()
+    check(
+      'leader suggestion: Jasmína by e-mail in skautIS',
+      suggestions.includes('Jasmína Kolářová') &&
+        suggestions.includes('vedoucí, e-mail ve skautISu') &&
+        !suggestions.includes('Ondřej'),
+      suggestions.replace(/\s+/g, ' '),
+    )
+    await pending.getByRole('button', { name: 'Přiřadit Jasmína Kolářová' }).click()
+    await new Promise((r) => setTimeout(r, 500))
+    check(
+      'leader choose: chosen, nothing saved yet',
+      (await pending.getByTestId('children').innerText()).includes('Jasmína') &&
+        (await roleOf(leaderEmail)) === 'pending' &&
+        !(await personIdOf(leaderEmail)),
+    )
+    await pending.getByRole('button', { name: 'schválit jako vedoucího' }).click()
+    check(
+      'leader approve: role leader and linked in one write',
+      await until(
+        async () =>
+          (await roleOf(leaderEmail)) === 'leader' && (await personIdOf(leaderEmail)) === jasmina,
+      ),
+    )
+
+    await filter(page, 'Vedoucí').click()
+    const linked = card(page, leaderEmail)
+    await linked.getByRole('button', { name: 'Odebrat Jasmína Kolářová' }).click()
+    await linked.getByText('Účet není propojený', { exact: false }).waitFor()
+    check(
+      'leader unlink: personId removed, role kept, suggestion back',
+      !(await personIdOf(leaderEmail)) &&
+        (await roleOf(leaderEmail)) === 'leader' &&
+        (await linked.getByTestId('suggestions').innerText()).includes('Jasmína'),
+    )
+
+    await linked.getByRole('button', { name: '+ přiřadit vedoucího' }).click()
+    const search = linked.getByRole('searchbox', { name: 'Hledat vedoucího' })
+    await search.fill('ond')
+    check(
+      'leader picker: a leader linked to another account is not offered',
+      await linked.getByText('Nic nenalezeno.').isVisible(),
+    )
+    await search.fill('jas')
+    await linked.getByRole('button', { name: 'Jasmína Jasmína Kolářová s&s' }).click()
+    check(
+      'leader picker: linked',
+      await until(async () => (await personIdOf(leaderEmail)) === jasmina),
+    )
+    check(
+      'leader: seeded vedouci@ shows Ondys',
+      await card(page, 'vedouci@zare.test')
+        .getByRole('button', { name: 'Odebrat Ondřej Sýkora' })
+        .isVisible(),
+    )
+
+    await linked.getByRole('button', { name: 'odebrat přístup' }).click()
+    check(
+      'leader revoke: role none and unlinked',
+      await until(
+        async () => (await roleOf(leaderEmail)) === 'none' && !(await personIdOf(leaderEmail)),
+      ),
+    )
+  }
+
   // ---- leader roles ----
   {
     await filter(page, 'Vedoucí').click()
@@ -253,8 +341,10 @@ export default async function admin({ browser, check }) {
     )
     const own = card(page, 'spravce@zare.test')
     check(
-      'leaders: no actions on the own account',
-      (await own.getByRole('button').count()) === 0 && (await own.getByText('(ty)').isVisible()),
+      'leaders: no role actions on the own account',
+      (await own.getByRole('group', { name: 'Role' }).count()) === 0 &&
+        (await own.getByRole('button', { name: 'odebrat přístup' }).count()) === 0 &&
+        (await own.getByText('(ty)').isVisible()),
     )
   }
   check('admin page: no console errors', errors.length === 0, errors.join(' | '))
@@ -264,6 +354,7 @@ export default async function admin({ browser, check }) {
   {
     runScript('seed-users.js')
     runScript('seed-members.js')
+    runScript('seed-activity.js')
     const leader = await signInRest('vedouci@zare.test', PASSWORD)
     const parent = await signInRest('rodic@zare.test', PASSWORD)
     check(
@@ -324,4 +415,5 @@ export default async function admin({ browser, check }) {
 
   runScript('seed-users.js')
   runScript('seed-members.js')
+  runScript('seed-activity.js')
 }

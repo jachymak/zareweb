@@ -3,7 +3,7 @@
 // Needs `npm run emulators` and `npm run dev` running. Modifies emulator data:
 // resets settings/*, clears the `waitlist` collection, and (login) replaces all
 // accounts and `users` with the test accounts of `seed-users.js`, (admin, parent,
-// poster, preview, leader, attendance, events, news) also `members` with the children of `seed-members.js`, and (parent, poster, preview, leader, attendance, events, news) leaders,
+// poster, preview, leader, attendance, events, news) also `members` with the children of `seed-members.js`, and (admin, parent, poster, preview, leader, attendance, events, news) leaders,
 // contacts, events, news and meetings with `seed-activity.js`; clubhouse replaces the
 // accounts too; waitlistadmin replaces the accounts and the whole `waitlist` with
 // `seed-waitlist.js` and runs the annual reset; adminextras replaces accounts,
