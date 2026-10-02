@@ -69,7 +69,7 @@ export default async function publicPage({ browser, check }) {
       text,
     )
 
-    const d = await page.locator('main > svg path').getAttribute('d')
+    const d = await page.locator('main > svg path[stroke-dasharray]').getAttribute('d')
     check('desktop: trail path drawn', !!d && d.split('C').length > 10)
     check('desktop: no horizontal overflow', (await horizontalOverflow(page)) <= 0)
     check(
@@ -83,11 +83,24 @@ export default async function publicPage({ browser, check }) {
     )
 
     const q = page.locator('#otazky button')
+    const faqHeight = () => page.locator('#otazky').evaluate((el) => el.offsetHeight)
+    const heightBefore = await faqHeight()
     await q.nth(2).click()
     const expanded = await q.evaluateAll((bs) => bs.map((b) => b.getAttribute('aria-expanded')))
     check(
       'desktop: FAQ one open at a time',
       expanded.filter((e) => e === 'true').length === 1 && expanded[2] === 'true',
+    )
+    const heightAfter = await faqHeight()
+    check(
+      'desktop: FAQ keeps its height',
+      heightAfter === heightBefore,
+      `${heightBefore} → ${heightAfter}`,
+    )
+    await q.nth(2).click()
+    check(
+      'desktop: FAQ open item stays open',
+      (await q.nth(2).getAttribute('aria-expanded')) === 'true',
     )
 
     await page.screenshot({ path: `${SCREENSHOTS}public-desktop.png`, fullPage: true })

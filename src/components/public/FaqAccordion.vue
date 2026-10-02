@@ -1,7 +1,8 @@
 <script setup>
 import { ref, useId } from 'vue'
 
-// Accordion with at most one item open at a time.
+// Accordion with exactly one item open at a time. The open answer is as tall as
+// the longest one, so switching questions does not make the page jump.
 defineProps({
   items: { type: Array, required: true }, // [{ q, a }]
 })
@@ -9,8 +10,8 @@ defineProps({
 const openIndex = ref(0)
 const baseId = useId()
 
-function toggle(i) {
-  openIndex.value = openIndex.value === i ? -1 : i
+function open(i) {
+  openIndex.value = i
 }
 </script>
 
@@ -24,7 +25,7 @@ function toggle(i) {
           :aria-expanded="openIndex === i"
           :aria-controls="`${baseId}-a${i}`"
           class="flex w-full cursor-pointer items-baseline gap-4 bg-transparent px-0.5 py-[18px] text-left text-[17px] leading-snug font-medium text-ink sm:text-lg"
-          @click="toggle(i)"
+          @click="open(i)"
         >
           <span class="flex-1">{{ item.q }}</span>
           <span class="flex-none font-hand text-[26px] leading-none text-red" aria-hidden="true">
@@ -38,11 +39,18 @@ function toggle(i) {
         role="region"
         :aria-labelledby="`${baseId}-q${i}`"
       >
-        <p
-          class="m-0 max-w-[62ch] px-0.5 pb-5 text-base leading-[1.75] text-pretty text-muted sm:text-[17px]"
-        >
-          {{ item.a }}
-        </p>
+        <!-- All answers share one grid cell; the others only reserve height. -->
+        <div class="grid">
+          <p
+            v-for="(other, j) in items"
+            :key="other.q"
+            :aria-hidden="j !== i || undefined"
+            :class="{ invisible: j !== i }"
+            class="col-start-1 row-start-1 m-0 max-w-[62ch] px-0.5 pb-5 text-base leading-[1.75] text-pretty text-muted sm:text-[17px]"
+          >
+            {{ other.a }}
+          </p>
+        </div>
       </div>
     </div>
   </div>
