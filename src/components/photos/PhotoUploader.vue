@@ -1,5 +1,6 @@
 <script setup>
 import { onMounted, onUnmounted, ref } from 'vue'
+import BigPhotosDialog from './BigPhotosDialog.vue'
 import { FILE_PROBLEMS, photoCount } from './photosText'
 
 // Picking / dropping photos and the progress of the batch (usePhotoUpload).
@@ -94,8 +95,8 @@ defineExpose({ pick: () => input.value.click() })
         vyber fotky, nebo je sem přetáhni
       </span>
       <span class="text-[14px] text-muted-2">
-        klidně celé album najednou · JPEG, PNG nebo WebP do 30 MB · originály zůstanou v plné
-        kvalitě
+        klidně celé album najednou · JPEG, PNG nebo WebP do 30 MB · fotky nad 7 MB ti nabídnu
+        zmenšit
       </span>
     </button>
 
@@ -185,6 +186,12 @@ defineExpose({ pick: () => input.value.click() })
     </details>
 
     <Teleport to="body">
+      <BigPhotosDialog
+        v-if="upload.pending"
+        :count="upload.big.count"
+        :bytes="upload.big.bytes"
+        @decide="upload.decideBig"
+      />
       <div
         v-if="dragging"
         class="pointer-events-none fixed inset-0 z-50 grid place-items-center bg-green/25 p-6 backdrop-blur-[2px]"

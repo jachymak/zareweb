@@ -529,6 +529,92 @@ export default async function photos({ browser, check }) {
     await m.ctx.close()
   }
 
+  // big photos: asked first, shrunk in the browser with the date kept
+  {
+    // 5000×3500 rotated by EXIF (upright 3500×5000), ~14 MB
+    const raw = await sharp({
+      create: {
+        width: 5000,
+        height: 3500,
+        channels: 3,
+        noise: { type: 'gaussian', mean: 128, sigma: 8 },
+      },
+    })
+      .raw()
+      .toBuffer({ resolveWithObject: true })
+    const big = await sharp(raw.data, { raw: raw.info })
+      .jpeg({ quality: 100 })
+      .withExif({ IFD2: { DateTimeOriginal: '2026:09:21 18:30:00' } })
+      .withMetadata({ orientation: 6 })
+      .toBuffer()
+    const small = await jpeg(800, 600, '#3a6b8c')
+    const files = [
+      { name: 'velka.jpg', mimeType: 'image/jpeg', buffer: big },
+      { name: 'mala.jpg', mimeType: 'image/jpeg', buffer: small },
+    ]
+    const before = (await storageFiles(`originals/${albumId}/`)).length
+    const dialog = page.getByTestId('big-photos')
+
+    await page.getByTestId('photo-input').setInputFiles(files)
+    await dialog.waitFor()
+    const text = await dialog.innerText()
+    check(
+      'big photos: asked before uploading',
+      text.includes('Jedna fotka je zbytečně velká') && text.includes('přes 7 MB'),
+      text,
+    )
+    await page.setViewportSize({ width: 360, height: 780 })
+    const boxes = await dialog
+      .locator('button, h2, p')
+      .evaluateAll((els) => els.map((e) => e.getBoundingClientRect()))
+    check(
+      'big photos: dialog fits 360px',
+      boxes.every((b) => b.left >= 0 && b.right <= 360),
+      JSON.stringify(boxes.map((b) => [b.left, b.right])),
+    )
+    await page.screenshot({ path: `${SCREENSHOTS}photos-big-360.png` })
+    await page.setViewportSize({ width: 1280, height: 900 })
+    await dialog.getByRole('button', { name: 'zrušit, zmenším si ji sám' }).click()
+    await dialog.waitFor({ state: 'detached' })
+    await page.waitForTimeout(1500)
+    check(
+      'big photos: cancel uploads nothing',
+      (await storageFiles(`originals/${albumId}/`)).length === before,
+    )
+
+    await page.getByTestId('photo-input').setInputFiles(files)
+    await dialog.getByRole('button', { name: 'zmenšit a nahrát' }).click()
+    const uploaded = (docs) =>
+      Object.fromEntries(
+        docs
+          .map((d) => d.fields)
+          .filter((f) => ['velka.jpg', 'mala.jpg'].includes(fieldValue(f.originalFilename)))
+          .map((f) => [fieldValue(f.originalFilename), f]),
+      )
+    let photos = {}
+    await until(async () => {
+      photos = uploaded(await listDocs(`albums/${albumId}/photos`))
+      return Object.values(photos).filter((f) => fieldValue(f.status) === 'ready').length === 2
+    }, 60000)
+    const shrunk = photos['velka.jpg']
+    check(
+      'big photos: shrunk to 4000 px, upright, date taken kept',
+      fieldValue(shrunk?.width) === '2800' &&
+        fieldValue(shrunk?.height) === '4000' &&
+        fieldValue(shrunk?.takenAt) === '2026-09-21T16:30:00Z',
+      JSON.stringify(shrunk),
+    )
+    const bigMeta = await storageMeta(fieldValue(shrunk?.originalPath))
+    const smallMeta = await storageMeta(fieldValue(photos['mala.jpg']?.originalPath))
+    check(
+      'big photos: stored JPEG under 7 MB, small one untouched',
+      Number(bigMeta?.size) < 7 * 1024 * 1024 &&
+        bigMeta.contentType === 'image/jpeg' &&
+        Number(smallMeta?.size) === small.length,
+      `${bigMeta?.size} / ${smallMeta?.size} (${small.length})`,
+    )
+  }
+
   // delete the album
   {
     await page.getByRole('button', { name: 'smazat celé album' }).click()

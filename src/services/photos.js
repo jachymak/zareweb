@@ -116,18 +116,20 @@ function attachment(filename) {
   return `attachment; filename="${ascii || 'foto'}"; filename*=UTF-8''${encodeURIComponent(filename)}`
 }
 
-// Uploads an original; `onProgress(bytesTransferred)`. Returns { done, cancel }.
-export function uploadPhoto(albumId, photoId, file, onProgress) {
+// Uploads an original: `data` is its content read into memory (Uint8Array),
+// `name` and `type` its file name and type; `onProgress(bytesTransferred)`.
+// Returns { done, cancel }.
+export function uploadPhoto(albumId, photoId, { name, type, data }, onProgress) {
   const task = uploadBytesResumable(
-    storageRef(storage, originalPath(albumId, photoId, file.type)),
-    file,
+    storageRef(storage, originalPath(albumId, photoId, type)),
+    data,
     {
-      contentType: file.type,
-      contentDisposition: attachment(file.name),
+      contentType: type,
+      contentDisposition: attachment(name),
       customMetadata: {
         albumId,
         uploadedBy: auth.currentUser.uid,
-        originalFilename: file.name,
+        originalFilename: name,
       },
     },
   )
