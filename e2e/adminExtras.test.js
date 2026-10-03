@@ -343,6 +343,13 @@ export default async function adminExtras({ browser, check: report }) {
       'meetings: after saving, the range that is over is hidden (still in the data)',
       (await page.getByTestId('no-meeting').count()) === 1,
     )
+    await page.getByRole('button', { name: 'ukázat proběhlá (1)' }).click()
+    check(
+      'meetings: „ukázat proběhlá“ lists the range that is over',
+      (await page.getByTestId('past-no-meeting').count()) === 1 &&
+        (await page.getByTestId('past-no-meeting').innerText()).includes('státní svátek'),
+    )
+    await page.getByRole('button', { name: 'skrýt proběhlá' }).click()
     const saved = (await getDoc('settings/meetings')).data
     check(
       'meetings: saved to settings/meetings',

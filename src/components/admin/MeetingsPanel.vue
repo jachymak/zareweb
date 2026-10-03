@@ -129,11 +129,13 @@ function addRange() {
 }
 
 // Ranges not over yet (and ones added here until saved); the ones that are
-// over stay in the data (see above).
+// over (this school year's, see above) are shown on request.
 const added = ref([])
-const upcoming = computed(() =>
-  draft.value.noMeetings.filter((r) => r.to >= today || added.value.includes(r)),
-)
+const isPast = (r) => r.to < today && !added.value.includes(r)
+const upcoming = computed(() => draft.value.noMeetings.filter((r) => !isPast(r)))
+const pastCount = computed(() => draft.value.noMeetings.length - upcoming.value.length)
+const showPast = ref(false)
+const shown = computed(() => (showPast.value ? draft.value.noMeetings : upcoming.value))
 const removeRange = (range) =>
   (draft.value.noMeetings = draft.value.noMeetings.filter((r) => r !== range))
 
@@ -285,16 +287,28 @@ async function submit() {
       >
         <p class="m-0 mb-3 text-[14.5px] text-muted">
           Prázdniny, svátky, podzimní a jarní prázdniny… Ty dny se v docházce nenabízí a nepočítají
-          se jako nezapsané. Proběhlá období tu už nejsou vidět, docházka je ale do konce školního
-          roku dál vynechává.
+          se jako nezapsané. Proběhlá období letošního školního roku jsou schovaná, docházka je ale
+          dál vynechává.
         </p>
 
-        <ul v-if="upcoming.length" class="m-0 mb-3 flex list-none flex-col p-0">
+        <button
+          v-if="pastCount"
+          type="button"
+          class="btn-link mb-1 py-0 text-[14.5px]"
+          :aria-expanded="showPast"
+          data-testid="toggle-past"
+          @click="showPast = !showPast"
+        >
+          {{ showPast ? 'skrýt proběhlá' : `ukázat proběhlá (${pastCount})` }}
+        </button>
+
+        <ul v-if="shown.length" class="m-0 mb-3 flex list-none flex-col p-0">
           <li
-            v-for="(r, i) in upcoming"
+            v-for="(r, i) in shown"
             :key="`${r.from}-${r.to}-${r.troop}-${i}`"
             class="flex flex-wrap items-center gap-x-3 gap-y-0.5 border-t border-[#ece4d0] py-2 first:border-t-0"
-            data-testid="no-meeting"
+            :class="isPast(r) ? 'opacity-60' : ''"
+            :data-testid="isPast(r) ? 'past-no-meeting' : 'no-meeting'"
           >
             <span class="font-hand text-[21px] leading-none font-bold whitespace-nowrap text-ink">
               {{ formatDates(r) }}
