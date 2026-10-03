@@ -17,6 +17,20 @@ export function registrationState(event, today) {
   return today <= event.registrationDeadline ? 'open' : 'ended'
 }
 
+// Parents get e-mails about the event (registration, poster) only until it starts.
+export function sendsEventEmails(event, today) {
+  return !event.deleted && !event.cancelled && event.startDate >= today
+}
+
+// What saving a change that announces the event (registration, poster) does:
+// 'send' | 'cancelled' | 'started' | 'sent' (already announced) | 'off' (Administration).
+export function eventEmailState(event, today, { notified, enabled }) {
+  if (event.cancelled) return 'cancelled'
+  if (!sendsEventEmails(event, today)) return 'started'
+  if (notified) return 'sent'
+  return enabled ? 'send' : 'off'
+}
+
 // Listed under „Nejbližší akce“: registration started, not cancelled, not started yet.
 export function isOpenForSignUp(event, today) {
   return registrationState(event, today) !== 'none' && !event.cancelled && event.startDate > today

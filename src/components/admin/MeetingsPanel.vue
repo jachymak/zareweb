@@ -12,6 +12,7 @@ import AudienceTag from '@/components/parent/AudienceTag.vue'
 import { formatRange, plural } from '@/components/parent/parentText'
 import CollapsibleSection from './CollapsibleSection.vue'
 import SaveBar from './SaveBar.vue'
+import DateInput from '@/components/form/DateInput.vue'
 
 // „Schůzky“ — SPEC §4.8 Meetings: each troop's two meeting days and time,
 // and date ranges without meetings (holidays). Saved together with one button;
@@ -93,11 +94,20 @@ const withoutDay = computed(() => members.value.filter((m) => !m.meetingDay).len
 // ---- dates without meetings ----
 
 const TROOP_OPTIONS = ['all', 'vlc', 'ss']
-const range = reactive({ from: '', to: '', troop: 'all', reason: '' })
+const range = reactive({
+  from: '',
+  to: '',
+  fromIncomplete: false,
+  toIncomplete: false,
+  troop: 'all',
+  reason: '',
+})
 const rangeError = ref('')
 
 function addRange() {
   const to = range.to || range.from
+  if (range.fromIncomplete || range.toIncomplete)
+    return (rangeError.value = 'Zadej celé datum — DD. MM. RRRR.')
   if (!range.from) return (rangeError.value = 'Vyber, od kdy schůzky nejsou.')
   if (to < range.from) return (rangeError.value = 'Konec musí být stejně nebo později než začátek.')
   rangeError.value = ''
@@ -298,14 +308,14 @@ async function submit() {
           class="grid grid-cols-2 gap-3 border-t border-dashed border-line pt-3 sm:grid-cols-[auto_auto_auto_minmax(0,1fr)_auto] sm:items-end"
           data-testid="add-range"
         >
-          <label class="flex min-w-0 flex-col gap-[7px]">
+          <div class="col-span-2 flex min-w-0 flex-col gap-[7px] sm:col-span-1">
             <span class="text-[15px] font-medium text-ink">Od</span>
-            <input v-model="range.from" type="date" class="field-input py-2.5" />
-          </label>
-          <label class="flex min-w-0 flex-col gap-[7px]">
+            <DateInput v-model="range.from" v-model:incomplete="range.fromIncomplete" label="Od" />
+          </div>
+          <div class="col-span-2 flex min-w-0 flex-col gap-[7px] sm:col-span-1">
             <span class="text-[15px] font-medium text-ink">Do</span>
-            <input v-model="range.to" type="date" :min="range.from" class="field-input py-2.5" />
-          </label>
+            <DateInput v-model="range.to" v-model:incomplete="range.toIncomplete" label="Do" />
+          </div>
           <label class="col-span-2 flex min-w-0 flex-col gap-[7px] sm:col-span-1">
             <span class="text-[15px] font-medium text-ink">Oddíl</span>
             <select v-model="range.troop" class="field-input py-2.5">

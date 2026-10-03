@@ -1,8 +1,11 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
-import { registrationState } from '@shared/events'
+import { eventEmailState, registrationState } from '@shared/events'
 import { setRegistration } from '@/services/events'
+import { useEmailEnabled } from '@/composables/useEmailEnabled'
 import { formatDay, SAVE_ERROR } from '@/components/parent/parentText'
+import DateInput from '@/components/form/DateInput.vue'
+import { noEmailNote } from './eventsText'
 
 // „Spustit přihlašování“ + the deadline (last day parents can sign up).
 const props = defineProps({
@@ -12,6 +15,7 @@ const props = defineProps({
 
 const open = ref(false)
 const deadline = ref('')
+const deadlineIncomplete = ref(false)
 watch(
   () => [props.event.registrationOpen, props.event.registrationDeadline],
   ([isOpen, date]) => {
@@ -29,11 +33,21 @@ const changed = computed(
 )
 const error = computed(() => {
   if (!open.value) return ''
+  if (deadlineIncomplete.value) return 'Zadej celé datum uzávěrky — DD. MM. RRRR.'
   if (!deadline.value) return 'Vyber datum uzávěrky.'
   if (deadline.value > props.event.startDate)
     return 'Uzávěrka musí být nejpozději v den začátku akce.'
   return ''
 })
+
+// Whether starting the registration e-mails parents (as onEventUpdated decides).
+const emailEnabled = useEmailEnabled('registrationOpened')
+const email = computed(() =>
+  eventEmailState(props.event, props.today, {
+    notified: props.event.registrationNotifiedAt,
+    enabled: emailEnabled.value,
+  }),
+)
 
 const saving = ref(false)
 const saveError = ref(false)
@@ -66,7 +80,7 @@ async function save() {
     </h3>
     <p class="m-0 mb-3 text-[14.5px] text-muted" data-testid="registration-state">
       <template v-if="state === 'open'">
-        Rodiče můžou děti přihlašovat do {{ formatDay(event.registrationDeadline) }}.
+        Rodiče můžou děti přihlašovat do {{ formatDay(event.registrationDeadline) }}
       </template>
       <template v-else-if="state === 'ended'">
         Přihlašování skončilo {{ formatDay(event.registrationDeadline) }} — teď přihlašuješ jen ty.
@@ -78,16 +92,15 @@ async function save() {
         <input v-model="open" type="checkbox" class="size-6 accent-green" />
         spustit přihlašování
       </label>
-      <label v-if="open" class="flex flex-col gap-1 text-[14px] text-muted">
+      <div v-if="open" class="flex flex-col gap-1 text-[14px] text-muted">
         přihlášky do
-        <input
+        <DateInput
           v-model="deadline"
-          type="date"
-          :max="event.startDate"
-          class="field-input py-2! text-[15px]!"
-          :aria-invalid="submitted && !!error"
+          v-model:incomplete="deadlineIncomplete"
+          label="přihlášky do"
+          :invalid="submitted && !!error"
         />
-      </label>
+      </div>
       <button
         type="submit"
         :disabled="!changed || saving"
@@ -98,8 +111,16 @@ async function save() {
     </form>
     <p v-if="submitted && error" class="m-0 mt-2 text-sm text-red">{{ error }}</p>
     <p v-if="saveError" role="alert" class="m-0 mt-2 text-sm text-red">{{ SAVE_ERROR }}</p>
-    <p v-if="open && !event.registrationOpen" class="m-0 mt-2 text-[13.5px] text-[#8a7b5e]">
-      Až budou fungovat e-maily, dostanou rodiče dětí, které můžou jet, zprávu, že se přihlašuje.
+    <p
+      v-if="open && !event.registrationOpen"
+      class="m-0 mt-2 text-[13.5px] text-[#8a7b5e]"
+      data-testid="registration-email"
+    >
+      {{
+        email === 'send'
+          ? 'Po uložení odejde rodičům dětí, které můžou jet, e-mail, že se přihlašuje.'
+          : noEmailNote(email, 'o přihlašování')
+      }}
     </p>
   </section>
 </template>

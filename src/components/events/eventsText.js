@@ -43,3 +43,11 @@ export const MONTHS = [
 export const WEEKDAY_HEADERS = ['po', 'út', 'st', 'čt', 'pá', 'so', 'ne']
 
 export const UNSAVED_CONFIRM = 'Plakátek má neuložené změny. Opravdu odejít bez uložení?'
+
+// Why parents get no e-mail about the event; what = „o přihlašování“ / „o plakátku“.
+export function noEmailNote(state, what) {
+  if (state === 'cancelled') return 'Akce je zrušená, rodičům žádný e-mail nepřijde.'
+  if (state === 'started') return 'Akce už začala, rodičům žádný e-mail nepřijde.'
+  if (state === 'sent') return `E-mail ${what} už rodiče dostali, znovu nepřijde.`
+  return `E-mail ${what} je v Administraci vypnutý, rodičům nic nepřijde.`
+}

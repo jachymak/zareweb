@@ -18,6 +18,7 @@ import {
   pragueToday,
   runScript,
   signInRest,
+  fillDate,
 } from './lib.js'
 import { addDays, EVENTS, PACKING_TEMPLATES } from '../scripts/seed-activity.js'
 
@@ -230,6 +231,10 @@ export default async function events({ browser, check }) {
       (await getDoc(`${path}/poster/content`, asParent)) === null,
     )
     await poster.getByLabel('zveřejnit plakátek rodičům').check()
+    check(
+      'poster: says publishing e-mails the parents',
+      (await poster.getByTestId('poster-note').textContent()).includes('odejde e-mail'),
+    )
     await poster.getByRole('button', { name: 'uložit' }).click()
     check(
       'poster: published',
@@ -246,13 +251,19 @@ export default async function events({ browser, check }) {
   {
     const registration = page.getByRole('region', { name: 'Přihlašování' })
     await registration.getByLabel('spustit přihlašování').check()
-    await registration.getByLabel('přihlášky do').fill(addDays(start, 1))
+    check(
+      'registration: says saving e-mails the parents',
+      (await registration.getByTestId('registration-email').textContent()).includes(
+        'Po uložení odejde rodičům',
+      ),
+    )
+    await fillDate(registration, 'přihlášky do', addDays(start, 1))
     await registration.getByRole('button', { name: 'uložit přihlašování' }).click()
     check(
       'registration: deadline after the start refused',
       await registration.getByText('Uzávěrka musí být nejpozději v den začátku akce.').isVisible(),
     )
-    await registration.getByLabel('přihlášky do').fill(addDays(today, 10))
+    await fillDate(registration, 'přihlášky do', addDays(today, 10))
     await registration.getByRole('button', { name: 'uložit přihlašování' }).click()
     const path = `events/${eventId}`
     check(

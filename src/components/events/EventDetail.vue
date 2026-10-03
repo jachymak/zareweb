@@ -132,7 +132,7 @@ const action =
       </template>
       <div v-else class="flex flex-col gap-6">
         <RegistrationSettings :event="event" :today="today" />
-        <PosterEditor v-model:dirty="dirty" :event="event" :templates="templates" />
+        <PosterEditor v-model:dirty="dirty" :event="event" :templates="templates" :today="today" />
         <EventSignUps v-if="event.registrationOpen" :event="event" :members="members" />
       </div>
     </article>

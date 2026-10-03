@@ -4,7 +4,7 @@ import { db } from './admin.js'
 import { APP_URL, sendEmails } from './mail.js'
 import { MAIL_OPTIONS } from './options.js'
 import { emailTemplate, renderEmail } from './shared/emails.js'
-import { canJoin, formatEventDates, registrationState } from './shared/events.js'
+import { canJoin, formatEventDates, registrationState, sendsEventEmails } from './shared/events.js'
 import { pragueToday } from './shared/schoolYear.js'
 import { nicknameOf } from './shared/names.js'
 
@@ -53,7 +53,7 @@ export const onEventUpdated = onDocumentUpdated(
     const before = data.before.data()
     const event = data.after.data()
     const today = pragueToday()
-    if (event.deleted || event.cancelled || event.startDate < today) return
+    if (!sendsEventEmails(event, today)) return
 
     const opened =
       !before.registrationOpen && event.registrationOpen && !event.registrationNotifiedAt

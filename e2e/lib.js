@@ -192,7 +192,9 @@ export async function assertRunning() {
   // would change real data and send real e-mails.
   const firebaseModule = await (await fetch(`${APP_URL}/src/services/firebase.js`)).text()
   if (!/"VITE_USE_EMULATORS": *"true"/.test(firebaseModule)) {
-    throw new Error('the dev server is not using the emulators (VITE_USE_EMULATORS) — run `npm run dev`')
+    throw new Error(
+      'the dev server is not using the emulators (VITE_USE_EMULATORS) — run `npm run dev`',
+    )
   }
 }
 
@@ -209,6 +211,12 @@ export function yearsAgo(today, years, days = 0) {
 
 // `2018-03-14` → keys typed into the DD / MM / RRRR fields: `14032018`
 export const dateKeys = (iso) => iso.slice(8, 10) + iso.slice(5, 7) + iso.slice(0, 4)
+
+// Types `YYYY-MM-DD` into a DateInput labelled `label` as DD. MM. RRRR.
+export const fillDate = (scope, label, iso) =>
+  scope
+    .getByLabel(label, { exact: true })
+    .fill(`${iso.slice(8)}. ${iso.slice(5, 7)}. ${iso.slice(0, 4)}`)
 
 const plural = (n, one, few, many) => (n === 1 ? one : n >= 2 && n <= 4 ? few : many)
 

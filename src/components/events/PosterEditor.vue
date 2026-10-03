@@ -1,15 +1,19 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
+import { eventEmailState } from '@shared/events'
 import { getPoster, savePoster } from '@/services/events'
+import { useEmailEnabled } from '@/composables/useEmailEnabled'
 import FormField from '@/components/form/FormField.vue'
 import { LOAD_ERROR, SAVE_ERROR } from '@/components/parent/parentText'
 import PackingList from './PackingList.vue'
+import { noEmailNote } from './eventsText'
 
 // Poster editor (SPEC §4.3): saved with „uložit“ together with the price and
 // whether parents see it. Reports unsaved changes through `dirty`.
 const props = defineProps({
   event: { type: Object, required: true },
   templates: { type: Array, required: true },
+  today: { type: String, required: true },
 })
 const dirty = defineModel('dirty', { type: Boolean, default: false })
 
@@ -57,6 +61,22 @@ watch(() => props.event.id, load, { immediate: true })
 
 watch([form, price, publish], () => (dirty.value = !loading.value && snapshot() !== saved), {
   deep: true,
+})
+
+// Publishing for the first time e-mails parents (as onEventUpdated decides).
+const emailEnabled = useEmailEnabled('posterPublished')
+const email = computed(() =>
+  eventEmailState(props.event, props.today, {
+    notified: props.event.posterNotifiedAt,
+    enabled: emailEnabled.value,
+  }),
+)
+const publishNote = computed(() => {
+  if (!publish.value) return 'Rozepsaný plakátek rodiče nevidí — zveřejníš ho, až bude hotový.'
+  if (props.event.posterStatus === 'published') return 'Po uložení plakátek rodiče hned uvidí.'
+  if (email.value === 'send')
+    return 'Po uložení plakátek rodiče hned uvidí a rodičům dětí, které můžou jet, odejde e-mail s odkazem na něj.'
+  return `Po uložení plakátek rodiče hned uvidí. ${noEmailNote(email.value, 'o plakátku')}`
 })
 
 const submitted = ref(false)
@@ -249,12 +269,8 @@ const heading = 'm-0 mb-2 text-[16px] font-semibold text-ink'
         Něco nesedí — zkontroluj označená pole.
       </p>
       <p v-if="saveError" role="alert" class="m-0 mt-2 text-sm text-red">{{ SAVE_ERROR }}</p>
-      <p class="m-0 mt-2.5 text-[14px] text-[#8a7b5e]">
-        {{
-          publish
-            ? 'Po uložení plakátek rodiče hned uvidí.'
-            : 'Rozepsaný plakátek rodiče nevidí — zveřejníš ho, až bude hotový.'
-        }}
+      <p class="m-0 mt-2.5 text-[14px] text-[#8a7b5e]" data-testid="poster-note">
+        {{ publishNote }}
         Náhled ukazuje uloženou verzi.
       </p>
     </form>

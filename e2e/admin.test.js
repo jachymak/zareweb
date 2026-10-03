@@ -136,6 +136,12 @@ export default async function admin({ browser, check }) {
         (await roleOf('cekajici@zare.test')) === 'pending' &&
         !(await parentUidsOf('900101')).includes(uid),
     )
+    check(
+      'approve: says the account gets an e-mail',
+      (await pending.getByTestId('approval-email').textContent()).includes(
+        'Po schválení přijde na cekajici@zare.test e-mail',
+      ),
+    )
     await pending.getByRole('button', { name: 'schválit jako rodiče' }).click()
     await other.page.waitForURL(/\/clenove$/, { timeout: 10000 })
     check('pair: the waiting user is moved to /clenove live', true)

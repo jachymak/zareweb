@@ -27,6 +27,7 @@ import {
   patchDoc,
   REPO,
   yearsAgo,
+  fillDate,
 } from './lib.js'
 import { readFileSync, statSync } from 'node:fs'
 import { schoolYearRange } from '../functions/src/shared/schoolYear.js'
@@ -321,12 +322,12 @@ export default async function adminExtras({ browser, check: report }) {
       'meetings: adding a range without a date asks for it',
       await page.getByText('Vyber, od kdy schůzky nejsou.').isVisible(),
     )
-    await add.getByLabel('Od', { exact: true }).fill(latestMon)
+    await fillDate(add, 'Od', latestMon)
     await add.getByLabel('Oddíl').selectOption('vlc')
     await add.getByLabel('Důvod').fill('státní svátek')
     await add.getByRole('button', { name: '+ přidat' }).click()
-    await add.getByLabel('Od', { exact: true }).fill(`${Number(today.slice(0, 4)) + 1}-02-02`)
-    await add.getByLabel('Do', { exact: true }).fill(`${Number(today.slice(0, 4)) + 1}-02-06`)
+    await fillDate(add, 'Od', `${Number(today.slice(0, 4)) + 1}-02-02`)
+    await fillDate(add, 'Do', `${Number(today.slice(0, 4)) + 1}-02-06`)
     await add.getByLabel('Oddíl').selectOption('all')
     await add.getByLabel('Důvod').fill('jarní prázdniny')
     await add.getByRole('button', { name: '+ přidat' }).click()

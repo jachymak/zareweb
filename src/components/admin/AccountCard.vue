@@ -320,6 +320,17 @@ const BADGE = {
         </button>
       </template>
     </div>
+    <p
+      v-if="role === 'pending' && !self"
+      class="m-0 mt-1.5 text-[13.5px] text-[#8a7b5e]"
+      data-testid="approval-email"
+    >
+      {{
+        account.approvalNotifiedAt
+          ? 'E-mail o schválení už tenhle účet jednou dostal, znovu nepřijde.'
+          : `Po schválení přijde na ${account.email} e-mail, že může na web.`
+      }}
+    </p>
 
     <div
       v-if="confirmingDelete && role === 'none'"
