@@ -112,7 +112,7 @@ const heading = 'm-0 mb-2 text-[16px] font-semibold text-ink'
     <p v-if="loading" class="m-0 font-hand text-xl text-muted">načítám…</p>
     <p v-else-if="loadError" role="alert" class="m-0 text-red">{{ LOAD_ERROR }}</p>
     <form v-else novalidate aria-label="Plakátek" @submit.prevent="save">
-      <FormField v-slot="{ id }" label="Obecné informace o výpravě" class="mb-3.5">
+      <FormField v-slot="{ id }" label="Obecné informace o výpravě" rich-text class="mb-3.5">
         <textarea
           :id="id"
           v-model="form.intro"

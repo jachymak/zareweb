@@ -8,3 +8,10 @@ export const NEWS_AUDIENCE_OPTIONS = [
 
 export const PUBLISHED = 'zveřejněno ✓ rodiče to uvidí na svojí stránce'
 export const SAVED = 'uloženo ✓ rodiče uvidí upravenou verzi'
+
+// The body with the separate link of older news (linkLabel / linkUrl, before links
+// went into the text) appended as <a>.
+export function newsBody({ body, linkLabel, linkUrl }) {
+  if (!/^https?:\/\//i.test(linkUrl ?? '')) return body
+  return `${body}\n\n<a href="${linkUrl.replace(/"/g, '%22')}">${linkLabel || linkUrl}</a>`
+}

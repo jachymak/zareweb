@@ -109,7 +109,13 @@ async function submit() {
               :aria-describedby="describedBy"
             />
           </FormField>
-          <FormField v-slot="{ id, describedBy }" label="Text" :error="errors.body">
+          <FormField
+            v-slot="{ id, describedBy }"
+            label="Text"
+            rich-text
+            rich-text-note='Odkaz na doplňovanou adresu: <a href="{odkaz}">zde</a>.'
+            :error="errors.body"
+          >
             <textarea
               :id="id"
               v-model="body"

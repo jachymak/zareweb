@@ -1,6 +1,7 @@
 import {
   addDoc,
   collection,
+  deleteField,
   doc,
   onSnapshot,
   orderBy,
@@ -30,12 +31,10 @@ export function subscribeNews(callback, onError) {
   )
 }
 
-const contentFields = ({ title, body, audience, linkLabel, linkUrl, important }) => ({
+const contentFields = ({ title, body, audience, important }) => ({
   title,
   body,
   audience,
-  linkLabel: linkLabel || null,
-  linkUrl: linkUrl || null,
   important,
 })
 
@@ -50,9 +49,14 @@ export async function publishNews(content, authorName) {
   return ref.id
 }
 
-// Edits the content; author and publication date stay.
+// Edits the content; author and publication date stay. The separate link of older
+// news is dropped (the form moves it into the text).
 export function updateNews(newsId, content) {
-  return updateDoc(doc(news, newsId), contentFields(content))
+  return updateDoc(doc(news, newsId), {
+    ...contentFields(content),
+    linkLabel: deleteField(),
+    linkUrl: deleteField(),
+  })
 }
 
 export function setNewsWithdrawn(newsId, withdrawn) {

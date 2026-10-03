@@ -184,7 +184,7 @@ export default async function events({ browser, check }) {
   {
     const poster = page.getByRole('form', { name: 'Plakátek' })
     await poster.waitFor()
-    await poster.getByLabel('Obecné informace o výpravě').fill('Vylezeme na Sněžku.')
+    await poster.getByLabel('Obecné informace o výpravě').fill('Vylezeme na <b>Sněžku</b>.')
     await poster.getByLabel('Kam se jede?').fill('Pec pod Sněžkou')
     await poster.getByLabel('Čas u Památníku').fill('07:30')
     await poster.getByLabel('Peněz (Kč)').fill('450')
@@ -219,7 +219,7 @@ export default async function events({ browser, check }) {
     check(
       'poster: draft saved with content, price and items',
       fieldValue((await getDoc(path)).price) === '450' &&
-        fieldValue(content.intro) === 'Vylezeme na Sněžku.' &&
+        fieldValue(content.intro) === 'Vylezeme na <b>Sněžku</b>.' &&
         fieldValue(content.meetAtPamatnik) === '07:30' &&
         fieldValue(content.packingTemplateId) === 'seed-jednodenni' &&
         values(content.packingItems).join() === wantItems.join(),

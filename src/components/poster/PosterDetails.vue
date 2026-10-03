@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import AudienceTag from '@/components/parent/AudienceTag.vue'
+import RichText from '@/components/RichText.vue'
 import { formatRange, organizerNames } from '@/components/parent/parentText'
 import { isHttpUrl, meetingText, packingSentence, priceText, returnText } from './posterText'
 
@@ -38,7 +39,7 @@ const lines = computed(() =>
       v-if="poster.intro"
       class="m-0 mb-[22px] text-[18px] leading-[1.6] whitespace-pre-line text-pretty text-ink"
     >
-      {{ poster.intro }}
+      <RichText :text="poster.intro" />
     </p>
 
     <dl class="m-0 flex flex-col gap-3.5 text-[17px] leading-normal text-ink">

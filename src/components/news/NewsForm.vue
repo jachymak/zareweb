@@ -4,10 +4,11 @@ import { publishNews, updateNews } from '@/services/news'
 import FormField from '@/components/form/FormField.vue'
 import HandDrawnBox from '@/components/HandDrawnBox.vue'
 import { SAVE_ERROR } from '@/components/parent/parentText'
-import { NEWS_AUDIENCE_OPTIONS } from './newsText'
+import { NEWS_AUDIENCE_OPTIONS, newsBody } from './newsText'
 
 // „Napsat rodičům“: a new news item, published right away, or an existing one
-// loaded by „upravit“ (author and date stay).
+// loaded by „upravit“ (author and date stay). The text may use <b>, <i> and <a>;
+// the separate link of older news moves into it.
 const props = defineProps({
   item: { type: Object, default: null }, // null = new
   authorName: { type: String, required: true },
@@ -17,33 +18,19 @@ const emit = defineEmits(['saved', 'cancel', 'edited']) // saved('published' | '
 
 const n = props.item
 const title = ref(n?.title ?? '')
-const body = ref(n?.body ?? '')
+const body = ref(n ? newsBody(n) : '')
 const audience = ref(n?.audience ?? 'all')
-const linkLabel = ref(n?.linkLabel ?? '')
-const linkUrl = ref(n?.linkUrl ?? '')
 const important = ref(n?.important ?? false)
 
-watch([title, body, audience, linkLabel, linkUrl, important], () => emit('edited'))
+watch([title, body, audience, important], () => emit('edited'))
 
 const submitted = ref(false)
 const saving = ref(false)
 const saveError = ref(false)
 
-// „example.cz/x“ → „https://example.cz/x“; parents only see http(s) links.
-const normalizedUrl = computed(() => {
-  const url = linkUrl.value.trim()
-  return url && !/^[a-z][a-z0-9+.-]*:/i.test(url) ? `https://${url}` : url
-})
-
 const errors = computed(() => ({
   title: title.value.trim() ? '' : 'Napiš titulek.',
   body: body.value.trim() ? '' : 'Napiš text vzkazu.',
-  linkUrl:
-    linkLabel.value.trim() && !normalizedUrl.value
-      ? 'Doplň adresu odkazu.'
-      : normalizedUrl.value && !/^https?:\/\/[^\s.]+\.\S+$/i.test(normalizedUrl.value)
-        ? 'Tohle nevypadá jako webová adresa.'
-        : '',
 }))
 const shown = (field) => (submitted.value ? errors.value[field] : '')
 
@@ -56,8 +43,6 @@ async function save() {
     title: title.value.trim(),
     body: body.value.trim(),
     audience: audience.value,
-    linkLabel: normalizedUrl.value ? linkLabel.value.trim() : '',
-    linkUrl: normalizedUrl.value,
     important: important.value,
   }
   try {
@@ -102,7 +87,7 @@ async function save() {
             :aria-describedby="describedBy"
           />
         </FormField>
-        <FormField v-slot="{ id, describedBy }" label="Text" :error="shown('body')">
+        <FormField v-slot="{ id, describedBy }" label="Text" rich-text :error="shown('body')">
           <textarea
             :id="id"
             v-model="body"
@@ -120,34 +105,6 @@ async function save() {
               {{ o.label }}
             </option>
           </select>
-        </FormField>
-        <FormField
-          v-slot="{ describedBy }"
-          label="Odkaz (nepovinné)"
-          tag="fieldset"
-          :error="shown('linkUrl')"
-        >
-          <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,160px),1fr))] gap-2.5">
-            <input
-              v-model="linkLabel"
-              type="text"
-              maxlength="60"
-              aria-label="Text odkazu"
-              placeholder="platební údaje"
-              class="field-input"
-            />
-            <input
-              v-model="linkUrl"
-              type="url"
-              inputmode="url"
-              maxlength="500"
-              aria-label="Adresa odkazu"
-              placeholder="https://…"
-              class="field-input"
-              :aria-invalid="!!shown('linkUrl')"
-              :aria-describedby="describedBy"
-            />
-          </div>
         </FormField>
         <label class="flex cursor-pointer items-center gap-3 text-[15.5px] text-text">
           <input v-model="important" type="checkbox" class="size-6 shrink-0 accent-red" />

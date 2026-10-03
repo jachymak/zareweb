@@ -502,6 +502,18 @@ export default async function adminExtras({ browser, check: report }) {
       'waitlist e-mails: renewal text without {odkaz} is refused',
       await form.getByText('Text musí obsahovat {odkaz}').isVisible(),
     )
+    await body.fill(
+      'Zapsali jsme <b>{dite}</b>, potvrďte <a href="{odkaz}">tady</a>, <a href="mapy.cz">mapa</a>.',
+    )
+    const preview = form.getByTestId('preview-body')
+    check(
+      'waitlist e-mails: preview shows bold and links',
+      (await preview.locator('b').innerText()) === 'Jan Novák' &&
+        (await preview.getByRole('link', { name: 'mapa' }).getAttribute('href')) ===
+          'https://mapy.cz' &&
+        (await preview.getByRole('link', { name: 'tady' }).count()) === 1,
+      await preview.innerHTML(),
+    )
     await body.fill(original)
     await form.getByLabel('Předmět').fill('Trvá Váš zájem o Záři?')
     check(

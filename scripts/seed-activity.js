@@ -116,7 +116,8 @@ export const MANUAL_CONTACT = {
 
 // Full poster content, as the leaders' poster editor saves it (SPEC §5).
 export const STREDOHORI_POSTER = {
-  intro: 'Vyrazíme na dva dny do Českého středohoří, vylezeme na Milešovku a přespíme na chatě.',
+  intro:
+    'Vyrazíme na dva dny do Českého středohoří, vylezeme na <b>Milešovku</b> a přespíme na chatě.',
   destination: 'Milešov, České středohoří',
   mapUrl: 'https://mapy.cz/s/milesovka',
   meetAtPamatnik: '08:00',
@@ -320,13 +321,11 @@ export const NEWS = [
   {
     id: 'seed-prispevky',
     title: 'Členské příspěvky na školní rok',
-    body: 'Prosíme o zaplacení 1 500 Kč na účet 2400123456/2010 do konce října, do zprávy napište přezdívku dítěte.',
+    body: 'Prosíme o zaplacení <b>1 500 Kč</b> na účet 2400123456/2010 do konce října, do zprávy napište přezdívku dítěte.\n\n<a href="https://example.cz/prispevky">platební údaje</a>',
     audience: 'all',
     author: 'Hobit',
     age: 10,
     important: true,
-    linkLabel: 'platební údaje',
-    linkUrl: 'https://example.cz/prispevky',
   },
   {
     id: 'seed-stazena',
@@ -524,8 +523,6 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
   for (const { id, author, age, important = false, withdrawn = false, ...news } of NEWS) {
     await put(`news/${id}`, {
-      linkLabel: null,
-      linkUrl: null,
       ...news,
       important,
       withdrawn,

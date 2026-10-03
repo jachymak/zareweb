@@ -1,9 +1,11 @@
 <script setup>
 import { computed } from 'vue'
-import { EMAIL_FROM } from '@shared/emails'
+import { EMAIL_FROM, fillLinks } from '@shared/emails'
+import RichText from '@/components/RichText.vue'
 
 // An automated e-mail as parents get it, with the placeholders marked where
-// they are filled in (sample value, the description in a tooltip).
+// they are filled in (sample value, the description in a tooltip), and <b>, <i>
+// and <a> rendered.
 const props = defineProps({
   template: { type: Object, required: true }, // { subject, body }
   placeholders: { type: Object, required: true }, // { name: description } (EMAILS[key])
@@ -24,12 +26,17 @@ const parts = (text) =>
         : { text: part }
     })
 
-// Paragraphs → lines → parts.
+// Links to a placeholder point to the web in the preview.
+const sampleLinks = computed(() =>
+  Object.fromEntries(
+    Object.keys(props.placeholders).map((name) => [name, 'https://zare.skauting.cz']),
+  ),
+)
 const paragraphs = computed(() =>
-  props.template.body
+  fillLinks(props.template.body, sampleLinks.value)
     .split(/\n\s*\n/)
-    .filter((p) => p.trim())
-    .map((p) => p.split('\n').map(parts)),
+    .map((p) => p.trim())
+    .filter(Boolean),
 )
 const subject = computed(() => parts(props.template.subject))
 </script>
@@ -54,20 +61,24 @@ const subject = computed(() => parts(props.template.subject))
         </template>
       </dd>
     </dl>
-    <div class="flex flex-col gap-3 px-[18px] pt-4 pb-[18px] text-[15.5px] leading-[1.65] text-ink">
-      <p v-for="(lines, i) in paragraphs" :key="i" class="m-0 break-words">
-        <template v-for="(line, j) in lines" :key="j">
-          <br v-if="j" />
-          <template v-for="(part, k) in line" :key="k">
-            <span
-              v-if="part.fill"
-              :title="part.tip"
-              class="rounded-[5px] bg-gold-light px-1.5 py-px"
-              >{{ part.fill }}</span
-            >
-            <template v-else>{{ part.text }}</template>
+    <div
+      class="flex flex-col gap-3 px-[18px] pt-4 pb-[18px] text-[15.5px] leading-[1.65] text-ink"
+      data-testid="preview-body"
+    >
+      <p v-for="(text, i) in paragraphs" :key="i" class="m-0 break-words whitespace-pre-line">
+        <RichText :text="text">
+          <template #text="{ text: plain }">
+            <template v-for="(part, k) in parts(plain)" :key="k">
+              <span
+                v-if="part.fill"
+                :title="part.tip"
+                class="rounded-[5px] bg-gold-light px-1.5 py-px"
+                >{{ part.fill }}</span
+              >
+              <template v-else>{{ part.text }}</template>
+            </template>
           </template>
-        </template>
+        </RichText>
       </p>
     </div>
   </div>

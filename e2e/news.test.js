@@ -1,5 +1,6 @@
 // Leaders' news (SPEC §4.4): the list (published, important, withdrawn
-// below), publishing with validation and link, what a parent sees, editing,
+// below), publishing with validation and <b>/<i>/<a> in the text (the „?“ hint),
+// what a parent sees, editing (an older item's separate link moves into the text),
 // withdrawing and restoring, security rules, mobile widths. Accounts from
 // `scripts/seed-users.js` (vedouci@ is Ondys 800001), children from
 // `scripts/seed-members.js` (rodic@ has children in both troops), news from
@@ -106,6 +107,8 @@ export default async function news({ browser, check }) {
 
   // ---- publish ----
   const TITLE = 'Testovací aktualita pro vlčušky'
+  const BODY =
+    'Příští týden bude schůzka <b>venku</b>.\nVezměte si <i>holinky</i>, sraz je <a href="mapy.cz/s/sarka">tady</a>. <script>x</script>'
   let newsId
   {
     const form = page.getByRole('form', { name: 'Napsat rodičům' })
@@ -116,18 +119,13 @@ export default async function news({ browser, check }) {
         (await form.getByText('Napiš text vzkazu.').isVisible()),
     )
     await form.getByLabel('Titulek').fill(TITLE)
-    await form
-      .getByLabel('Text', { exact: true })
-      .fill('Příští týden bude schůzka venku.\nVezměte si holinky.')
     await form.getByLabel('Komu se zobrazí').selectOption('vlc')
-    await form.getByLabel('Text odkazu').fill('mapa')
-    await form.getByLabel('Adresa odkazu').fill('není adresa')
-    await form.getByRole('button', { name: 'zveřejnit' }).click()
+    await form.getByRole('button', { name: 'Nápověda: tučné písmo, kurzíva, odkazy' }).click()
     check(
-      'publish: bad link reported',
-      await form.getByText('Tohle nevypadá jako webová adresa.').isVisible(),
+      'publish: „?“ explains the tags',
+      await form.getByText('Text jde zvýraznit jako v\u00a0HTML:').isVisible(),
     )
-    await form.getByLabel('Adresa odkazu').fill('mapy.cz/s/sarka')
+    await form.getByLabel('Text', { exact: true }).fill(BODY)
     await form.getByLabel('označit jako důležité').check()
     await form.getByRole('button', { name: 'zveřejnit' }).click()
     check(
@@ -142,13 +140,12 @@ export default async function news({ browser, check }) {
     newsId = doc?.name.split('/').at(-1)
     const f = doc?.fields ?? {}
     check(
-      'publish: saved with author, date and link',
-      fieldValue(f.body) === 'Příští týden bude schůzka venku.\nVezměte si holinky.' &&
+      'publish: saved with author and date, text as written',
+      fieldValue(f.body) === BODY &&
         fieldValue(f.audience) === 'vlc' &&
         fieldValue(f.important) === true &&
         fieldValue(f.withdrawn) === false &&
-        fieldValue(f.linkLabel) === 'mapa' &&
-        fieldValue(f.linkUrl) === 'https://mapy.cz/s/sarka' &&
+        !('linkUrl' in f) &&
         fieldValue(f.authorUid) === leader.uid &&
         fieldValue(f.authorName) === 'Ondys' &&
         Math.abs(Date.parse(fieldValue(f.publishedAt)) - Date.now()) < 60000,
@@ -164,23 +161,45 @@ export default async function news({ browser, check }) {
     )
     const text = await parentNews(parent.page)
     check('publish: the parent sees it', text.includes(TITLE) && text.includes('Ondys'))
+    const featured = parent.page.getByTestId('news-featured')
+    check(
+      'publish: the parent sees bold, italics and the link; other tags as text',
+      (await featured.locator('b').innerText()) === 'venku' &&
+        (await featured.locator('i').innerText()) === 'holinky' &&
+        (await featured.getByRole('link', { name: 'tady' }).getAttribute('href')) ===
+          'https://mapy.cz/s/sarka' &&
+        text.includes('<script>x</script>') &&
+        (await featured.locator('script').count()) === 0,
+    )
   }
 
   // ---- edit ----
   {
+    // An older item with the separate link (before links went into the text).
+    await patchDocAs(leader.idToken, `news/${newsId}`, {
+      linkLabel: { stringValue: 'mapa' },
+      linkUrl: { stringValue: 'https://mapy.cz/s/stara' },
+    })
+    check(
+      'edit: an older link is shown below the text',
+      (await parentNews(parent.page)) &&
+        (await parent.page
+          .getByTestId('news-featured')
+          .getByRole('link', { name: 'mapa' })
+          .getAttribute('href')) === 'https://mapy.cz/s/stara',
+    )
     const publishedAt = fieldValue((await getDoc(`news/${newsId}`)).publishedAt)
     await item(TITLE).getByRole('button', { name: 'upravit' }).click()
     const form = page.getByRole('form', { name: 'Upravit aktualitu' })
+    const LEGACY = '\n\n<a href="https://mapy.cz/s/stara">mapa</a>'
     check(
-      'edit: item loaded into the form',
+      'edit: item loaded into the form, the older link in the text',
       (await form.getByLabel('Titulek').inputValue()) === TITLE &&
         (await form.getByLabel('Komu se zobrazí').inputValue()) === 'vlc' &&
-        (await form.getByLabel('Adresa odkazu').inputValue()) === 'https://mapy.cz/s/sarka' &&
+        (await form.getByLabel('Text', { exact: true }).inputValue()) === BODY + LEGACY &&
         (await form.getByLabel('označit jako důležité').isChecked()),
     )
     await form.getByLabel('Titulek').fill(`${TITLE} (upraveno)`)
-    await form.getByLabel('Text odkazu').fill('')
-    await form.getByLabel('Adresa odkazu').fill('')
     await form.getByRole('button', { name: 'uložit změny' }).click()
     await page.getByRole('form', { name: 'Napsat rodičům' }).waitFor()
     const f =
@@ -189,12 +208,14 @@ export default async function news({ browser, check }) {
         return fieldValue(d.title) === `${TITLE} (upraveno)` && d
       })) || {}
     check(
-      'edit: saved, author and date kept, link removed',
+      'edit: saved, author and date kept, the link moved into the text',
       fieldValue(f.title) === `${TITLE} (upraveno)` &&
         fieldValue(f.publishedAt) === publishedAt &&
         fieldValue(f.authorName) === 'Ondys' &&
-        fieldValue(f.linkUrl) === null &&
-        fieldValue(f.linkLabel) === null,
+        fieldValue(f.body) === BODY + LEGACY &&
+        !('linkUrl' in f) &&
+        !('linkLabel' in f),
+      JSON.stringify(f),
     )
     check(
       'edit: list updated live',

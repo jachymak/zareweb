@@ -12,7 +12,12 @@ export const SMTP_PASSWORD = defineSecret('SMTP_PASSWORD')
 
 const FROM_NAME = 'Skautský oddíl Záře'
 
-// Sends e-mails [{ to, subject, text }] — SPEC §7 — over Gmail SMTP of the skaut.cz
+// The HTML part around rendered paragraphs (renderEmail), styled like a plain e-mail.
+const emailHtml = (body) =>
+  `<!doctype html><html lang="cs"><head><meta charset="utf-8"></head>` +
+  `<body style="font-family:Arial,sans-serif;font-size:15px;line-height:1.5;color:#222">${body}</body></html>`
+
+// Sends e-mails [{ to, subject, text, html? }] — SPEC §7 — over Gmail SMTP of the skaut.cz
 // Google Workspace; replies go to MAIL_REPLY_TO. Never throws: failures are logged. The
 // emulator only logs each e-mail (so links can be tried locally); production logs no content.
 export async function sendEmails(kind, emails) {
@@ -42,6 +47,7 @@ export async function sendEmails(kind, emails) {
         to: email.to,
         subject: email.subject,
         text: email.text,
+        ...(email.html && { html: emailHtml(email.html) }),
       }),
     ),
   )

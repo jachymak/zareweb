@@ -3,6 +3,10 @@
 // the defaults below apply while none is saved. Paragraphs are separated by a
 // blank line; `{name}` placeholders are filled per recipient, and a paragraph
 // left empty (e.g. `{prihlasovani}` when registration isn't open) is dropped.
+// The body may use <b>, <i> and <a href> (richText.js), also <a href="{odkaz}">;
+// filled values stay text.
+
+import { parseRichText, richTextToHtml, richTextToPlain } from './richText.js'
 
 export const EMAIL_FROM = 'Skautský oddíl Záře <zare@skaut.cz>'
 
@@ -133,12 +137,22 @@ export const missingPlaceholders = (key, body) =>
 const fill = (text, values) =>
   text.replace(/\{(\p{L}+)\}/gu, (whole, name) => (name in values ? (values[name] ?? '') : whole))
 
-// { subject, text } for one recipient; paragraphs left empty by a placeholder are dropped.
+// <a href="{odkaz}">: the address is filled in before the text is parsed.
+export const fillLinks = (body, values) =>
+  body.replace(/(href\s*=\s*)(["'])\{(\p{L}+)\}\2/gu, (whole, attr, quote, name) =>
+    name in values ? `${attr}"${String(values[name] ?? '').replace(/"/g, '%22')}"` : whole,
+  )
+
+// { subject, text, html } for one recipient; paragraphs left empty by a placeholder
+// are dropped.
 export function renderEmail(template, values) {
-  const text = template.body
+  const paragraphs = fillLinks(template.body, values)
     .split(/\n\s*\n/)
-    .map((p) => fill(p, values).trim())
-    .filter(Boolean)
-    .join('\n\n')
-  return { subject: fill(template.subject, values), text }
+    .map((p) => parseRichText(p.trim(), (t) => fill(t, values)))
+    .filter((nodes) => richTextToPlain(nodes).trim())
+  return {
+    subject: fill(template.subject, values),
+    text: paragraphs.map((nodes) => richTextToPlain(nodes).trim()).join('\n\n'),
+    html: paragraphs.map((nodes) => `<p>${richTextToHtml(nodes).trim()}</p>`).join('\n'),
+  }
 }

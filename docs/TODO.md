@@ -38,9 +38,12 @@ emailove upozorneni na aktuality
 
 fotky duplikaty nenahravat
 
+prihlasenym prijde mail o pridanem plakatku
+
 udelat ted
 - [ ] kde se prihlasuje
 - doladit zneni mailuto
 - tabory dosat
 - fotky kontakty vedeni
-- 
+
+nejde zapisovat ucast na vypravu po terminu konani?

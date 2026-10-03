@@ -90,6 +90,10 @@ export default async function posterSuite({ browser, check }) {
       (await page.getByRole('link', { name: '(mapa)' }).getAttribute('href')) ===
         'https://mapy.cz/s/milesovka',
     )
+    check(
+      'content: intro with bold text',
+      (await main(page).locator('p b').first().innerText()) === 'Milešovku',
+    )
     check('content: empty „jinde“ fields left out', !text.includes(', ,'))
   }
 

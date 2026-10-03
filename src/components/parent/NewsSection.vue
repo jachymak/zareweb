@@ -2,7 +2,8 @@
 import { ref, useId } from 'vue'
 import HandDrawnBox from '@/components/HandDrawnBox.vue'
 import AudienceTag from './AudienceTag.vue'
-import NewsLink from './NewsLink.vue'
+import RichText from '@/components/RichText.vue'
+import { newsBody } from '@/components/news/newsText'
 import SectionHeading from './SectionHeading.vue'
 import { formatTimestamp } from './parentText'
 
@@ -43,9 +44,8 @@ const toggle = (id) => (openId.value = openId.value === id ? null : id)
           <p
             class="m-0 max-w-[62ch] text-[16.5px] leading-[1.7] whitespace-pre-line text-pretty text-[#4b5749]"
           >
-            {{ news[0].body }}
+            <RichText :text="newsBody(news[0])" />
           </p>
-          <NewsLink :item="news[0]" />
         </article>
       </HandDrawnBox>
 
@@ -90,9 +90,8 @@ const toggle = (id) => (openId.value = openId.value === id ? null : id)
             <p
               class="m-0 max-w-[62ch] text-[16px] leading-[1.7] whitespace-pre-line text-pretty text-[#4b5749]"
             >
-              {{ item.body }}
+              <RichText :text="newsBody(item)" />
             </p>
-            <NewsLink :item="item" />
           </div>
         </div>
       </div>
