@@ -49,7 +49,7 @@ const quietText = computed(() => {
   <HandDrawnBox
     :stroke="record ? 'var(--color-green)' : '#c9bfa6'"
     :fill="record ? 'var(--color-paper)' : '#f6efdc'"
-    class="px-5 pt-[18px] pb-5 sm:px-6"
+    class="px-5 pt-[18px] pb-5 sm:px-8"
   >
     <section aria-label="Dnešek" data-testid="today-card">
       <div v-if="record" class="flex flex-wrap items-center gap-x-[18px] gap-y-3">

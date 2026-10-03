@@ -5,9 +5,6 @@ Stránka pro členy
 - footer u plakátku nebude
 - rodiče nemohou vidět rozdělané plakátky
 
-Stránka pro vedoucí
-- rámečky s vhodným odsazením
-
 Klubovna
 - dodělat otroka
 - rámečky
@@ -22,3 +19,42 @@ Informace pro nováčky - samostatná stránka
     
 skautIS
 - později požádat podporu o PersonParentAll (kontakty na rodiče), synchronizace je pak načte sama
+
+- upozorneni, ze jeste neni pridanej plakatek
+
+- export akcí do kalendáře
+
+- mezi roky mazání akcí atd
+- jména do otroka
+* Link Multiple Auth Providers to an Account Using JavaScript - mohou si pozdeji k uctu pripojit i google
+
+
+
+- [ ] download
+- [ ] zpevnik?
+
+omluvenky?
+
+logo - udelat pro vedouci do design slozky
+
+namluvene pro vedouci
+
+upozorneni pri velkych fotkach
+
+tabory dosat
+
+export kontaktu na vedeni a deti?
+
+potravinove intolerance
+
+—
+
+
+
+udelat ted
+- [ ] pro mobily
+- [ ] schuzka do stavu nezapsano
+- [ ] obcas se stuckne na nakonecnem nacitani
+- [ ] kde se prihlasuje
+- [x] prezdivka = jmeno, kdyz nema prezdivku nastavenou - napr ve vypravach
+- doladit zneni mailu

@@ -79,7 +79,7 @@ async function save() {
 </script>
 
 <template>
-  <HandDrawnBox shape="tall" class="px-4 pt-5 pb-6 sm:px-[26px]">
+  <HandDrawnBox shape="tall" class="px-5 pt-6 pb-6 sm:px-8 sm:pt-7 sm:pb-7">
     <form novalidate :aria-label="e ? 'Upravit akci' : 'Nová akce'" @submit.prevent="save">
       <p class="kicker m-0 -mb-[3px]">{{ e ? 'úprava akce' : 'nová akce' }}</p>
       <h2 class="m-0 mb-[18px] text-[25px] font-medium tracking-[-0.03em] text-ink">

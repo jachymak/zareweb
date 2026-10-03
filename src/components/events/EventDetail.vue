@@ -54,7 +54,7 @@ const action =
 </script>
 
 <template>
-  <HandDrawnBox shape="tall" class="px-4 pt-5 pb-6 sm:px-[26px]">
+  <HandDrawnBox shape="tall" class="px-5 pt-6 pb-6 sm:px-8 sm:pt-7 sm:pb-7">
     <article :aria-label="event.title">
       <div class="mb-1 flex flex-wrap items-baseline gap-x-3.5 gap-y-1.5">
         <p class="m-0 font-hand text-[24px] text-red">

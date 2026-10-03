@@ -126,7 +126,7 @@ const section = 'mx-auto max-w-[1040px] px-4 sm:px-6'
             <HandDrawnBox
               v-if="poster.packingItems?.length"
               stroke="#8a7b5e"
-              class="min-w-0 flex-[1_1_300px] px-5 pt-5 pb-6 sm:px-[26px]"
+              class="min-w-0 flex-[1_1_300px] px-5 pt-6 pb-6 sm:px-8 sm:pt-7 sm:pb-7"
             >
               <PackingChecklist :event-id="event.id" :items="poster.packingItems" />
             </HandDrawnBox>

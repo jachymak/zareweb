@@ -58,7 +58,7 @@ const label = 'm-0 mb-2 text-[12.5px] tracking-[.1em] text-[#8a7b5e] uppercase'
         </button>
       </div>
 
-      <HandDrawnBox v-if="trip" shape="tall" class="mt-1.5 px-4 pt-5 pb-[22px] sm:px-6">
+      <HandDrawnBox v-if="trip" shape="tall" class="mt-1.5 px-5 pt-6 pb-6 sm:px-8 sm:pt-7 sm:pb-7">
         <section :aria-label="trip.title">
           <div class="mb-1.5 flex flex-wrap items-baseline gap-x-[18px] gap-y-2">
             <h2 class="m-0 text-[23px] font-medium tracking-[-0.03em] text-ink sm:text-[25px]">

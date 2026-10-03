@@ -29,7 +29,7 @@ const requirementLines = computed(() => {
         v-for="{ member, percent, trips } in stats"
         :key="member.id"
         stroke="#b9a97f"
-        class="px-[18px] pt-[15px] pb-4"
+        class="px-5 pt-[18px] pb-[18px] sm:px-7"
       >
         <article :aria-label="nicknameOf(member)">
           <div class="flex flex-wrap items-baseline gap-x-[9px] gap-y-[3px]">

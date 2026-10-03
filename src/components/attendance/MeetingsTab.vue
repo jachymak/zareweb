@@ -97,7 +97,7 @@ const small =
         </button>
       </div>
 
-      <HandDrawnBox v-if="date" class="mt-1.5 px-4 pt-5 pb-[22px] sm:px-6">
+      <HandDrawnBox v-if="date" class="mt-1.5 px-5 pt-6 pb-6 sm:px-8 sm:pt-7 sm:pb-7">
         <section :aria-label="`Schůzka ${formatDay(date)}`">
           <div class="mb-3.5 flex flex-wrap items-baseline gap-x-[18px] gap-y-2">
             <h2 class="m-0 text-[23px] font-medium tracking-[-0.03em] text-ink sm:text-[25px]">

@@ -23,7 +23,7 @@ const modeButton = 'cursor-pointer border-0 px-[18px] py-2 text-[15px] font-medi
 
 <template>
   <HandDrawnBox :stroke="manual ? 'var(--color-red)' : 'var(--color-green)'">
-    <div class="px-5 pt-5 pb-[22px] sm:px-6">
+    <div class="px-5 pt-6 pb-6 sm:px-8 sm:pt-7 sm:pb-7">
       <div class="flex flex-wrap items-end gap-x-8 gap-y-[18px]">
         <div>
           <p :class="label" class="mb-0.5">Teploměr</p>

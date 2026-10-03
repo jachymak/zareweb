@@ -26,7 +26,7 @@ const toggle = (id) => (openId.value = openId.value === id ? null : id)
     <template v-else>
       <HandDrawnBox
         stroke="var(--color-red)"
-        class="mb-2 -rotate-[0.5deg] px-5 pt-5 pb-[22px] sm:px-6"
+        class="mb-2 -rotate-[0.5deg] px-5 pt-6 pb-6 sm:px-8 sm:pt-7 sm:pb-7"
         data-testid="news-featured"
       >
         <article :aria-labelledby="`${baseId}-first`">
