@@ -360,6 +360,18 @@ export default async function adminExtras({ browser, check: report }) {
         saved.noMeetings.some((r) => r.troop === 'all' && r.to.endsWith('-02-06')),
       JSON.stringify(saved),
     )
+
+    // filled in but not added with „+ přidat“ → „uložit“ adds it too
+    const yearEnd = `${today.slice(0, 4)}-12-31`
+    await fillDate(add, 'Od', yearEnd)
+    await page.getByRole('button', { name: 'uložit' }).click()
+    await until(async () =>
+      (await getDoc('settings/meetings')).data?.noMeetings?.some((r) => r.from === yearEnd),
+    )
+    check(
+      'meetings: a range filled in but not added is saved by „uložit“',
+      (await getDoc('settings/meetings')).data?.noMeetings?.length === 3,
+    )
     await page.getByTestId('invalid-days').waitFor()
     check(
       'meetings: warns that 2 children (Bobr, Vydra) have a day the troop no longer has',

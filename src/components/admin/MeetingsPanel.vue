@@ -104,12 +104,20 @@ const range = reactive({
 })
 const rangeError = ref('')
 
+// Whether the add-range fields have something filled in (not yet added).
+const rangeStarted = () =>
+  !!(range.from || range.to || range.fromIncomplete || range.toIncomplete || range.reason.trim())
+
+// Adds the filled-in range to the draft; false (with a message) if it isn't valid.
 function addRange() {
   const to = range.to || range.from
-  if (range.fromIncomplete || range.toIncomplete)
-    return (rangeError.value = 'Zadej celé datum — DD. MM. RRRR.')
-  if (!range.from) return (rangeError.value = 'Vyber, od kdy schůzky nejsou.')
-  if (to < range.from) return (rangeError.value = 'Konec musí být stejně nebo později než začátek.')
+  const fail = (message) => {
+    rangeError.value = message
+    return false
+  }
+  if (range.fromIncomplete || range.toIncomplete) return fail('Zadej celé datum — DD. MM. RRRR.')
+  if (!range.from) return fail('Vyber, od kdy schůzky nejsou.')
+  if (to < range.from) return fail('Konec musí být stejně nebo později než začátek.')
   rangeError.value = ''
   const newRange = { from: range.from, to, troop: range.troop, reason: range.reason.trim() }
   added.value = [...added.value, newRange]
@@ -117,6 +125,7 @@ function addRange() {
     a.from.localeCompare(b.from),
   )
   Object.assign(range, { from: '', to: '', reason: '' })
+  return true
 }
 
 // Ranges not over yet (and ones added here until saved); the ones that are
@@ -161,6 +170,8 @@ function validate() {
 }
 
 async function submit() {
+  // A range filled in but not added with „+ přidat“ is saved too, not dropped.
+  if (rangeStarted() && !addRange()) return (opened.ranges = true)
   if (!validate()) return
   if (await save(() => updateMeetingSettings(copy(draft.value)))) added.value = []
 }
