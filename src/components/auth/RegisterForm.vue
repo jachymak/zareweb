@@ -68,7 +68,7 @@ function submit() {
     <!-- From `sm` up the login page shows the intro and the explainer next to the card instead. -->
     <div class="sm:hidden">
       <p class="m-0 mb-4 text-base leading-relaxed text-muted">
-        Máš u nás dítě v oddíle, nebo jsi vedoucí? Založ si účet a správce ti ho schválí.
+        Máš u nás dítě v oddíle? Založ si účet a správce ti ho schválí.
       </p>
       <HowApprovalWorks class="mb-5" />
     </div>

@@ -12,8 +12,7 @@ defineProps({
 <template>
   <FormField label="Koho u nás máš?" :error="error" v-slot="{ id, describedBy }">
     <span class="-mt-0.5 text-[14.5px] leading-normal text-muted">
-      Napiš jména (a přezdívky) dětí, které k nám chodí, a do kterého oddílu. Pokud jsi vedoucí,
-      napiš svou přezdívku.
+      Napiš jména (a přezdívky) dětí, které k nám chodí, a do kterého oddílu.
     </span>
     <textarea
       :id="id"

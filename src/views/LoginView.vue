@@ -84,7 +84,7 @@ async function signOut() {
             class="hidden h-auto w-full max-w-[370px] sm:block"
           />
           <p class="m-0 mt-5 max-w-[40ch] text-[15px] leading-relaxed text-brown">
-            Jeden vstup pro rodiče i vedoucí — po přihlášení se ti ukáže to, na co máš přístup.
+            Účet si může založit každý z rodičů zvlášť — oba pak uvidí svoje děti.
           </p>
         </div>
 

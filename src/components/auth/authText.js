@@ -15,14 +15,14 @@ export const INTRO = {
   register: [
     'poprvé u nás?',
     'Založení účtu',
-    'Účet si může založit každý rodič dítěte z oddílu i vedoucí. Správce ho pak schválí a propojí s tvými dětmi.',
+    'Účet si může založit každý rodič dítěte z oddílu. Správce ho pak schválí a propojí s tvými dětmi.',
   ],
   pending: [
     'už to skoro je',
     'Účet čeká na schválení',
     'Bez schválení je účet prázdný — je to tak schválně, aby se dovnitř nedostal nikdo cizí.',
   ],
-  none: ['bez přístupu', 'Účet nemá přístup', 'Obsah pro členy a vedoucí vidí jen schválené účty.'],
+  none: ['bez přístupu', 'Účet nemá přístup', 'Stránky pro rodiče vidí jen schválené účty.'],
 }
 
 export const NOTE_MAX = 1000

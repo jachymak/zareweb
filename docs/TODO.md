@@ -37,10 +37,7 @@
 
 
 ## Udelat ted ##
-- texty kde se prihlasuje
-- doladit zneni mailu
-- tabory dosat
-- fotky kontakty vedeni
+- tabory dopsat
   
 - namluvene pro vedouci
 
