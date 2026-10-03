@@ -1,12 +1,13 @@
 // Links and Czech texts of the leader area (SPEC §4).
 
-// Tools on the leader home; Administrace is added for admins.
+// Tools on the leader home; Administrace is added for admins. `disabled` shows
+// a tool greyed out and not clickable.
 export const TOOLS = [
   { to: '/vedouci/dochazka', label: 'Docházka' },
   { to: '/vedouci/akce', label: 'Akce a plakátky' },
   { to: '/vedouci/aktuality', label: 'Aktuality' },
   { to: '/vedouci/fotky', label: 'Fotky' },
-  { to: '/vedouci/klubovna', label: 'Klubovna' },
+  { to: '/vedouci/klubovna', label: 'Klubovna', disabled: true },
   { to: '/vedouci/cekaci-listina', label: 'Čekací listina' },
 ]
 export const ADMIN_TOOL = { to: '/vedouci/administrace', label: 'Administrace' }

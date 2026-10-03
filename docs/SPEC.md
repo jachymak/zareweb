@@ -225,7 +225,7 @@ Photos of events are stored in Firebase Storage (§5 Storage): originals (in ful
 
 ## 4. Leader area
 
-Common header (as in the design, no menu): „Skautský oddíl Záře“ (→ leader home) with the badge „pro vedoucí“, then „náhled pro rodiče“, user's e-mail (hidden on narrow screens), „odhlásit“. Pages are reached from the tools on the leader home; each subpage has „← zpět na vedoucovskou stránku“. Footer: „vedoucovská část — vidí ji jen tým“, „náhled rodičovské stránky →“ (subpages: „zpět na vedoucovskou stránku →“).
+Common header (as in the design, no menu): „Skautský oddíl Záře“ (→ leader home) with the badge „pro vedoucí“, then „náhled pro rodiče“, user's e-mail (hidden on narrow screens), „odhlásit“. Pages are reached from the tools on the leader home; each subpage has „← zpět na vedoucovskou stránku“. Footer: the same as in the parent area.
 
 **Troop switch** (leader home, attendance): top right of the page, „Oddíl“ above a two-way switch „vlčušky“ / „skauti a skautky“, each with its troop tag. It starts with the leader's home troop (`skautisPeople.troop` of the linked person), or vlčušky for a leader without one (not linked yet, or „ostatní“); the leader's choice is remembered in the browser and shared by the pages.
 

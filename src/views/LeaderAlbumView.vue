@@ -411,12 +411,5 @@ const action =
       @clear="clearSelection"
     />
   </main>
-  <AreaFooter>
-    <p class="m-0 text-[14.5px] text-muted-2">vedoucovská část — vidí ji jen tým</p>
-    <p class="m-0 text-[15px] sm:ml-auto">
-      <RouterLink :to="{ name: 'leader-albums' }" class="inline-block py-1">
-        zpět na všechna alba →
-      </RouterLink>
-    </p>
-  </AreaFooter>
+  <AreaFooter />
 </template>

@@ -134,8 +134,7 @@ const count = computed(() => props.stats.length)
       class="m-0 mt-3 font-hand text-[20px] text-brown sm:block"
       :class="open ? 'block' : 'hidden'"
     >
-      klikni na dítě a uvidíš jeho schůzky: plné kolečko = byl(a), prázdné = nebyl(a), šrafované =
-      schůzka nebyla, čárkované = nezapsáno
+      klikni na dítě a uvidíš jeho schůzky
     </p>
     <p
       v-if="campRequirementText(requirement)"

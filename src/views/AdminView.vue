@@ -11,6 +11,7 @@ import PackingTemplatesPanel from '@/components/admin/PackingTemplatesPanel.vue'
 import SettingsPanel from '@/components/admin/SettingsPanel.vue'
 import SkautisPanel from '@/components/admin/SkautisPanel.vue'
 import WaitlistPanel from '@/components/admin/WaitlistPanel.vue'
+import AreaFooter from '@/components/AreaFooter.vue'
 import LeaderHeader from '@/components/leader/LeaderHeader.vue'
 
 // Administration (admins only) — SPEC §4.8. Tabs are added as they are built;
@@ -60,4 +61,5 @@ if (skautisToken.value) router.replace({ query: { zalozka: 'skautis' }, hash: ''
       @token-used="skautisToken = null"
     />
   </main>
+  <AreaFooter />
 </template>

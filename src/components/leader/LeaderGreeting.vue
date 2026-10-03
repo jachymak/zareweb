@@ -43,15 +43,19 @@ const tool =
       <slot />
     </div>
     <nav aria-label="Nástroje" class="flex flex-wrap gap-2.5">
-      <RouterLink
-        v-for="item in TOOLS"
-        :key="item.to"
-        :to="item.to"
-        :class="tool"
-        class="border-line-strong bg-paper"
-      >
-        {{ item.label }}
-      </RouterLink>
+      <template v-for="item in TOOLS" :key="item.to">
+        <span
+          v-if="item.disabled"
+          :class="tool"
+          class="cursor-default border-line bg-paper opacity-45 hover:translate-y-0"
+          aria-disabled="true"
+        >
+          {{ item.label }}
+        </span>
+        <RouterLink v-else :to="item.to" :class="tool" class="border-line-strong bg-paper">
+          {{ item.label }}
+        </RouterLink>
+      </template>
       <RouterLink
         v-if="isAdmin"
         :to="ADMIN_TOOL.to"

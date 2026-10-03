@@ -5,8 +5,8 @@ import signpost150 from '@/assets/public/rozcestnik-3-150.webp'
 import signpost300 from '@/assets/public/rozcestnik-3-300.webp'
 
 // Footer of the signed-in areas: group and středisko (the public site is a
-// sign-out away), under a trail to a signpost drawing.
-// The slot replaces everything after the group name (leader area).
+// sign-out away), under a trail to a signpost drawing. The same in the parent
+// and the leader area.
 
 const wrap = useTemplateRef('wrap')
 const row = useTemplateRef('row')
@@ -113,18 +113,16 @@ onBeforeUnmount(() => {
         class="flex flex-wrap items-center gap-x-7 gap-y-4 pt-[70px] pr-[108px] pb-10 sm:pt-[84px] sm:pr-[190px]"
       >
         <p class="m-0 font-hand text-[26px] text-ink">Skautský oddíl Záře</p>
-        <slot>
-          <a
-            href="https://stredisko-sipka.skauting.cz"
-            title="Junák — český skaut, středisko Šipka Praha, z. s."
-            class="block flex-none"
-          >
-            <img :src="logoSipka" alt="Středisko Šipka Praha" class="block size-[42px]" />
-          </a>
-          <p class="m-0 text-[14.5px] text-muted-2">
-            Junák — český skaut,<br />středisko Šipka Praha, z. s.
-          </p>
-        </slot>
+        <a
+          href="https://stredisko-sipka.skauting.cz"
+          title="Junák — český skaut, středisko Šipka Praha, z. s."
+          class="block flex-none"
+        >
+          <img :src="logoSipka" alt="Středisko Šipka Praha" class="block size-[42px]" />
+        </a>
+        <p class="m-0 text-[14.5px] text-muted-2">
+          Junák — český skaut,<br />středisko Šipka Praha, z. s.
+        </p>
       </div>
     </div>
   </footer>

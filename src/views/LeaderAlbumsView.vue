@@ -122,12 +122,5 @@ const section = 'mx-auto max-w-[1120px] px-4 sm:px-6'
       </section>
     </div>
   </main>
-  <AreaFooter>
-    <p class="m-0 text-[14.5px] text-muted-2">vedoucovská část — vidí ji jen tým</p>
-    <p class="m-0 text-[15px] sm:ml-auto">
-      <RouterLink to="/vedouci" class="inline-block py-1"
-        >zpět na vedoucovskou stránku →</RouterLink
-      >
-    </p>
-  </AreaFooter>
+  <AreaFooter />
 </template>
