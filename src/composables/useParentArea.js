@@ -3,7 +3,9 @@ import { pragueToday, schoolYearRange } from '@shared/schoolYear'
 import { campRequirements, meetingStats, tripCount } from '@shared/attendance'
 import { canJoin, isOpenForSignUp, isRelevant } from '@shared/events'
 import { contactCard } from '@shared/contacts'
+import { meetsOn, weekdayOf } from '@shared/meetingDays'
 import { getParticipant, listEvents, setSignedUp } from '@/services/events'
+import { cancelExcuse, excuse, getExcuse } from '@/services/excuses'
 import { listMeetings } from '@/services/meetings'
 import { listNews } from '@/services/news'
 import { listAlbums } from '@/services/photos'
@@ -11,6 +13,7 @@ import { listContacts } from '@/services/contacts'
 import { listLeaders } from '@/services/skautisPeople'
 import { getAppSettings } from '@/services/settings'
 import { TROOPS } from '@/constants/troops'
+import { useMeetingScheduleStore } from '@/stores/meetingSchedule'
 
 // News, newest first, with the pinned important item (if any) moved to the top.
 export function pinnedFirst(list) {
@@ -24,6 +27,7 @@ export function pinnedFirst(list) {
 export function useParentArea(loadChildren) {
   const today = pragueToday()
   const schoolYear = schoolYearRange(today)
+  const scheduleStore = useMeetingScheduleStore()
 
   const loading = ref(true)
   const loadError = ref(false)
@@ -36,6 +40,7 @@ export function useParentArea(loadChildren) {
   const contacts = ref([])
   const leaders = ref({}) // skautisPeople by id
   const participants = ref({}) // { eventId: { memberId: doc | null } }
+  const excuses = ref({}) // today's excuse per child with a meeting today: { memberId: doc | null }
 
   const childTroops = computed(() => [...new Set(children.value.map((c) => c.troop))])
   // Troops whose events, news and albums are shown: the children's, or both
@@ -52,8 +57,9 @@ export function useParentArea(loadChildren) {
   onMounted(async () => {
     try {
       children.value = (await loadChildren()).filter((c) => c.active)
-      const [appSettings, eventList, newsList, albumList, contactList, people, ...meetingLists] =
+      const [, appSettings, eventList, newsList, albumList, contactList, people, ...meetingLists] =
         await Promise.all([
+          scheduleStore.load(),
           getAppSettings(),
           listEvents({ fromDate: schoolYear.from }),
           listNews(),
@@ -72,6 +78,7 @@ export function useParentArea(loadChildren) {
       leaders.value = Object.fromEntries(people.map((p) => [p.id, p]))
       meetings.value = meetingLists.flat()
       participants.value = await loadParticipants(eventList)
+      excuses.value = await loadExcuses()
     } catch (e) {
       if (left) return
       console.error('Loading the parent area failed', e)
@@ -94,6 +101,20 @@ export function useParentArea(loadChildren) {
 
   const participantOf = (eventId, memberId) => participants.value[eventId]?.[memberId] ?? null
 
+  // Whether the child has a meeting today: their day, not a date without
+  // meetings and not called off by the leaders.
+  function meetsToday(member) {
+    if (member.meetingDay !== weekdayOf(today)) return false
+    if (!meetsOn(scheduleStore.schedule, member.troop, today)) return false
+    return !meetings.value.some((m) => m.troop === member.troop && m.date === today && m.cancelled)
+  }
+
+  async function loadExcuses() {
+    const kids = children.value.filter(meetsToday)
+    const docs = await Promise.all(kids.map((c) => getExcuse(c.troop, today, c.id)))
+    return Object.fromEntries(kids.map((c, i) => [c.id, docs[i]]))
+  }
+
   // ---- derived ----
 
   const organizersOf = (event) =>
@@ -107,12 +128,14 @@ export function useParentArea(loadChildren) {
     relevantEvents.value.find((e) => !e.cancelled && e.startDate >= today),
   )
 
+  // `excuse`: undefined = no meeting today, null = not excused, else the excuse.
   const childStats = computed(() => {
     const pastEvents = events.value.filter((e) => e.startDate <= today)
     return children.value.map((member) => ({
       member,
       percent: meetingStats(member, meetings.value).percent,
       trips: tripCount(member, pastEvents, participantOf),
+      excuse: excuses.value[member.id],
     }))
   })
 
@@ -163,6 +186,35 @@ export function useParentArea(loadChildren) {
     }
   }
 
+  // ---- excuses from today's meeting ----
+
+  const excusing = ref(new Set()) // memberIds being saved
+  const excuseErrors = ref({}) // { memberId: true }
+
+  // Excuses (reason given) or takes the excuse back; shows the result once the
+  // server has it, read back like a sign-up.
+  async function setExcused(member, reason = null) {
+    if (excusing.value.has(member.id)) return
+    excusing.value = new Set(excusing.value).add(member.id)
+    excuseErrors.value = { ...excuseErrors.value, [member.id]: false }
+    const key = { troop: member.troop, date: today, memberId: member.id }
+    try {
+      if (reason === null) await cancelExcuse(key)
+      else await excuse({ ...key, reason, by: 'parent' })
+      excuses.value = {
+        ...excuses.value,
+        [member.id]: await getExcuse(member.troop, today, member.id),
+      }
+    } catch (e) {
+      console.error('Saving the excuse failed', e)
+      excuseErrors.value = { ...excuseErrors.value, [member.id]: true }
+    } finally {
+      const next = new Set(excusing.value)
+      next.delete(member.id)
+      excusing.value = next
+    }
+  }
+
   return {
     today,
     loading,
@@ -183,5 +235,8 @@ export function useParentArea(loadChildren) {
     saving,
     signUpErrors,
     toggleSignUp,
+    excusing,
+    excuseErrors,
+    setExcused,
   }
 }

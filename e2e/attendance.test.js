@@ -5,7 +5,8 @@
 // `scripts/seed-users.js`, children from `scripts/seed-members.js` (vlc: Sojka
 // 900102 thu, Liška 900103 mon, Žabka and Kulíšek without a day), activity from
 // `scripts/seed-activity.js` (the latest meeting date of each day is unrecorded,
-// the 2nd one cancelled). The camp requirement summary at the bottom of the page.
+// the 2nd one cancelled, some absences excused). The camp requirement summary at the
+// bottom of the page. Excuses entered by a leader.
 
 import {
   SCREENSHOTS,
@@ -123,6 +124,7 @@ export default async function attendance({ browser, check }) {
   {
     const members = (await docs('members')).filter((m) => m.active)
     const meetings = (await docs('meetings')).filter((m) => m.date >= yearStart)
+    const excuses = await docs('excuses')
     const region = page.getByRole('region', { name: 'Podmínka na tábor' })
     const rows = region.getByRole('listitem')
     check('camp: folded at first', !(await region.getByRole('list').isVisible()))
@@ -166,7 +168,7 @@ export default async function attendance({ browser, check }) {
       .getByTestId('dots')
       .locator('[data-state]')
       .evaluateAll((els) => els.map((e) => e.dataset.state))
-    const wantDots = meetingDots(sojka, meetings, meetingSchedule(null), yearStart, today)
+    const wantDots = meetingDots(sojka, meetings, meetingSchedule(null), yearStart, today, excuses)
     check(
       `camp: clicking a child shows a dot per meeting of their day (${wantDots.length})`,
       wantDots.length > 0 && states.join() === wantDots.map((d) => d.state).join(),
@@ -276,6 +278,49 @@ export default async function attendance({ browser, check }) {
     )
     await sojka.click()
     await until(async () => presentIds(await getDoc(olderPath)).includes('900102') === before)
+  }
+
+  // ---- meetings: excuse entered by a leader ----
+  {
+    await page
+      .getByRole('group', { name: 'Termín schůzky' })
+      .getByRole('button', { name: formatDay(latestThu), exact: true })
+      .click()
+    await page.getByRole('heading', { name: `Schůzka čtvrtek ${formatDay(latestThu)}` }).waitFor()
+    const sojka = page.getByRole('button', { name: 'Sojka' })
+    if (await pressed(sojka)) await sojka.click()
+    await until(async () => !presentIds(await getDoc(meetingPath)).includes('900102'))
+    const excusePath = `excuses/vlc_${latestThu}_900102`
+    await page.getByRole('button', { name: '+ omluvit dítě' }).click()
+    await page.getByLabel('Dítě').selectOption('900102')
+    await page.getByLabel('Důvod').fill('SMS od mámy')
+    await page.getByRole('button', { name: 'omluvit', exact: true }).click()
+    const saved = await until(() => getDoc(excusePath))
+    check(
+      'excuse: „+ omluvit dítě“ saves it by the leader',
+      fieldValue(saved?.by) === 'leader' &&
+        fieldValue(saved?.reason) === 'SMS od mámy' &&
+        fieldValue(saved?.troop) === 'vlc',
+    )
+    const row = page.getByRole('listitem', { name: 'omluvenka Sojka' })
+    check(
+      'excuse: yellow card, count and reason shown',
+      (await until(() => sojka.getByText('omluveno').isVisible())) &&
+        (await page.getByTestId('excused-count').innerText()) === 'omluveno 1' &&
+        (await row.innerText()).includes('omluvili vedoucí: SMS od mámy'),
+    )
+    await sojka.click()
+    check(
+      'excuse: ticked anyway → present wins',
+      (await until(() => pressed(sojka))) &&
+        (await page.getByTestId('excused-count').count()) === 0 &&
+        (await until(async () => (await row.innerText()).includes('ale přišel(a)'))),
+    )
+    await row.getByRole('button', { name: 'zrušit' }).click()
+    check(
+      'excuse: „zrušit“ deletes it',
+      (await until(async () => !(await getDoc(excusePath)))) && (await row.count()) === 0,
+    )
   }
 
   // ---- meetings: other weekday ----

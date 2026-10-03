@@ -16,9 +16,17 @@ export const ADMIN_TOOL = { to: '/vedouci/administrace', label: 'Administrace' }
 export const DOT_STATES = {
   present: 'na schůzce',
   absent: 'chyběl(a)',
+  excused: 'omluveno',
   cancelled: 'schůzka nebyla',
   unrecorded: 'nezapsáno',
 }
+
+// Who wrote an excuse.
+export const EXCUSED_BY = { parent: 'rodiče', leader: 'vedoucí' }
+
+// „omluveno (rodiče: nemoc)“
+export const excuseText = ({ by, reason }) =>
+  `omluveno (${EXCUSED_BY[by] ?? by}${reason ? `: ${reason}` : ''})`
 
 // Attendance page opened on a meeting or a trip (query understood by §4.2).
 export const meetingLink = (troop, date) => ({

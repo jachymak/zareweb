@@ -12,6 +12,7 @@ import {
   setPresent,
   subscribeMeetings,
 } from '@/services/meetings'
+import { cancelExcuse, excuse, subscribeExcuses } from '@/services/excuses'
 import { listMembers } from '@/services/members'
 import { getAppSettings } from '@/services/settings'
 import { useLeaderTroopStore } from '@/stores/leaderTroop'
@@ -39,6 +40,7 @@ export function useAttendance() {
   const members = ref([])
   const events = ref([])
   const meetingsByTroop = ref({ vlc: [], ss: [] })
+  const excusesByTroop = ref({ vlc: [], ss: [] })
   const participants = ref({}) // { eventId: { memberId: doc } }
   const settings = ref(campRequirements(null)) // camp requirement per troop
 
@@ -93,6 +95,17 @@ export function useAttendance() {
                 error,
               ),
             (list) => (meetingsByTroop.value = { ...meetingsByTroop.value, [code]: list }),
+          ),
+        ),
+        ...['vlc', 'ss'].map((code) =>
+          follow(
+            (next, error) =>
+              subscribeExcuses(
+                { troop: code, fromDate: schoolYear.from, toDate: today },
+                next,
+                error,
+              ),
+            (list) => (excusesByTroop.value = { ...excusesByTroop.value, [code]: list }),
           ),
         ),
         ...eventList.filter(isTrip).map((event) =>
@@ -173,6 +186,15 @@ export function useAttendance() {
     save(() => setCancelled(meetingKey(date), cancelled))
   const unrecordMeeting = (date) => save(() => clearMeeting(meetingKey(date)))
 
+  // Excuses (parents' on the day, leaders' any time); an excused child still counts as absent.
+  const excuses = computed(() => excusesByTroop.value[troop.value])
+  const excuseOf = (date, memberId) =>
+    excuses.value.find((e) => e.date === date && e.memberId === memberId) ?? null
+  const excuseChild = (date, memberId, reason) =>
+    save(() => excuse({ troop: troop.value, date, memberId, reason, by: 'leader' }))
+  const unexcuseChild = (date, memberId) =>
+    save(() => cancelExcuse({ troop: troop.value, date, memberId }))
+
   // ---- trips ----
 
   // The troop's trips this school year (troop + all), newest first.
@@ -219,7 +241,14 @@ export function useAttendance() {
       member,
       percent: meetingStats(member, meetings.value).percent,
       trips: tripCount(member, pastTrips, participantOf),
-      dots: meetingDots(member, meetings.value, schedule.value, schoolYear.from, today),
+      dots: meetingDots(
+        member,
+        meetings.value,
+        schedule.value,
+        schoolYear.from,
+        today,
+        excuses.value,
+      ),
       hasMeetingDay: schedule.value[member.troop].days.includes(member.meetingDay),
     }))
   })
@@ -244,6 +273,9 @@ export function useAttendance() {
     setAllPresent,
     setMeetingCancelled,
     unrecordMeeting,
+    excuseOf,
+    excuseChild,
+    unexcuseChild,
     // trips
     trips,
     defaultTrip,

@@ -20,6 +20,7 @@ const {
   person,
   troop,
   todayPlan,
+  todayExcuses,
   meetingTime,
   upcomingEvents,
   events,
@@ -49,7 +50,13 @@ const section = 'mx-auto max-w-[1000px] px-4 sm:px-6'
       </div>
 
       <div :class="section" class="pt-[22px]">
-        <TodayCard :plan="todayPlan" :troop="troop" :today="today" :meeting-time="meetingTime" />
+        <TodayCard
+          :plan="todayPlan"
+          :troop="troop"
+          :today="today"
+          :meeting-time="meetingTime"
+          :excuses="todayExcuses"
+        />
       </div>
 
       <div :class="section" class="pt-8">

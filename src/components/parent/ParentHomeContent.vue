@@ -39,6 +39,9 @@ const {
   saving,
   signUpErrors,
   toggleSignUp,
+  excusing,
+  excuseErrors,
+  setExcused,
 } = useParentArea(props.loadChildren)
 
 const posterQuery = computed(() => (props.previewOf ? { nahled: props.previewOf } : {}))
@@ -66,7 +69,15 @@ const section = 'mx-auto max-w-[960px] px-4 sm:px-6'
       </div>
 
       <div :class="section" class="pt-[22px]">
-        <ChildCards v-if="children.length" :stats="childStats" :settings="settings" />
+        <ChildCards
+          v-if="children.length"
+          :stats="childStats"
+          :settings="settings"
+          :excusing="excusing"
+          :excuse-errors="excuseErrors"
+          :preview="!!previewOf"
+          @excuse="setExcused"
+        />
         <p v-else class="m-0 text-[16px] text-muted">
           K účtu nemáte přiřazené žádné dítě, a tak tu vidíte akce, aktuality a fotky obou oddílů.
         </p>

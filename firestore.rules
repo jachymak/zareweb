@@ -107,6 +107,56 @@ service cloud.firestore {
       allow write: if isLeader();
     }
 
+    // Excuses from meetings, id `{troop}_{date}_{memberId}`. A parent excuses
+    // their own child only on the meeting day and may take it back that day;
+    // leaders any time. The child is read from the id, so a parent can also
+    // ask for an excuse that doesn't exist (yet).
+    match /excuses/{excuseId} {
+      function excusedChild() {
+        return excuseId.split('_')[2];
+      }
+
+      // The day in Europe/Prague, approximated as 22:00 UTC the day before to
+      // 22:00 UTC that day (exact in summer, one hour early in winter).
+      function onDay(date) {
+        return request.time >= timestamp.date(
+          int(date[0:4]), int(date[5:7]), int(date[8:10])
+        ) - duration.value(2, 'h') && request.time < timestamp.date(
+          int(date[0:4]), int(date[5:7]), int(date[8:10])
+        ) + duration.value(22, 'h');
+      }
+
+      // The day pretended on the dev server (`?dnes=`, src/devToday.js) — written
+      // straight into the emulator; nobody can write it in production.
+      function devDay(date) {
+        return exists(/databases/$(database)/documents/devToday/today)
+          && get(/databases/$(database)/documents/devToday/today).data.date == date;
+      }
+
+      allow read: if isLeader() || isParentOf(excusedChild());
+      allow write: if isLeader();
+
+      allow create: if isParentOf(request.resource.data.memberId)
+        && request.resource.data.keys().hasOnly(['troop', 'date', 'memberId', 'reason', 'by', 'createdBy', 'createdAt'])
+        && request.resource.data.date is string
+        && request.resource.data.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && excuseId == request.resource.data.troop + '_' + request.resource.data.date + '_' + request.resource.data.memberId
+        && request.resource.data.troop == member(request.resource.data.memberId).troop
+        && request.resource.data.by == 'parent'
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.reason is string
+        && request.resource.data.reason.size() <= 200
+        && (onDay(request.resource.data.date) || devDay(request.resource.data.date));
+
+      allow delete: if isParentOf(excusedChild())
+        && (onDay(resource.data.date) || devDay(resource.data.date));
+    }
+
+    match /devToday/{docId} {
+      allow read, write: if false;
+    }
+
     // ---- events ----
 
     match /events/{eventId} {

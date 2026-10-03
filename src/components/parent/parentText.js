@@ -144,3 +144,7 @@ export const LOAD_ERROR = 'Stránku se nepodařilo načíst. Zkuste ji prosím o
 export const previewSignUpText = (nickname, signedUp) =>
   `Tohle je jen náhled, tady se nic neuloží. Rodič tímhle tlačítkem ${nickname} rovnou ` +
   `${signedUp ? 'odhlásí' : 'přihlásí'} — a vy to pak uvidíte v přihláškách akce.`
+
+export const previewExcuseText = (nickname, excused) =>
+  `Tohle je jen náhled, tady se nic neuloží. Rodič tímhle tlačítkem ${nickname} ` +
+  `${excused ? 'omluvenku z dnešní schůzky zruší' : 'omluví z dnešní schůzky'} — a vy to pak uvidíte v docházce.`

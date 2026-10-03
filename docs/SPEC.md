@@ -171,7 +171,7 @@ Common header: „Skautský oddíl Záře — pro členy“, the user's e-mail, 
 A parent without paired children (§4.8) sees everything of **both troops** (news, Výpravník, photos, as if they had children in both), instead of the children cards the note „K účtu nemáte přiřazené žádné dítě, a tak tu vidíte akce, aktuality a fotky obou oddílů.“, and „Nejbližší akce“ without the children rows (just the event, poster and deadline; nobody to sign up). The leaders' preview (§4.7) shows this page while no child is picked.
 
 1. **Greeting** — „Ahoj!“, today's date, nearest upcoming relevant event (name + date).
-2. **Children cards** — one per paired child: nickname, troop tag, full name, meeting day, attendance % at meetings, number of trips attended (current school year). Below: the camp requirement of the children's troop(s) (§6.3), only its required parts — *„na tábor je potřeba 4 výpravy a 60 % schůzek“*; one line when all children's troops have the same one, else one line per troop prefixed with the troop name; nothing when not required.
+2. **Children cards** — one per paired child: nickname, troop tag, full name, meeting day, attendance % at meetings, number of trips attended (current school year). On the child's meeting day (their day, not a date without meetings, not marked „schůzka nebyla“) the card has **„omluvit z dnešní schůzky“**: an optional reason („důvod (nepovinné)“, up to 200 characters) and „omluvit“ / „zpět“; once saved (read back, „ukládá se…“ meanwhile) „✓ omluveno z dnešní schůzky“, the reason and „zrušit“. A parent can excuse only on the day — also after the meeting, until midnight; the next day the button is gone (a later excuse goes through a leader). The excused child still counts as absent (§6.3); the leaders just see it was excused. In the leaders' preview (§4.7) the button only explains. Below: the camp requirement of the children's troop(s) (§6.3), only its required parts — *„na tábor je potřeba 4 výpravy a 60 % schůzek“*; one line when all children's troops have the same one, else one line per troop prefixed with the troop name; nothing when not required.
 3. **News (Aktuality)** — non-withdrawn news whose audience is `all` or one of the children's troops. The first item — **important** news pinned on top, otherwise the newest — is shown expanded and highlighted as a card (date, tag, author, title, text, optional link); the rest as an accordion (one open at a time).
 4. **Open for sign-up (Nejbližší akce)** — relevant events with registration enabled. Each row: date, tag, title, organizer, poster link („plakátek“ if published, otherwise disabled „plakátek se chystá“), and under the title the deadline as a chip („přihlášky do 12. 3.“) followed by the time left in handwriting („ještě 5 dní“, „zítra poslední den“, „dnes poslední den“ — red for the last two days); below, a row per child (green tinted when signed up, dashed when not) **whose troop matches the event audience**: nickname, state in words („✓ přihlášeno“ / „nepřihlášeno“), when it last changed („přihlásili jste dnes v 14:05“ when this parent did it, else „přihlášeno …“ / „odhlášeno …“) and one button „přihlásit“ / „odhlásit“.
    - Before the deadline: „přihlásit“ saves at once; the new state (with the server time of the change, read back) shows only once it is saved („ukládá se…“ meanwhile). „Odhlásit“ asks first, inside the card: „Opravdu zrušit přihlášku na akci „{název}“ ({přezdívka})?“ — „ano, odhlásit“ / „ne, nechat přihlášené“.
@@ -187,8 +187,8 @@ A parent without paired children (§4.8) sees everything of **both troops** (new
 6. **Photos (Fotky)** — the 4 latest published albums of the children's troops (+ `all`), as tilted polaroids: cover, troop tag, title, detail like „únor · 31 fotek“ (month with the year when not this year); each opens the album (§3.3); „všechna alba →“ opens all albums. No albums → „Zatím tu nejsou žádná alba…“.
 7. **Leaders (Vedoucí)** — contact cards (photo, nickname, name · role, phone, e-mail) filtered by tabs „vlčušky“ / „skauti a skautky“ / „ostatní“.
 
-**Reads:** own `users/{uid}`, `members` (own children), `meetings` (attendance), `events` + own children's `participants`, `news`, `albums`, `contacts`, `settings/app`.
-**Writes:** `events/{id}/participants/{memberId}` — only sign-up fields, only own children, only while registration is open and before the deadline.
+**Reads:** own `users/{uid}`, `members` (own children), `meetings` (attendance), today's `excuses` of own children, `events` + own children's `participants`, `news`, `albums`, `contacts`, `settings/app`, `settings/meetings`.
+**Writes:** `events/{id}/participants/{memberId}` — only sign-up fields, only own children, only while registration is open and before the deadline. `excuses` — create / delete for own children, only on the meeting day.
 
 ### 3.2 Event poster (`/clenove/akce/:eventId`)
 
@@ -236,7 +236,7 @@ Common header (as in the design, no menu): „Skautský oddíl Záře“ (→ le
 The today card follows the troop switch; news, the calendar, photos and contacts are of both troops (what the parents get). The greeting uses the linked person's nickname and role title, otherwise the account's first name and „vedoucí“ / „správce“. Today's date next to it is left out on a phone.
 
 3. **Today card** (based on the chosen troop and today's date):
-   - today is a meeting day of the troop → „schůzka v klubovně, 17–19 h“ + „zapsat docházku →“ (opens that meeting: `/vedouci/dochazka?oddil={troop}&schuzka={date}`);
+   - today is a meeting day of the troop → „schůzka v klubovně, 17–19 h“ + „zapsat docházku →“ (opens that meeting: `/vedouci/dochazka?oddil={troop}&schuzka={date}`); below, children of the troop excused from it, followed live: „omluveno: Liška, Sojka (nemoc)“;
    - today is the first day of a trip (§6.3) for the troop (or `all`) → „první den výpravy — {name}“ + „zapsat účast a platby →“ (`/vedouci/dochazka?oddil={troop}&vyprava={eventId}`);
    - the other troop meets today → „dneska má schůzku druhý oddíl…“;
    - today is a meeting day of the troop but falls into a range without meetings (§4.8 Meetings) → „dneska schůzka není — {reason}“;
@@ -260,6 +260,7 @@ Troop switch (top right, §4 intro; on a phone only the troop tag next to the he
 - Choose weekday (the troop's two meeting days from §4.8 Meetings; the time is shown next to it), then a date from the list of meeting dates of this school year up to today — dates in ranges without meetings are left out unless a meeting was recorded on them anyway (newest first, horizontally scrollable, the selected one scrolled into view; cancelled dates marked „×“).
 - Header: „Schůzka {den} {datum}“, troop tag, „přišlo X z Y“.
 - Grid of children **whose meeting day is the selected weekday** (nickname + name) — click toggles present. Buttons „přišli všichni“, „zrušit výběr“, „schůzka nebyla“. Children of the troop without a meeting day are named below the grid (they are not in any meeting; the admin sets the day).
+- **Excuses** (omluvenky): an excused child who is not ticked has a yellow card with „omluveno“, the header adds „· omluveno Z“. Below the grid, the excuses of the meeting — nickname, „omluvili rodiče / vedoucí: {důvod}“ („· ale přišel(a)“ when ticked anyway — present wins) and „zrušit“ — and „+ omluvit dítě“ (a child of the meeting not ticked and not excused, optional reason, „omluvit“ / „zpět“), e.g. when a parent texted a leader or forgot; leaders can excuse on any meeting date. An excuse still counts as an absence (§6.3).
 - „Schůzka nebyla“ marks the meeting cancelled: it does not count towards anyone's attendance nor the number of meetings. Can be undone („schůzka přece byla“) — the recorded presence is kept.
 - „Vrátit na nezapsáno“ (on a recorded or cancelled meeting) deletes the record, e.g. after a child was ticked by mistake on a meeting that should stay unrecorded; asks first when more than one child is ticked.
 - **Autosave** („ukládá se samo“). A meeting is **recorded** once its attendance is saved (or it is marked „schůzka nebyla“). Clicking a child changes only that child (`arrayUnion` / `arrayRemove`), and the page follows the meetings live, so two leaders can record the same meeting at once.
@@ -276,10 +277,10 @@ Troop switch (top right, §4 intro; on a phone only the troop tag next to the he
 - There is no „nepřijel“: a child not marked „přijel“ did not come.
 - Autosave, followed live.
 
-**Camp requirement summary** (bottom of the page, hidden at the meeting point) — for the chosen troop: each child with meeting % and trips count; children not meeting the camp requirement highlighted red. Folded behind a summary („55 dětí · 12 nesplňuje podmínku na tábor“, „zobrazit ↓“). Clicking a child shows a dot per meeting date of their day this school year — filled = present, empty = absent, hatched = meeting cancelled, dashed = not recorded yet; tooltip with date and state; a child without a meeting day gets a note instead. Follows the recording live.
+**Camp requirement summary** (bottom of the page, hidden at the meeting point) — for the chosen troop: each child with meeting % and trips count; children not meeting the camp requirement highlighted red. Folded behind a summary („55 dětí · 12 nesplňuje podmínku na tábor“, „zobrazit ↓“). Clicking a child shows a dot per meeting date of their day this school year — filled = present, empty = absent, yellow = excused (absent, or not recorded yet, with an excuse), hatched = meeting cancelled, dashed = not recorded yet; tooltip with date and state (for an excuse who excused and why); a child without a meeting day gets a note instead. Follows the recording live.
 
-**Reads:** `members`, `meetings`, `events` + `participants`, `settings/app`.
-**Writes:** `meetings` (presence, cancelled flag; deleted by „vrátit na nezapsáno“), `events/{id}/participants` (sign-up fields, attended, paid, amountPaid).
+**Reads:** `members`, `meetings`, `excuses`, `events` + `participants`, `settings/app`.
+**Writes:** `meetings` (presence, cancelled flag; deleted by „vrátit na nezapsáno“), `excuses` (by a leader; deleted by „zrušit“), `events/{id}/participants` (sign-up fields, attended, paid, amountPaid).
 
 ### 4.3 Events & posters (`/vedouci/akce`)
 
@@ -495,6 +496,20 @@ Sync overwrites only the skautIS fields (name, nickname, phone, e-mail, `active`
 | `updatedBy`  | string    | uid                                    |
 | `updatedAt`  | Timestamp |                                        |
 
+### `excuses/{troop_date_memberId}` (e.g. `vlc_2026-03-19_900102`) — §3.1, §4.2
+
+| Field       | Type      | Notes                                          |
+| ----------- | --------- | ---------------------------------------------- |
+| `troop`     | `troop`   |                                                |
+| `date`      | string    | `YYYY-MM-DD` of the meeting                    |
+| `memberId`  | string    | `members` id                                   |
+| `reason`    | string    | optional („“), max 200 characters              |
+| `by`        | string    | `parent` \| `leader`                           |
+| `createdBy` | string    | uid                                            |
+| `createdAt` | Timestamp |                                                |
+
+Independent of `meetings`, so a child can be excused before the meeting is recorded. Only marks the absence; the attendance % ignores it (§6.3).
+
 ### `events/{eventId}`
 
 | Field                    | Type                                            | Notes                                     |
@@ -655,6 +670,7 @@ Mock only in v1 — no collections yet. Later: clubhouse rules (settings) and th
 | `users/{uid}`               | —                          | own: create/read, update `note`/`displayName` | own: read                   | read all          | rw    |
 | `members`                   | —                          | —                | read own children (`uid in parentUids`)                  | read              | rw    |
 | `meetings`                  | —                          | —                | read                                                     | rw                | rw    |
+| `excuses`                   | —                          | —                | read own children's; create / delete for own children on the meeting day (`by: parent`) | rw | rw |
 | `events`                    | —                          | —                | read (not deleted)                                       | rw                | rw    |
 | `events/*/poster/content`   | —                          | —                | read if published                                        | rw                | rw    |
 | `…/participants`            | —                          | —                | read own; write sign-up fields for own children before deadline | rw         | rw    |
@@ -687,7 +703,7 @@ Mock only in v1 — no collections yet. Later: clubhouse rules (settings) and th
 
 ### 6.3 Attendance
 
-- Meeting %: present / **recorded** meetings (cancelled and unrecorded excluded) **on the child's meeting day**, within the current school year. A meeting counts only if a `meetings` doc exists and is not cancelled.
+- Meeting %: present / **recorded** meetings (cancelled and unrecorded excluded) **on the child's meeting day**, within the current school year. A meeting counts only if a `meetings` doc exists and is not cancelled. An **excused** absence (`excuses`) counts as an absence — it only shows yellow in the dots.
 - Trips: count of events **that had registration enabled**, except the camp (event without poster), with `attended = true`, in the current school year. The Attendance → trips tab lists the same events.
 - Camp requirement (per troop, §4.8 Settings) met when every required part holds: trips ≥ `trips`, meeting % ≥ `meetingPct`. A part that isn't required is never red and is left out of the text; with nothing required the pages say the troop has no camp requirement.
 

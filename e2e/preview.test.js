@@ -9,11 +9,15 @@ import {
   SCREENSHOTS,
   clearAuthAccounts,
   clearCollection,
+  deleteDoc,
   FIRESTORE,
   horizontalOverflow,
   openPage,
+  patchDoc,
+  pragueToday,
   runScript,
 } from './lib.js'
+import { weekdayOf } from '../functions/src/shared/meetingDays.js'
 
 const PASSWORD = 'heslo1234'
 
@@ -117,6 +121,41 @@ export default async function preview({ browser, check }) {
       'sign-up: after the deadline the parent’s notice',
       await uzly.getByText('Přihlašování už skončilo').isVisible(),
     )
+  }
+
+  // ---- excuse from today's meeting explains, saves nothing ----
+  {
+    const today = pragueToday()
+    const weekday = weekdayOf(today)
+    const days = [weekday, weekday === 'mon' ? 'thu' : 'mon']
+    await patchDoc('settings/meetings', {
+      vlc: {
+        mapValue: {
+          fields: {
+            days: { arrayValue: { values: days.map((d) => ({ stringValue: d })) } },
+            start: { stringValue: '17:00' },
+            end: { stringValue: '19:00' },
+          },
+        },
+      },
+    })
+    await patchDoc('members/900102', { meetingDay: { stringValue: weekday } })
+    await page.reload({ waitUntil: 'load' })
+    const card = page.getByRole('article', { name: 'Sojka', exact: true })
+    await card.getByRole('button', { name: 'omluvit z dnešní schůzky' }).click()
+    const notice = await card.getByText('Tohle je jen náhled').innerText()
+    await new Promise((r) => setTimeout(r, 500))
+    const res = await fetch(`${FIRESTORE}/excuses/vlc_${today}_900102`, {
+      headers: { Authorization: 'Bearer owner' },
+    })
+    check(
+      'excuse: click explains, nothing written',
+      notice.includes('Sojka omluví z dnešní schůzky') && res.status === 404,
+      notice,
+    )
+    await deleteDoc('settings/meetings')
+    runScript('seed-members.js')
+    await page.reload({ waitUntil: 'load' })
   }
 
   // ---- poster keeps the preview ----

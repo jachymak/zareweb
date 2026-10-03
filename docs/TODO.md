@@ -18,29 +18,29 @@ skautIS
 - export akcí do kalendáře
 
 - mezi roky mazání akcí atd
-- jména do otroka
+
 * Link Multiple Auth Providers to an Account Using JavaScript - mohou si pozdeji k uctu pripojit i google
 
 
-
-- [ ] download
 - [ ] zpevnik?
 
 logo - udelat pro vedouci do design slozky
 
 namluvene pro vedouci
 
-tabory dosat
-
 export kontaktu na vedeni a deti?
 
 potravinove intolerance
 
-—
+—videa do fotek?
 
 emailove upozorneni na aktuality
+
+fotky duplikaty nenahravat
 
 udelat ted
 - [ ] kde se prihlasuje
 - doladit zneni mailuto
-- omluvenky
+- tabory dosat
+- fotky kontakty vedeni
+- 

@@ -13,7 +13,13 @@ const props = defineProps({
   troop: { type: String, required: true },
   today: { type: String, required: true },
   meetingTime: { type: String, required: true }, // „17–19 h“
+  excuses: { type: Array, default: () => [] }, // [{ nickname, reason }] of today's meeting
 })
+
+// „Sojka (nemoc), Bobr“
+const excusedText = computed(() =>
+  props.excuses.map((e) => (e.reason ? `${e.nickname} (${e.reason})` : e.nickname)).join(', '),
+)
 
 const date = computed(() => formatShortDay(props.today, weekdayOf(props.today)))
 const record = computed(() => {
@@ -62,6 +68,13 @@ const quietText = computed(() => {
         >
           {{ record.action }}
         </RouterLink>
+        <p
+          v-if="plan.kind === 'meeting' && excuses.length"
+          class="m-0 basis-full text-[15px] text-[#7a5408]"
+          data-testid="today-excuses"
+        >
+          omluveno: {{ excusedText }}
+        </p>
       </div>
       <div v-else class="flex flex-wrap items-center gap-x-[18px] gap-y-2.5">
         <span class="font-hand text-[25px] leading-none font-bold text-brown">{{ date }}</span>

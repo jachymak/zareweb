@@ -3,7 +3,7 @@
 // events with sign-ups and attendance, news, and recorded meetings of this
 // school year. Dates are relative to today, so the data always has upcoming,
 // open, closed and past events. Replaces `skautisPeople`, `contacts`, `events`
-// (incl. posters and participants), `news`, `meetings` and `packingTemplates`, and links the test
+// (incl. posters and participants), `news`, `meetings`, `excuses` and `packingTemplates`, and links the test
 // leader accounts to their skautIS person.
 // Run after `seed-members.js`. Usage: npm run seed:activity. Writes bypass security rules.
 
@@ -354,11 +354,46 @@ export function buildMeetings(members) {
         const presentIds = cancelled
           ? []
           : kids.filter((_, k) => (i + k) % 3 !== 2).map((m) => m.id)
-        meetings.push({ troop, date, weekday, cancelled, presentIds })
+        meetings.push({ troop, date, weekday, cancelled, presentIds, kids: kids.map((m) => m.id) })
       })
     }
   }
   return meetings
+}
+
+// Excuses on recorded meetings: every other absence excused (alternately by a
+// parent with a reason and by a leader without one), plus one child excused by
+// a parent who came anyway on each troop's first recorded meeting.
+export function buildExcuses(meetings) {
+  const excuses = []
+  let n = 0
+  for (const m of meetings.filter((m) => !m.cancelled)) {
+    const kids = m.kids.filter((id) => !m.presentIds.includes(id))
+    for (const memberId of kids) {
+      if (n++ % 2) continue
+      const byParent = n % 4 === 1
+      excuses.push({
+        troop: m.troop,
+        date: m.date,
+        memberId,
+        reason: byParent ? 'nemoc' : '',
+        by: byParent ? 'parent' : 'leader',
+      })
+    }
+  }
+  for (const troop of ['vlc', 'ss']) {
+    const first = meetings.find((m) => m.troop === troop && !m.cancelled && m.presentIds.length)
+    if (first) {
+      excuses.push({
+        troop,
+        date: first.date,
+        memberId: first.presentIds[0],
+        reason: 'možná nepřijde',
+        by: 'parent',
+      })
+    }
+  }
+  return excuses
 }
 
 // ---- Firestore REST ----
@@ -415,7 +450,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     }))
     .filter((m) => m.active)
 
-  for (const c of ['skautisPeople', 'contacts', 'news', 'meetings', 'packingTemplates'])
+  for (const c of ['skautisPeople', 'contacts', 'news', 'meetings', 'excuses', 'packingTemplates'])
     await clear(c)
   await clear('events', ['participants', 'poster'])
 
@@ -502,8 +537,18 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   console.log(`${NEWS.length} news`)
 
   const meetings = buildMeetings(members)
-  for (const m of meetings) {
+  for (const { kids, ...m } of meetings) {
     await put(`meetings/${m.troop}_${m.date}`, { ...m, updatedBy: 'seed', updatedAt: now })
   }
   console.log(`${meetings.length} recorded meetings since ${schoolYearRange(today).from}`)
+
+  const excuses = buildExcuses(meetings)
+  for (const e of excuses) {
+    await put(`excuses/${e.troop}_${e.date}_${e.memberId}`, {
+      ...e,
+      createdBy: 'seed',
+      createdAt: now,
+    })
+  }
+  console.log(`${excuses.length} excuses`)
 }

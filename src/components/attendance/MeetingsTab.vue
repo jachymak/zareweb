@@ -5,10 +5,12 @@ import HandDrawnBox from '@/components/HandDrawnBox.vue'
 import AudienceTag from '@/components/parent/AudienceTag.vue'
 import { formatDay, plural } from '@/components/parent/parentText'
 import { WEEKDAY_NAMES } from './attendanceText'
+import MeetingExcuses from './MeetingExcuses.vue'
 import { nicknameOf } from '@shared/names'
 
 // Meetings: pick the weekday and a past date, then tick who came. Every click
 // saves at once; „schůzka nebyla“ takes the meeting out of the statistics.
+// Excused children who didn't come are yellow (still absent).
 const props = defineProps({
   attendance: { type: Object, required: true }, // reactive(useAttendance())
 })
@@ -23,6 +25,8 @@ const children = computed(() => a.childrenOn(weekday.value))
 const presentCount = computed(
   () => children.value.filter((m) => a.isPresent(date.value, m.id)).length,
 )
+const isExcused = (m) => !a.isPresent(date.value, m.id) && !!a.excuseOf(date.value, m.id)
+const excusedCount = computed(() => children.value.filter(isExcused).length)
 
 // Drops the record (incl. who came); asks first when more than a stray tick would go.
 function unrecord() {
@@ -116,7 +120,13 @@ const small =
               class="font-hand text-[23px] font-bold text-green sm:ml-auto"
               data-testid="present-count"
             >
-              přišlo {{ presentCount }} z {{ children.length }}
+              přišlo {{ presentCount }} z {{ children.length
+              }}<template v-if="excusedCount">
+                ·
+                <span class="text-[#9a6b0c]" data-testid="excused-count"
+                  >omluveno {{ excusedCount }}</span
+                ></template
+              >
             </span>
           </div>
 
@@ -210,7 +220,9 @@ const small =
                 :class="
                   a.isPresent(date, m.id)
                     ? 'border-green bg-[#e9f1ea]'
-                    : 'border-[#d6ccb4] bg-cream hover:border-line-strong'
+                    : isExcused(m)
+                      ? 'border-gold bg-[#fbf0d2] hover:border-[#c98a1c]'
+                      : 'border-[#d6ccb4] bg-cream hover:border-line-strong'
                 "
                 @click="a.togglePresent(date, m.id)"
               >
@@ -225,12 +237,21 @@ const small =
                   <span class="block font-hand text-[20px] leading-[1.1] font-bold text-ink">
                     {{ nicknameOf(m) }}
                   </span>
-                  <span class="block truncate text-[12.5px] text-[#8a7b5e]">
+                  <span v-if="isExcused(m)" class="block text-[12.5px] text-[#9a6b0c]">
+                    omluveno
+                  </span>
+                  <span v-else class="block truncate text-[12.5px] text-[#8a7b5e]">
                     {{ m.firstName }} {{ m.lastName }}
                   </span>
                 </span>
               </button>
             </div>
+            <MeetingExcuses
+              v-if="children.length"
+              :attendance="a"
+              :date="date"
+              :children="children"
+            />
           </template>
         </section>
       </HandDrawnBox>

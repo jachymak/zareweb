@@ -25,6 +25,14 @@
       ]
     },
     {
+      "collectionGroup": "excuses",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "troop", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "news",
       "queryScope": "COLLECTION",
       "fields": [

@@ -8,9 +8,16 @@ const pragueDate = new Intl.DateTimeFormat('en-CA', {
   day: '2-digit',
 })
 
+// A pretended today (`YYYY-MM-DD`) — only the web dev server sets it (`?dnes=`).
+let todayOverride = null
+export function setTodayOverride(isoDate) {
+  todayOverride = isoDate
+}
+
 // Today in Prague as `YYYY-MM-DD`.
-export function pragueToday(now = new Date()) {
-  return pragueDate.format(now)
+export function pragueToday(now) {
+  if (!now && todayOverride) return todayOverride
+  return pragueDate.format(now ?? new Date())
 }
 
 function yearMonth(isoDate) {

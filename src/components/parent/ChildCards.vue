@@ -3,14 +3,20 @@ import { computed } from 'vue'
 import { troopByCode } from '@/constants/troops'
 import HandDrawnBox from '@/components/HandDrawnBox.vue'
 import AudienceTag from './AudienceTag.vue'
+import ExcuseToday from './ExcuseToday.vue'
 import { MEETING_DAYS, campRequirementText } from './parentText'
 import { nicknameOf } from '@shared/names'
 
-// One card per child: meeting day, attendance and trips this school year.
+// One card per child: meeting day, attendance and trips this school year; on
+// the child's meeting day the excuse from it.
 const props = defineProps({
-  stats: { type: Array, required: true }, // [{ member, percent, trips }]
+  stats: { type: Array, required: true }, // [{ member, percent, trips, excuse }]
   settings: { type: Object, required: true }, // camp requirement per troop
+  excusing: { type: Set, default: () => new Set() }, // memberIds being saved
+  excuseErrors: { type: Object, default: () => ({}) },
+  preview: { type: Boolean, default: false },
 })
+defineEmits(['excuse'])
 
 // The camp requirement of the children's troops — one line when it is the same,
 // else one per troop with its name.
@@ -26,7 +32,7 @@ const requirementLines = computed(() => {
   <div>
     <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,236px),1fr))] gap-3.5">
       <HandDrawnBox
-        v-for="{ member, percent, trips } in stats"
+        v-for="{ member, percent, trips, excuse } in stats"
         :key="member.id"
         stroke="#b9a97f"
         class="px-5 pt-[18px] pb-[18px] sm:px-7"
@@ -59,6 +65,16 @@ const requirementLines = computed(() => {
               }}</b>
             </span>
           </p>
+          <ExcuseToday
+            v-if="excuse !== undefined"
+            :member="member"
+            :excuse="excuse"
+            :saving="excusing.has(member.id)"
+            :error="!!excuseErrors[member.id]"
+            :preview="preview"
+            @excuse="(reason) => $emit('excuse', member, reason)"
+            @cancel="$emit('excuse', member, null)"
+          />
         </article>
       </HandDrawnBox>
     </div>

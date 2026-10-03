@@ -9,10 +9,12 @@ import {
   SCREENSHOTS,
   clearAuthAccounts,
   clearCollection,
+  deleteDoc,
   fieldValue,
   horizontalOverflow,
   listDocs,
   openPage,
+  patchDoc,
   pragueToday,
   runScript,
 } from './lib.js'
@@ -196,6 +198,20 @@ export default async function leader({ browser, check }) {
     }
     // vlc meeting, ss meeting (other troop for vlc), first day of the vlc trip
     const trip = events.find((e) => e.id === 'seed-stredohori')
+    // Excuses from the vlc meeting (Sojka by a parent with a reason, Liška by a leader).
+    const excused = [
+      ['900102', 'nemoc', 'parent'],
+      ['900103', '', 'leader'],
+    ]
+    for (const [memberId, reason, by] of excused) {
+      await patchDoc(`excuses/vlc_${next('thu')}_${memberId}`, {
+        troop: { stringValue: 'vlc' },
+        date: { stringValue: next('thu') },
+        memberId: { stringValue: memberId },
+        reason: { stringValue: reason },
+        by: { stringValue: by },
+      })
+    }
     for (const date of [next('thu'), next('tue'), trip.startDate]) {
       await page.clock.setFixedTime(new Date(`${date}T10:00:00Z`))
       await page.reload({ waitUntil: 'load' })
@@ -209,8 +225,14 @@ export default async function leader({ browser, check }) {
         const want = plan.kind === 'meeting' ? `schuzka=${date}` : `vyprava=${plan.event.id}`
         ok &&= href.includes('oddil=vlc') && href.includes(want)
       }
+      if (plan.kind === 'meeting') {
+        const line = card.getByTestId('today-excuses')
+        const got = (await line.count()) ? await line.innerText() : ''
+        check('today: excused children of the meeting listed', got === 'omluveno: Liška, Sojka (nemoc)', got)
+      }
       check(`today: ${weekdayOf(date)} ${date} is „${plan.kind}“`, ok, text)
     }
+    for (const [memberId] of excused) await deleteDoc(`excuses/vlc_${next('thu')}_${memberId}`)
     await page.clock.setFixedTime(new Date())
     await page.reload({ waitUntil: 'load' })
     await page.getByRole('heading', { name: 'Nejbližší akce' }).waitFor()

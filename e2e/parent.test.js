@@ -2,13 +2,15 @@
 // locked sign-up after the deadline, security rules, calendar, relevance by
 // troop, leader contacts, mobile widths. Accounts from `scripts/seed-users.js`,
 // children from `scripts/seed-members.js`, activity from `scripts/seed-activity.js`
-// (rodic@ has Sojka 900102 in vlc and Bobr 900201 in ss).
+// (rodic@ has Sojka 900102 in vlc and Bobr 900201 in ss). Excuses: today is made
+// a vlc meeting day and Sojka's day through `settings/meetings`.
 
 import {
   SCREENSHOTS,
   clearAuthAccounts,
   clearCollection,
   commitAs,
+  deleteDoc,
   fieldValue,
   FIRESTORE,
   horizontalOverflow,
@@ -21,6 +23,7 @@ import {
 } from './lib.js'
 import { addDays, EVENTS } from '../scripts/seed-activity.js'
 import { schoolYearRange } from '../functions/src/shared/schoolYear.js'
+import { weekdayOf } from '../functions/src/shared/meetingDays.js'
 
 const PASSWORD = 'heslo1234'
 const EMAIL = 'rodic@zare.test'
@@ -94,6 +97,7 @@ export default async function parent({ browser, check }) {
   runScript('seed-users.js')
   runScript('seed-members.js')
   runScript('seed-activity.js')
+  await deleteDoc('devToday/today') // a day pretended on the dev server (src/devToday.js)
 
   const { ctx, page, errors } = await openAsParent(browser)
   await page.screenshot({ path: `${SCREENSHOTS}parent-desktop.png`, fullPage: true })
@@ -328,6 +332,129 @@ export default async function parent({ browser, check }) {
   }
   check('desktop: no console errors', errors.length === 0, errors.join(' | '))
   await ctx.close()
+
+  // ---- excuse from today's meeting ----
+  {
+    const weekday = weekdayOf(today)
+    const days = [weekday, weekday === 'mon' ? 'thu' : 'mon']
+    await patchDoc('settings/meetings', {
+      vlc: {
+        mapValue: {
+          fields: {
+            days: { arrayValue: { values: days.map((d) => ({ stringValue: d })) } },
+            start: { stringValue: '17:00' },
+            end: { stringValue: '19:00' },
+          },
+        },
+      },
+    })
+    await patchDoc('members/900102', { meetingDay: { stringValue: weekday } })
+    const excusePath = `excuses/vlc_${today}_900102`
+    const excuseDoc = async () => {
+      const res = await fetch(`${FIRESTORE}/${excusePath}`, {
+        headers: { Authorization: 'Bearer owner' },
+      })
+      return res.ok ? (await res.json()).fields : null
+    }
+
+    const { ctx, page, errors } = await openAsParent(browser)
+    const card = page.getByRole('article', { name: 'Sojka', exact: true })
+    const button = card.getByRole('button', { name: 'omluvit z dnešní schůzky' })
+    check('excuse: button on the child card on the meeting day', await button.isVisible())
+    if (!['tue', 'wed'].includes(weekday)) {
+      check(
+        'excuse: no button for a child without a meeting today',
+        (await page
+          .getByRole('article', { name: 'Bobr', exact: true })
+          .getByTestId('excuse')
+          .count()) === 0,
+      )
+    }
+    await button.click()
+    await card.getByLabel('Důvod').fill('angína')
+    await card.getByRole('button', { name: 'omluvit', exact: true }).click()
+    const state = card.getByTestId('excuse-state')
+    check(
+      'excuse: shown as excused once saved',
+      await until(() => state.isVisible()),
+    )
+    const { uid } = await signInRest(EMAIL, PASSWORD)
+    const saved = await excuseDoc()
+    check(
+      'excuse: saved with reason, by the parent',
+      fieldValue(saved?.reason) === 'angína' &&
+        fieldValue(saved?.by) === 'parent' &&
+        fieldValue(saved?.createdBy) === uid &&
+        fieldValue(saved?.memberId) === '900102' &&
+        fieldValue(saved?.date) === today &&
+        fieldValue(saved?.troop) === 'vlc',
+    )
+    check('excuse: reason shown', await card.getByText('angína').isVisible())
+    await page.reload()
+    await page.getByRole('heading', { name: 'Výpravník' }).waitFor()
+    check('excuse: kept after reload', await card.getByTestId('excuse-state').isVisible())
+    await card.getByRole('button', { name: 'zrušit' }).click()
+    check(
+      'excuse: „zrušit“ deletes it',
+      (await until(async () => !(await excuseDoc()))) && (await button.isVisible()),
+    )
+    await button.click()
+    await card.getByRole('button', { name: 'omluvit', exact: true }).click()
+    check(
+      'excuse: without a reason',
+      await until(async () => fieldValue((await excuseDoc())?.reason) === ''),
+    )
+    check('excuse: no console errors', errors.length === 0, errors.join(' | '))
+    await ctx.close()
+
+    const mobile = await openAsParent(browser, { width: 360, height: 800, mobile: true })
+    check(
+      'excuse: mobile 360 shows the state without overflow',
+      (await mobile.page
+        .getByRole('article', { name: 'Sojka', exact: true })
+        .getByTestId('excuse-state')
+        .isVisible()) && (await horizontalOverflow(mobile.page)) <= 0,
+    )
+    await mobile.page.screenshot({ path: `${SCREENSHOTS}parent-excuse-360.png`, fullPage: true })
+    await mobile.ctx.close()
+
+    // Rules: only own children, only today, only as a parent.
+    const { idToken } = await signInRest(EMAIL, PASSWORD)
+    const db = FIRESTORE.split('/v1/')[1]
+    const create = (troop, date, memberId, by = 'parent') =>
+      commitAs(idToken, [
+        {
+          update: {
+            name: `${db}/excuses/${troop}_${date}_${memberId}`,
+            fields: {
+              troop: { stringValue: troop },
+              date: { stringValue: date },
+              memberId: { stringValue: memberId },
+              reason: { stringValue: '' },
+              by: { stringValue: by },
+              createdBy: { stringValue: uid },
+            },
+          },
+          updateTransforms: [{ fieldPath: 'createdAt', setToServerValue: 'REQUEST_TIME' }],
+        },
+      ])
+    await deleteDoc(excusePath)
+    check('rules: excuse own child today → allowed', (await create('vlc', today, '900102')) === 200)
+    check('rules: excuse other child → denied', (await create('vlc', today, '900103')) === 403)
+    check(
+      'rules: excuse another day → denied',
+      (await create('vlc', addDays(today, -1), '900102')) === 403,
+    )
+    check(
+      'rules: excuse as a leader → denied',
+      (await create('ss', today, '900201', 'leader')) === 403,
+    )
+    check('rules: excuse in a wrong troop → denied', (await create('ss', today, '900102')) === 403)
+
+    await deleteDoc(excusePath)
+    await deleteDoc('settings/meetings')
+    runScript('seed-members.js')
+  }
 
   // ---- relevance: only a vlc child ----
   {

@@ -14,24 +14,24 @@ export function meetingStats(member, meetings) {
 }
 
 // A dot per meeting date of the child's day between two dates, oldest first:
-// 'present' | 'absent' | 'cancelled' | 'unrecorded'. Dates without meetings
-// (Administration) are left out unless a meeting was recorded on them anyway.
-// [] when the child has no meeting day of the troop.
-export function meetingDots(member, meetings, schedule, fromDate, toDate) {
+// { date, state, excuse? }, state 'present' | 'absent' | 'excused' | 'cancelled' |
+// 'unrecorded'. An excuse (`excuses` docs of the child or anyone) only marks an
+// absence or a not yet recorded meeting — it still counts as absent. Dates
+// without meetings (Administration) are left out unless a meeting was recorded
+// on them anyway. [] when the child has no meeting day of the troop.
+export function meetingDots(member, meetings, schedule, fromDate, toDate, excuses = []) {
   const { troop, meetingDay } = member
   if (!schedule[troop]?.days.includes(meetingDay)) return []
   const byDate = new Map(meetings.filter((m) => m.troop === troop).map((m) => [m.date, m]))
+  const excuseOn = new Map(excuses.filter((e) => e.memberId === member.id).map((e) => [e.date, e]))
   const skip = (date) => !!noMeetingOn(schedule, troop, date) && !byDate.has(date)
   return meetingDates(meetingDay, fromDate, toDate, skip).map((date) => {
     const meeting = byDate.get(date)
-    const state = !meeting
-      ? 'unrecorded'
-      : meeting.cancelled
-        ? 'cancelled'
-        : meeting.presentIds?.includes(member.id)
-          ? 'present'
-          : 'absent'
-    return { date, state }
+    const excuse = excuseOn.get(date)
+    if (meeting?.cancelled) return { date, state: 'cancelled' }
+    if (meeting?.presentIds?.includes(member.id)) return { date, state: 'present' }
+    if (excuse) return { date, state: 'excused', excuse }
+    return { date, state: meeting ? 'absent' : 'unrecorded' }
   })
 }
 

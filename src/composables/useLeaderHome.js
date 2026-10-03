@@ -4,6 +4,7 @@ import { canJoin, isOpenForSignUp } from '@shared/events'
 import { contactCard } from '@shared/contacts'
 import { meetingTimeShort, troopDay } from '@shared/meetingDays'
 import { listEvents, listParticipants } from '@/services/events'
+import { subscribeExcuses } from '@/services/excuses'
 import { listMembers } from '@/services/members'
 import { listNews } from '@/services/news'
 import { listAlbums } from '@/services/photos'
@@ -36,9 +37,14 @@ export function useLeaderHome() {
   const contacts = ref([])
   const leaders = ref({}) // skautisPeople by id
   const participants = ref({}) // { eventId: { memberId: doc } }
+  const excuses = ref({ vlc: [], ss: [] }) // today's, followed live
 
   let left = false
-  onUnmounted(() => (left = true))
+  const unsubscribes = []
+  onUnmounted(() => {
+    left = true
+    unsubscribes.forEach((u) => u())
+  })
 
   onMounted(async () => {
     try {
@@ -60,6 +66,15 @@ export function useLeaderHome() {
       contacts.value = contactList
       leaders.value = Object.fromEntries(people.map((p) => [p.id, p]))
       participants.value = await loadParticipants(eventList)
+      for (const code of ['vlc', 'ss']) {
+        unsubscribes.push(
+          subscribeExcuses(
+            { troop: code, fromDate: today, toDate: today },
+            (list) => (excuses.value = { ...excuses.value, [code]: list }),
+            (e) => console.error('Following excuses failed', e),
+          ),
+        )
+      }
     } catch (e) {
       if (left) return
       console.error('Loading the leader home failed', e)
@@ -86,6 +101,14 @@ export function useLeaderHome() {
 
   const todayPlan = computed(() =>
     troopDay(troop.value, today, events.value, scheduleStore.schedule),
+  )
+  // Children of the troop excused from today's meeting: [{ nickname, reason }].
+  const todayExcuses = computed(() =>
+    excuses.value[troop.value]
+      .map((e) => ({ member: members.value.find((m) => m.id === e.memberId), reason: e.reason }))
+      .filter((e) => e.member)
+      .map(({ member, reason }) => ({ nickname: nicknameOf(member), reason }))
+      .sort((a, b) => a.nickname.localeCompare(b.nickname, 'cs')),
   )
   const meetingTime = computed(() => meetingTimeShort(scheduleStore.schedule[troop.value]))
 
@@ -123,6 +146,7 @@ export function useLeaderHome() {
     person: computed(() => leaderTroop.person),
     troop,
     todayPlan,
+    todayExcuses,
     meetingTime,
     upcomingEvents,
     events,
