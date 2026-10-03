@@ -10,11 +10,13 @@ import { nicknameOf } from '@shared/names'
 const props = defineProps({
   contacts: { type: Array, required: true }, // [{ id, group, photoUrl, nickname, name, roleTitle, phone, email }]
   initialGroup: { type: String, default: 'vlc' },
+  folded: { type: Boolean, default: false }, // leader home: starts folded
 })
 
 const GROUPS = Object.entries(CONTACT_GROUP_NAMES).map(([value, label]) => ({ value, label }))
 const TILTS = [-1.6, 1.4, -1, 1.8, -1.3, 1.1]
 
+const open = ref(!props.folded)
 const group = ref(props.initialGroup)
 const visible = computed(() => props.contacts.filter((c) => c.group === group.value))
 
@@ -27,40 +29,48 @@ const telHref = (phone) => `tel:${phone.replace(/\s+/g, '')}`
 
 <template>
   <section aria-labelledby="leaders-title">
-    <SectionHeading id="leaders-title" kicker="na koho se obrátit" title="Vedoucí">
+    <SectionHeading
+      id="leaders-title"
+      v-model:open="open"
+      kicker="na koho se obrátit"
+      :title="folded ? 'Kontakty na vedoucí' : 'Vedoucí'"
+      :foldable="folded"
+    >
       <PillSwitch v-model="group" :options="GROUPS" label="Skupina vedoucích" />
     </SectionHeading>
-    <p v-if="!visible.length" class="m-0 text-[16px] text-muted">Tady zatím nikdo není.</p>
-    <ul
-      class="m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(min(100%,290px),1fr))] gap-[18px] p-0"
-    >
-      <li v-for="(contact, i) in visible" :key="contact.id" class="flex items-start gap-[13px]">
-        <div
-          class="flex-none bg-paper px-1.5 pt-1.5 pb-[5px] shadow-[0_6px_14px_rgba(34,48,31,.1)]"
-          :style="{ rotate: `${TILTS[i % TILTS.length]}deg` }"
-        >
-          <img
-            v-if="contact.photoUrl"
-            :src="contact.photoUrl"
-            alt=""
-            loading="lazy"
-            class="block aspect-[3/4] w-[68px] object-cover"
-          />
-          <div v-else class="aspect-[3/4] w-[68px] bg-sand" aria-hidden="true" />
-        </div>
-        <div class="min-w-0">
-          <h3 class="m-0 font-hand text-[23px] leading-[1.15] font-bold text-ink">
-            {{ nicknameOf(contact) }}
-          </h3>
-          <p class="m-0 mb-[5px] text-[14.5px] text-muted">{{ subtitle(contact) }}</p>
-          <p v-if="contact.phone" class="m-0 text-[15px]">
-            <a :href="telHref(contact.phone)" class="text-ink">{{ contact.phone }}</a>
-          </p>
-          <p v-if="contact.email" class="m-0 text-[15px] break-words">
-            <a :href="`mailto:${contact.email}`">{{ contact.email }}</a>
-          </p>
-        </div>
-      </li>
-    </ul>
+    <template v-if="open">
+      <p v-if="!visible.length" class="m-0 text-[16px] text-muted">Tady zatím nikdo není.</p>
+      <ul
+        class="m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(min(100%,290px),1fr))] gap-[18px] p-0"
+      >
+        <li v-for="(contact, i) in visible" :key="contact.id" class="flex items-start gap-[13px]">
+          <div
+            class="flex-none bg-paper px-1.5 pt-1.5 pb-[5px] shadow-[0_6px_14px_rgba(34,48,31,.1)]"
+            :style="{ rotate: `${TILTS[i % TILTS.length]}deg` }"
+          >
+            <img
+              v-if="contact.photoUrl"
+              :src="contact.photoUrl"
+              alt=""
+              loading="lazy"
+              class="block aspect-[3/4] w-[68px] object-cover"
+            />
+            <div v-else class="aspect-[3/4] w-[68px] bg-sand" aria-hidden="true" />
+          </div>
+          <div class="min-w-0">
+            <h3 class="m-0 font-hand text-[23px] leading-[1.15] font-bold text-ink">
+              {{ nicknameOf(contact) }}
+            </h3>
+            <p class="m-0 mb-[5px] text-[14.5px] text-muted">{{ subtitle(contact) }}</p>
+            <p v-if="contact.phone" class="m-0 text-[15px]">
+              <a :href="telHref(contact.phone)" class="text-ink">{{ contact.phone }}</a>
+            </p>
+            <p v-if="contact.email" class="m-0 text-[15px] break-words">
+              <a :href="`mailto:${contact.email}`">{{ contact.email }}</a>
+            </p>
+          </div>
+        </li>
+      </ul>
+    </template>
   </section>
 </template>

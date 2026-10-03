@@ -19,7 +19,10 @@ const props = defineProps({
   participantOf: { type: Function, required: true },
   albumOf: { type: Function, default: () => null }, // the event's published album
   query: { type: Object, default: () => ({}) }, // kept on links (leaders' preview)
+  folded: { type: Boolean, default: false }, // leader home: starts folded
 })
+
+const open = ref(!props.folded)
 
 const MODES = [
   { value: 'upcoming', label: 'co nás čeká' },
@@ -70,7 +73,13 @@ function attendance(event) {
 
 <template>
   <section aria-labelledby="calendar-title">
-    <SectionHeading id="calendar-title" kicker="celý rok pohromadě" title="Výpravník">
+    <SectionHeading
+      id="calendar-title"
+      v-model:open="open"
+      kicker="celý rok pohromadě"
+      title="Výpravník"
+      :foldable="folded"
+    >
       <PillSwitch v-model="mode" :options="MODES" label="Které akce" />
       <button
         v-if="!coversBothTroops"
@@ -82,81 +91,85 @@ function attendance(event) {
         {{ allTroops ? 'jen naše akce' : 'i akce druhého oddílu' }}
       </button>
     </SectionHeading>
-    <p class="m-0 -mt-2 mb-3.5 text-[14.5px] text-[#8a7b5e]">{{ filterText }}</p>
+    <template v-if="open">
+      <p class="m-0 -mt-2 mb-3.5 text-[14.5px] text-[#8a7b5e]">{{ filterText }}</p>
 
-    <p v-if="!months.length" class="m-0 border-t border-[#ede5d3] py-3 text-[16px] text-muted">
-      {{ mode === 'past' ? 'Letos zatím nic neproběhlo.' : 'Zatím tu nejsou žádné akce.' }}
-    </p>
+      <p v-if="!months.length" class="m-0 border-t border-[#ede5d3] py-3 text-[16px] text-muted">
+        {{ mode === 'past' ? 'Letos zatím nic neproběhlo.' : 'Zatím tu nejsou žádné akce.' }}
+      </p>
 
-    <div
-      v-for="month in visibleMonths"
-      :key="month.key"
-      class="grid gap-x-[18px] py-2 sm:grid-cols-[96px_minmax(0,1fr)]"
-      data-testid="calendar-month"
-    >
-      <h3 class="m-0 mb-1 font-hand text-[24px] leading-none font-bold text-red sm:mt-[7px]">
-        {{ formatMonth(month.key, thisYear) }}
-      </h3>
-      <ul class="m-0 min-w-0 list-none p-0">
-        <li
-          v-for="event in month.events"
-          :key="event.id"
-          class="flex flex-wrap items-center gap-x-3.5 gap-y-1 border-t border-[#ede5d3] py-2 sm:grid sm:grid-cols-[108px_42px_minmax(0,1fr)_auto]"
-          data-testid="calendar-event"
-        >
-          <span class="font-hand text-[22px] leading-[1.15] font-bold text-ink">
-            {{ formatRange(event.startDate, event.endDate) }}
-          </span>
-          <AudienceTag :audience="event.audience" />
-          <span
-            class="flex min-w-0 basis-full flex-wrap items-baseline gap-x-[9px] gap-y-0.5 sm:basis-auto"
-          >
-            <span class="text-[17px] text-ink" :class="event.cancelled && 'line-through'">
-              {{ event.title }}
-            </span>
-            <span class="text-[14.5px] text-muted">{{ organizerNames(organizersOf(event)) }}</span>
-            <span
-              v-if="event.cancelled"
-              class="rounded-full bg-[#f0cdc2] px-2.5 pt-1 pb-[5px] font-hand text-[18px] leading-none font-bold text-[#8a2f16]"
-            >
-              zrušeno
-            </span>
-            <RouterLink
-              v-if="albumOf(event)"
-              :to="{ name: 'album', params: { albumId: albumOf(event).id }, query }"
-              class="py-0.5 text-[14.5px]"
-            >
-              fotky →
-            </RouterLink>
-          </span>
-          <span class="flex flex-wrap gap-[7px] sm:justify-self-end">
-            <span
-              v-for="{ member, attended } in attendance(event)"
-              :key="member.id"
-              class="rounded-full border-[1.5px] px-2.5 pt-1 pb-[5px] font-hand text-[18px] leading-none font-bold whitespace-nowrap"
-              :class="
-                attended
-                  ? 'border-green bg-[#e9f1ea] text-[#1f5138]'
-                  : 'border-[#d6ccb4] text-[#8a7b5e]'
-              "
-              :title="attended ? 'byl(a) na akci' : 'nebyl(a) na akci'"
-            >
-              {{ attended ? '✓' : '✗' }} {{ nicknameOf(member) }}
-            </span>
-          </span>
-        </li>
-      </ul>
-    </div>
-
-    <div v-if="months.length > 2" class="mt-3 border-t border-[#ede5d3] pt-3">
-      <button
-        type="button"
-        class="cursor-pointer border-0 border-b-[1.5px] border-[#9ec0a8] bg-transparent px-0 pt-1 pb-px font-hand text-[21px] font-bold text-green hover:text-red"
-        :aria-expanded="fullYear"
-        @click="fullYear = !fullYear"
+      <div
+        v-for="month in visibleMonths"
+        :key="month.key"
+        class="grid gap-x-[18px] py-2 sm:grid-cols-[96px_minmax(0,1fr)]"
+        data-testid="calendar-month"
       >
-        {{ fullYear ? 'zobrazit jen nejbližší měsíce' : 'zobrazit celý rok' }}
-      </button>
-    </div>
+        <h3 class="m-0 mb-1 font-hand text-[24px] leading-none font-bold text-red sm:mt-[7px]">
+          {{ formatMonth(month.key, thisYear) }}
+        </h3>
+        <ul class="m-0 min-w-0 list-none p-0">
+          <li
+            v-for="event in month.events"
+            :key="event.id"
+            class="flex flex-wrap items-center gap-x-3.5 gap-y-1 border-t border-[#ede5d3] py-2 sm:grid sm:grid-cols-[108px_42px_minmax(0,1fr)_auto]"
+            data-testid="calendar-event"
+          >
+            <span class="font-hand text-[22px] leading-[1.15] font-bold text-ink">
+              {{ formatRange(event.startDate, event.endDate) }}
+            </span>
+            <AudienceTag :audience="event.audience" />
+            <span
+              class="flex min-w-0 basis-full flex-wrap items-baseline gap-x-[9px] gap-y-0.5 sm:basis-auto"
+            >
+              <span class="text-[17px] text-ink" :class="event.cancelled && 'line-through'">
+                {{ event.title }}
+              </span>
+              <span class="text-[14.5px] text-muted">{{
+                organizerNames(organizersOf(event))
+              }}</span>
+              <span
+                v-if="event.cancelled"
+                class="rounded-full bg-[#f0cdc2] px-2.5 pt-1 pb-[5px] font-hand text-[18px] leading-none font-bold text-[#8a2f16]"
+              >
+                zrušeno
+              </span>
+              <RouterLink
+                v-if="albumOf(event)"
+                :to="{ name: 'album', params: { albumId: albumOf(event).id }, query }"
+                class="py-0.5 text-[14.5px]"
+              >
+                fotky →
+              </RouterLink>
+            </span>
+            <span class="flex flex-wrap gap-[7px] sm:justify-self-end">
+              <span
+                v-for="{ member, attended } in attendance(event)"
+                :key="member.id"
+                class="rounded-full border-[1.5px] px-2.5 pt-1 pb-[5px] font-hand text-[18px] leading-none font-bold whitespace-nowrap"
+                :class="
+                  attended
+                    ? 'border-green bg-[#e9f1ea] text-[#1f5138]'
+                    : 'border-[#d6ccb4] text-[#8a7b5e]'
+                "
+                :title="attended ? 'byl(a) na akci' : 'nebyl(a) na akci'"
+              >
+                {{ attended ? '✓' : '✗' }} {{ nicknameOf(member) }}
+              </span>
+            </span>
+          </li>
+        </ul>
+      </div>
+
+      <div v-if="months.length > 2" class="mt-3 border-t border-[#ede5d3] pt-3">
+        <button
+          type="button"
+          class="cursor-pointer border-0 border-b-[1.5px] border-[#9ec0a8] bg-transparent px-0 pt-1 pb-px font-hand text-[21px] font-bold text-green hover:text-red"
+          :aria-expanded="fullYear"
+          @click="fullYear = !fullYear"
+        >
+          {{ fullYear ? 'zobrazit jen nejbližší měsíce' : 'zobrazit celý rok' }}
+        </button>
+      </div>
+    </template>
   </section>
 </template>

@@ -233,7 +233,7 @@ Common header (as in the design, no menu): „Skautský oddíl Záře“ (→ le
 
 1. **Greeting** — „Ahoj, {nickname}!“, role title + troop, today's date.
 2. **Tools** — links to Docházka, Akce a plakátky, Aktuality, Fotky, Klubovna, Čekací listina; **Administrace** only for admin.
-The troop-dependent parts (today card, attendance summary) follow the troop switch. The greeting uses the linked person's nickname and role title, otherwise the account's first name and „vedoucí“ / „správce“. Today's date next to it is left out on a phone.
+The today card follows the troop switch; news, the calendar, photos and contacts are of both troops (what the parents get). The greeting uses the linked person's nickname and role title, otherwise the account's first name and „vedoucí“ / „správce“. Today's date next to it is left out on a phone.
 
 3. **Today card** (based on the chosen troop and today's date):
    - today is a meeting day of the troop → „schůzka v klubovně, 17–19 h“ + „zapsat docházku →“ (opens that meeting: `/vedouci/dochazka?oddil={troop}&schuzka={date}`);
@@ -243,13 +243,17 @@ The troop-dependent parts (today card, attendance summary) follow the troop swit
    - otherwise → „dneska není schůzka ani výprava — klidný den“, link „zapsat jiný termín →“.
    The meeting time („17–19 h“) comes from the schedule.
 4. **Nearest events** — upcoming events of both troops with registration started (as in §3.1, incl. those past the deadline): date, tag, title, organizer, **signed up / eligible** count (active children who can join, §6.4); below, the deadline chip with the time left as on the parent home (§3.1) and „přihlášení:“ with the nicknames of the signed-up children (first 6, then „+ N dalších“; „zatím nikdo“), poster link („plakátek“ → poster page, or „vyplnit plakátek“ → editor `/vedouci/akce?akce={eventId}`), link „jmenný seznam a platby →“ (attendance → trips tab). Link „přidat akci nebo plakátek →“.
-5. **Troop attendance summary** — for the chosen troop: each child with meeting % and trips count; children not meeting the camp requirement highlighted red. Clicking a child shows a dot per meeting date of their day this school year — filled = present, empty = absent, hatched = meeting cancelled, dashed = not recorded yet; tooltip with date and state; a child without a meeting day gets a note instead; a legend below the list. On a phone the list is folded behind a summary („55 dětí · 12 nesplňuje podmínku na tábor“, „zobrazit ↓“).
+5. **Aktuality** — all news of both troops, as on the parent home (§3.1).
+6. **Fotky** — the 4 latest published albums of both troops, as on the parent home.
+7. **Výpravník** and **Kontakty na vedoucí** — the parent home's calendar of both troops and the contact cards (§3.1), each folded into one row between lines (heading + „zobrazit ↓“, the whole row opens it); the contacts' group switch starts on the leader's home troop.
 
-**Reads:** own `users/{uid}`, `members`, `meetings`, `events` + `participants`, `settings/app`.
+The camp requirement summary is only in attendance (§4.2).
+
+**Reads:** own `users/{uid}`, `members`, `events` + `participants`, `news`, `albums`, `contacts`, `skautisPeople`.
 
 ### 4.2 Attendance (`/vedouci/dochazka`)
 
-Troop switch (top right, §4 intro; on a phone only the troop tag next to the heading — the troop is chosen on the leader home). Two tabs, meetings and trips (each child's year is on the leader home, §4.1). The selection is kept in the URL: `?oddil={troop}&schuzka={date}` (meetings), `&vyprava={eventId}` (trips) — links from the leader home use it. Without a selection the page opens today's meeting if today is a meeting day, else the troop's most recent meeting date.
+Troop switch (top right, §4 intro; on a phone only the troop tag next to the heading — the troop is chosen on the leader home). Two tabs, meetings and trips; next to them (not a third tab) the link „podmínka na tábor ↓“ opens the camp requirement summary at the bottom of the page and scrolls to it. The selection is kept in the URL: `?oddil={troop}&schuzka={date}` (meetings), `&vyprava={eventId}` (trips) — links from the leader home use it. Without a selection the page opens today's meeting if today is a meeting day, else the troop's most recent meeting date.
 
 **Meetings (schůzky)**
 
@@ -272,7 +276,9 @@ Troop switch (top right, §4 intro; on a phone only the troop tag next to the he
 - There is no „nepřijel“: a child not marked „přijel“ did not come.
 - Autosave, followed live.
 
-**Reads:** `members`, `meetings`, `events` + `participants`.
+**Camp requirement summary** (bottom of the page, hidden at the meeting point) — for the chosen troop: each child with meeting % and trips count; children not meeting the camp requirement highlighted red. Folded behind a summary („55 dětí · 12 nesplňuje podmínku na tábor“, „zobrazit ↓“). Clicking a child shows a dot per meeting date of their day this school year — filled = present, empty = absent, hatched = meeting cancelled, dashed = not recorded yet; tooltip with date and state; a child without a meeting day gets a note instead. Follows the recording live.
+
+**Reads:** `members`, `meetings`, `events` + `participants`, `settings/app`.
 **Writes:** `meetings` (presence, cancelled flag; deleted by „vrátit na nezapsáno“), `events/{id}/participants` (sign-up fields, attended, paid, amountPaid).
 
 ### 4.3 Events & posters (`/vedouci/akce`)

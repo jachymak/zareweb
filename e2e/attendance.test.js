@@ -5,7 +5,7 @@
 // `scripts/seed-users.js`, children from `scripts/seed-members.js` (vlc: Sojka
 // 900102 thu, Liška 900103 mon, Žabka and Kulíšek without a day), activity from
 // `scripts/seed-activity.js` (the latest meeting date of each day is unrecorded,
-// the 2nd one cancelled).
+// the 2nd one cancelled). The camp requirement summary at the bottom of the page.
 
 import {
   SCREENSHOTS,
@@ -21,7 +21,14 @@ import {
   runScript,
 } from './lib.js'
 import { schoolYearRange } from '../functions/src/shared/schoolYear.js'
-import { meetingDates } from '../functions/src/shared/meetingDays.js'
+import { meetingDates, meetingSchedule } from '../functions/src/shared/meetingDays.js'
+import { EVENTS } from '../scripts/seed-activity.js'
+import {
+  DEFAULT_CAMP_REQUIREMENTS,
+  meetingDots,
+  meetingStats,
+  meetsCampRequirement,
+} from '../functions/src/shared/attendance.js'
 
 const PASSWORD = 'heslo1234'
 const today = pragueToday()
@@ -57,6 +64,17 @@ async function getDoc(path) {
   return res.ok ? (await res.json()).fields : null
 }
 const presentIds = (fields) => (fields?.presentIds?.arrayValue?.values ?? []).map(fieldValue)
+
+const docs = async (collection) =>
+  (await listDocs(collection)).map((d) => ({
+    id: d.name.split('/').at(-1),
+    ...Object.fromEntries(
+      Object.entries(d.fields).map(([k, v]) => [
+        k,
+        'arrayValue' in v ? (v.arrayValue.values ?? []).map(fieldValue) : fieldValue(v),
+      ]),
+    ),
+  }))
 
 const pressed = async (locator) => (await locator.getAttribute('aria-pressed')) === 'true'
 
@@ -99,6 +117,68 @@ export default async function attendance({ browser, check }) {
       'meetings: children without a meeting day mentioned',
       await page.getByText(/2 děti nemají den schůzek \(Kulíšek, Žabka\)/).isVisible(),
     )
+  }
+
+  // ---- camp requirement summary (before anything is recorded) ----
+  {
+    const members = (await docs('members')).filter((m) => m.active)
+    const meetings = (await docs('meetings')).filter((m) => m.date >= yearStart)
+    const region = page.getByRole('region', { name: 'Podmínka na tábor' })
+    const rows = region.getByRole('listitem')
+    check('camp: folded at first', !(await region.getByRole('list').isVisible()))
+    await page.getByRole('link', { name: 'podmínka na tábor ↓' }).click()
+    check(
+      'camp: the link next to the tabs opens it',
+      (await region.getByRole('list').isVisible()) &&
+        (await page.getByRole('group', { name: 'Část docházky' }).count()) === 1,
+    )
+    const vlc = members.filter((m) => m.troop === 'vlc')
+    check(`camp: ${vlc.length} vlc children`, (await rows.count()) === vlc.length)
+    const pastTrips = EVENTS.filter(
+      (e) => !e.deleted && e.startDate <= today && e.registration && !e.cancelled,
+    )
+    const wrong = []
+    for (const member of vlc) {
+      const row = rows.filter({ has: page.getByText(`${member.firstName} ${member.lastName}`) })
+      const { percent } = meetingStats(member, meetings)
+      const trips = pastTrips.filter(
+        (e) => e.posterStatus !== 'none' && e.participants?.[member.id]?.attended,
+      ).length
+      const want = [
+        percent === null ? '—' : `${percent} %`,
+        `${trips} výpr.`,
+        meetsCampRequirement({ percent, trips }, DEFAULT_CAMP_REQUIREMENTS.vlc) ? 'ok' : 'short',
+      ]
+      const got = [
+        await row.getByTestId('attendance').innerText(),
+        await row.getByTestId('trips').innerText(),
+        await row.getAttribute('data-camp'),
+      ]
+      if (want.join() !== got.join()) wrong.push(`${member.nickname}: ${got} ≠ ${want}`)
+    }
+    check('camp: meeting %, trips and camp flag per child', !wrong.length, wrong.join('; '))
+
+    const rowOf = (member) =>
+      rows.filter({ has: page.getByText(`${member.firstName} ${member.lastName}`) })
+    const sojka = members.find((m) => m.id === '900102')
+    await rowOf(sojka).getByRole('button').click()
+    const states = await rowOf(sojka)
+      .getByTestId('dots')
+      .locator('[data-state]')
+      .evaluateAll((els) => els.map((e) => e.dataset.state))
+    const wantDots = meetingDots(sojka, meetings, meetingSchedule(null), yearStart, today)
+    check(
+      `camp: clicking a child shows a dot per meeting of their day (${wantDots.length})`,
+      wantDots.length > 0 && states.join() === wantDots.map((d) => d.state).join(),
+      states.join(),
+    )
+    const noDay = vlc.find((m) => !m.meetingDay)
+    await rowOf(noDay).getByRole('button').click()
+    check(
+      'camp: a child without a meeting day explained',
+      await rowOf(noDay).getByText('Nemá den schůzek').isVisible(),
+    )
+    await region.getByRole('button', { name: /skrýt/ }).click()
   }
 
   // ---- meetings: autosave round trip ----

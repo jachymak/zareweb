@@ -38,7 +38,7 @@ potravinove intolerance
 
 —
 
-
+emailove upozorneni na aktuality
 
 udelat ted
 - [ ] kde se prihlasuje

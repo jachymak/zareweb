@@ -4,19 +4,17 @@ import { meetingsOk, meetsCampRequirement, tripsOk } from '@shared/attendance'
 import SectionHeading from '@/components/parent/SectionHeading.vue'
 import { campRequirementText, MEETING_DAYS, plural } from '@/components/parent/parentText'
 import MeetingDots from './MeetingDots.vue'
-import { TROOP_GENITIVE } from './leaderText'
 import { nicknameOf } from '@shared/names'
 
 // Meeting % and trips of each child of the troop; children not meeting the
-// camp requirement yet in red (SPEC §4.1). Clicking a child shows a dot per
-// meeting of their day. On a phone the list is folded behind a summary line.
+// camp requirement yet in red (SPEC §4.2). Clicking a child shows a dot per
+// meeting of their day. The list is folded behind a summary line.
 const props = defineProps({
-  troop: { type: String, required: true },
   stats: { type: Array, required: true }, // [{ member, percent, trips, dots, hasMeetingDay }]
   requirement: { type: Object, required: true }, // the troop's camp requirement
 })
 
-const open = ref(false)
+const open = defineModel('open', { type: Boolean, default: false })
 const shown = ref(new Set()) // ids of children with their dots shown
 function toggleDots(id) {
   const next = new Set(shown.value)
@@ -34,22 +32,15 @@ const count = computed(() => props.stats.length)
     <SectionHeading
       id="troop-attendance-title"
       kicker="jak na tom jsou"
-      :title="`Docházka ${TROOP_GENITIVE[troop]}`"
-    >
-      <RouterLink
-        :to="{ path: '/vedouci/dochazka', query: { oddil: troop } }"
-        class="py-1 text-[15.5px]"
-      >
-        celá docházka a zápis →
-      </RouterLink>
-    </SectionHeading>
+      title="Podmínka na tábor"
+    />
 
     <p v-if="!stats.length" class="m-0 text-[16px] text-muted">V oddílu zatím nejsou žádné děti.</p>
     <button
       v-if="stats.length"
       type="button"
       :aria-expanded="open"
-      class="flex w-full cursor-pointer flex-wrap items-baseline gap-x-3 gap-y-1 rounded-[3px] border-[1.5px] border-[#e4d9be] bg-paper px-3.5 py-2.5 text-left sm:hidden"
+      class="flex w-full cursor-pointer flex-wrap items-baseline gap-x-3 gap-y-1 rounded-[3px] border-[1.5px] border-[#e4d9be] bg-paper px-3.5 py-2.5 text-left"
       @click="open = !open"
     >
       <span class="text-[15px] text-ink">
@@ -67,8 +58,8 @@ const count = computed(() => props.stats.length)
     </button>
     <ul
       v-if="stats.length"
-      class="m-0 list-none grid-cols-[repeat(auto-fill,minmax(min(100%,280px),1fr))] items-start gap-x-[26px] p-0 sm:grid"
-      :class="open ? 'mt-2 grid sm:mt-0' : 'hidden'"
+      class="m-0 list-none grid-cols-[repeat(auto-fill,minmax(min(100%,280px),1fr))] items-start gap-x-[26px] p-0"
+      :class="open ? 'mt-2 grid' : 'hidden'"
     >
       <li
         v-for="row in stats"
@@ -131,14 +122,14 @@ const count = computed(() => props.stats.length)
     </ul>
     <p
       v-if="stats.length"
-      class="m-0 mt-3 font-hand text-[20px] text-brown sm:block"
+      class="m-0 mt-3 font-hand text-[20px] text-brown"
       :class="open ? 'block' : 'hidden'"
     >
       klikni na dítě a uvidíš jeho schůzky
     </p>
     <p
       v-if="campRequirementText(requirement)"
-      class="m-0 mt-1 font-hand text-[20px] text-brown sm:block"
+      class="m-0 mt-1 font-hand text-[20px] text-brown"
       :class="open ? 'block' : 'hidden'"
     >
       červeně ti, kdo zatím nesplňují podmínku na tábor ({{ campRequirementText(requirement) }})

@@ -12,6 +12,12 @@ import { listLeaders } from '@/services/skautisPeople'
 import { getAppSettings } from '@/services/settings'
 import { TROOPS } from '@/constants/troops'
 
+// News, newest first, with the pinned important item (if any) moved to the top.
+export function pinnedFirst(list) {
+  const first = list.find((n) => n.important) ?? list[0]
+  return first ? [first, ...list.filter((n) => n !== first)] : []
+}
+
 // Data of the parent home (SPEC §3.1) for the given children.
 // `loadChildren` resolves to their `members` docs — the signed-in parent's
 // children, or (later) the child a leader previews (§4.7).
@@ -110,12 +116,9 @@ export function useParentArea(loadChildren) {
     }))
   })
 
-  // Pinned important news first, then the newest.
-  const relevantNews = computed(() => {
-    const list = news.value.filter((n) => isRelevant(n.audience, troops.value))
-    const first = list.find((n) => n.important) ?? list[0]
-    return first ? [first, ...list.filter((n) => n !== first)] : []
-  })
+  const relevantNews = computed(() =>
+    pinnedFirst(news.value.filter((n) => isRelevant(n.audience, troops.value))),
+  )
 
   const relevantAlbums = computed(() =>
     albums.value.filter((a) => isRelevant(a.audience, troops.value)),

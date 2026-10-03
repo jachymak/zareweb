@@ -20,9 +20,6 @@ export const DOT_STATES = {
   unrecorded: 'nezapsáno',
 }
 
-// „Docházka vlčušek“
-export const TROOP_GENITIVE = { vlc: 'vlčušek', ss: 'skautů a skautek' }
-
 // Attendance page opened on a meeting or a trip (query understood by §4.2).
 export const meetingLink = (troop, date) => ({
   path: '/vedouci/dochazka',

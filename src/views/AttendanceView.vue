@@ -1,5 +1,5 @@
 <script setup>
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { weekdayOf } from '@shared/meetingDays'
 import { useAttendance } from '@/composables/useAttendance'
@@ -8,6 +8,7 @@ import MeetingsTab from '@/components/attendance/MeetingsTab.vue'
 import TripsTab from '@/components/attendance/TripsTab.vue'
 import { TABS } from '@/components/attendance/attendanceText'
 import LeaderHeader from '@/components/leader/LeaderHeader.vue'
+import TroopAttendance from '@/components/leader/TroopAttendance.vue'
 import TroopSwitch from '@/components/leader/TroopSwitch.vue'
 import AudienceTag from '@/components/parent/AudienceTag.vue'
 import PillSwitch from '@/components/parent/PillSwitch.vue'
@@ -65,6 +66,15 @@ watch([tab, date, tripId, () => a.troop], () => {
   router.replace({ query: { oddil: a.troop, ...selection } })
 })
 
+// Camp requirement summary at the bottom, folded; the link next to the tabs
+// opens it and scrolls there.
+const campOpen = ref(false)
+async function showCamp() {
+  campOpen.value = true
+  await nextTick()
+  document.getElementById('tabor')?.scrollIntoView({ behavior: 'smooth' })
+}
+
 const section = 'mx-auto max-w-[1040px] px-4 sm:px-6'
 </script>
 
@@ -90,7 +100,16 @@ const section = 'mx-auto max-w-[1040px] px-4 sm:px-6'
         </div>
         <TroopSwitch v-model="a.troop" class="hidden sm:block" />
       </div>
-      <PillSwitch v-model="tab" :options="TABS" label="Část docházky" class="mt-[18px]" />
+      <div class="mt-[18px] flex flex-wrap items-center gap-x-6 gap-y-2">
+        <PillSwitch v-model="tab" :options="TABS" label="Část docházky" />
+        <a
+          href="#tabor"
+          class="py-1 font-hand text-[20px] font-bold text-green no-underline hover:text-red sm:ml-auto"
+          @click.prevent="showCamp"
+        >
+          podmínka na tábor ↓
+        </a>
+      </div>
     </div>
 
     <p v-if="a.loading" :class="section" class="pt-8 font-hand text-2xl text-muted">načítám…</p>
@@ -111,6 +130,19 @@ const section = 'mx-auto max-w-[1040px] px-4 sm:px-6'
         v-model:mode="tripMode"
         :attendance="a"
       />
+    </div>
+    <div
+      v-if="!a.loading && !a.loadError && !gathering"
+      id="tabor"
+      class="mt-10 scroll-mt-4 border-y-2 border-[#e0d3af] bg-[#f6efdc]"
+    >
+      <div :class="section" class="pt-7 pb-[34px]">
+        <TroopAttendance
+          v-model:open="campOpen"
+          :stats="a.troopStats"
+          :requirement="a.requirement"
+        />
+      </div>
     </div>
   </main>
   <AreaFooter />

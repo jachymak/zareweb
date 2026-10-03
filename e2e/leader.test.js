@@ -1,6 +1,6 @@
 // Leader home (SPEC §4.1): greeting from the linked skautIS person, tools by
-// role, today card, upcoming events with sign-up counts, troop attendance with
-// the camp requirement, troop switch remembered in the browser, header
+// role, today card, upcoming events with sign-up counts, news, folded calendar,
+// photos, folded contacts, troop switch remembered in the browser, header
 // navigation, mobile widths. Accounts from `scripts/seed-users.js` (vedouci@ is
 // Ondys, vlc; spravce@ is Hobit, ss), children from `scripts/seed-members.js`,
 // activity from `scripts/seed-activity.js`.
@@ -17,21 +17,12 @@ import {
   runScript,
 } from './lib.js'
 import { addDays, EVENTS } from '../scripts/seed-activity.js'
-import { schoolYearRange } from '../functions/src/shared/schoolYear.js'
-import { meetingSchedule, troopDay, weekdayOf } from '../functions/src/shared/meetingDays.js'
+import { troopDay, weekdayOf } from '../functions/src/shared/meetingDays.js'
 import { canJoin, isOpenForSignUp } from '../functions/src/shared/events.js'
 import { nicknameOf } from '../functions/src/shared/names.js'
-import {
-  DEFAULT_CAMP_REQUIREMENTS,
-  meetingDots,
-  meetingStats,
-  meetsCampRequirement,
-} from '../functions/src/shared/attendance.js'
 
 const PASSWORD = 'heslo1234'
 const today = pragueToday()
-const { from: yearStart } = schoolYearRange(today)
-const SETTINGS = DEFAULT_CAMP_REQUIREMENTS.vlc
 
 // Seeded events as Firestore holds them.
 const events = EVENTS.filter((e) => !e.deleted).map(({ registration, ...e }) => ({
@@ -81,7 +72,6 @@ export default async function leader({ browser, check }) {
   runScript('seed-activity.js')
 
   const members = (await docs('members')).filter((m) => m.active)
-  const meetings = (await docs('meetings')).filter((m) => m.date >= yearStart)
 
   const { ctx, page, errors } = await openAs(browser, 'vedouci@zare.test')
   await page.screenshot({ path: `${SCREENSHOTS}leader-desktop.png`, fullPage: true })
@@ -158,56 +148,42 @@ export default async function leader({ browser, check }) {
     )
   }
 
-  // ---- troop attendance ----
+  // ---- news, calendar, photos, contacts (both troops) ----
   {
     check(
-      'attendance: heading of the home troop',
-      await page.getByRole('heading', { name: 'Docházka vlčušek' }).isVisible(),
+      'sections: news of both troops',
+      (await page.getByRole('heading', { name: 'Aktuality' }).isVisible()) &&
+        (await page.getByRole('region', { name: 'Aktuality' }).getByText('s&s').count()) > 0 &&
+        (await page.getByRole('region', { name: 'Aktuality' }).getByText('vlč').count()) > 0,
     )
-    const vlc = members.filter((m) => m.troop === 'vlc')
-    const rows = page.getByRole('region', { name: 'Docházka vlčušek' }).getByRole('listitem')
-    check(`attendance: ${vlc.length} vlc children`, (await rows.count()) === vlc.length)
-    const pastTrips = events.filter((e) => e.startDate <= today && e.registrationOpen)
-    let wrong = []
-    for (const member of vlc) {
-      const row = rows.filter({ has: page.getByText(`${member.firstName} ${member.lastName}`) })
-      const { percent } = meetingStats(member, meetings)
-      const trips = pastTrips.filter(
-        (e) => !e.cancelled && e.posterStatus !== 'none' && e.participants?.[member.id]?.attended,
-      ).length
-      const want = [
-        percent === null ? '—' : `${percent} %`,
-        `${trips} výpr.`,
-        meetsCampRequirement({ percent, trips }, SETTINGS) ? 'ok' : 'short',
-      ]
-      const got = [
-        await row.getByTestId('attendance').innerText(),
-        await row.getByTestId('trips').innerText(),
-        await row.getAttribute('data-camp'),
-      ]
-      if (want.join() !== got.join()) wrong.push(`${member.nickname}: ${got} ≠ ${want}`)
-    }
-    check('attendance: meeting %, trips and camp flag per child', !wrong.length, wrong.join('; '))
-
-    const rowOf = (member) =>
-      rows.filter({ has: page.getByText(`${member.firstName} ${member.lastName}`) })
-    const sojka = members.find((m) => m.id === '900102')
-    await rowOf(sojka).getByRole('button').click()
-    const states = await rowOf(sojka)
-      .getByTestId('dots')
-      .locator('[data-state]')
-      .evaluateAll((els) => els.map((e) => e.dataset.state))
-    const wantDots = meetingDots(sojka, meetings, meetingSchedule(null), yearStart, today)
+    const calendar = page.getByRole('region', { name: 'Výpravník' })
+    const folded = (await calendar.getByTestId('calendar-event').count()) === 0
+    await calendar.getByRole('button', { name: 'zobrazit ↓' }).click()
     check(
-      `attendance: clicking a child shows a dot per meeting of their day (${wantDots.length})`,
-      wantDots.length > 0 && states.join() === wantDots.map((d) => d.state).join(),
-      states.join(),
+      'sections: výpravník folded, opens with events of both troops',
+      folded &&
+        (await calendar.getByTestId('calendar-event').count()) > 0 &&
+        (await calendar.getByText('Vidíte akce obou oddílů.').isVisible()),
     )
-    const noDay = vlc.find((m) => !m.meetingDay)
-    await rowOf(noDay).getByRole('button').click()
+    await calendar.getByRole('button', { name: 'skrýt ↑' }).click()
     check(
-      'attendance: a child without a meeting day explained',
-      await rowOf(noDay).getByText('Nemá den schůzek').isVisible(),
+      'sections: photos open',
+      (await page.getByRole('heading', { name: 'Fotky' }).isVisible()) &&
+        (await page.getByRole('link', { name: 'všechna alba →' }).isVisible()),
+    )
+    const contacts = page.getByRole('region', { name: 'Kontakty na vedoucí' })
+    const contactsFolded = (await contacts.getByRole('listitem').count()) === 0
+    await contacts.getByRole('button', { name: 'zobrazit ↓' }).click()
+    check(
+      'sections: contacts folded, open on the home troop',
+      contactsFolded &&
+        (await contacts.getByRole('listitem').count()) > 0 &&
+        (await contacts.getByRole('button', { name: 'vlčušky' }).getAttribute('aria-pressed')) ===
+          'true',
+    )
+    check(
+      'sections: no camp requirement (it is in attendance)',
+      (await page.getByText(/podmínk/).count()) === 0,
     )
   }
 
@@ -256,17 +232,16 @@ export default async function leader({ browser, check }) {
       .getByRole('group', { name: 'Oddíl' })
       .getByRole('button', { name: 'skauti a skautky' })
       .click()
-    check(
-      'switch: attendance shows ss',
-      await page.getByRole('heading', { name: 'Docházka skautů a skautek' }).isVisible(),
-    )
     const text = await page.getByTestId('today-text').innerText()
     check('switch: ss today card', text === expectedToday('ss'), text)
     await page.reload({ waitUntil: 'load' })
     await page.getByRole('heading', { name: 'Nejbližší akce' }).waitFor()
     check(
       'switch: choice remembered after reload',
-      await page.getByRole('heading', { name: 'Docházka skautů a skautek' }).isVisible(),
+      (await page
+        .getByRole('group', { name: 'Oddíl' })
+        .getByRole('button', { name: 'skauti a skautky' })
+        .getAttribute('aria-pressed')) === 'true',
     )
     await page
       .getByRole('group', { name: 'Oddíl' })
@@ -307,7 +282,10 @@ export default async function leader({ browser, check }) {
     check(
       'admin: greeting and home troop ss',
       (await page.getByRole('heading', { name: 'Ahoj, Hobit!' }).isVisible()) &&
-        (await page.getByRole('heading', { name: 'Docházka skautů a skautek' }).isVisible()),
+        (await page
+          .getByRole('group', { name: 'Oddíl' })
+          .getByRole('button', { name: 'skauti a skautky' })
+          .getAttribute('aria-pressed')) === 'true',
     )
     const admin = page
       .getByRole('navigation', { name: 'Nástroje' })
@@ -352,13 +330,6 @@ export default async function leader({ browser, check }) {
           return r.width > 0 && r.height < 24 && !el.closest('p')
         })
         .map((el) => el.textContent.trim() || el.name),
-    )
-    const attendance = page.getByRole('region', { name: 'Docházka vlčušek' })
-    const folded = !(await attendance.getByRole('list').isVisible())
-    await attendance.getByRole('button', { name: /zobrazit/ }).click()
-    check(
-      `mobile ${width}: troop attendance folded, opens on a tap`,
-      folded && (await attendance.getByRole('list').isVisible()),
     )
     check(
       `mobile ${width}: no date under the greeting`,

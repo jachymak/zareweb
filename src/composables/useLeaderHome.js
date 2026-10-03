@@ -1,19 +1,22 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { pragueToday, schoolYearRange } from '@shared/schoolYear'
-import { campRequirements, isTrip, meetingDots, meetingStats, tripCount } from '@shared/attendance'
 import { canJoin, isOpenForSignUp } from '@shared/events'
+import { contactCard } from '@shared/contacts'
 import { meetingTimeShort, troopDay } from '@shared/meetingDays'
 import { listEvents, listParticipants } from '@/services/events'
-import { listMeetings } from '@/services/meetings'
 import { listMembers } from '@/services/members'
+import { listNews } from '@/services/news'
+import { listAlbums } from '@/services/photos'
+import { listContacts } from '@/services/contacts'
 import { listLeaders } from '@/services/skautisPeople'
-import { getAppSettings } from '@/services/settings'
+import { pinnedFirst } from '@/composables/useParentArea'
 import { useLeaderTroopStore } from '@/stores/leaderTroop'
 import { useMeetingScheduleStore } from '@/stores/meetingSchedule'
 import { nicknameOf } from '@shared/names'
 
-// Data of the leader home (SPEC §4.1). The troop-dependent parts (today card,
-// attendance summary) follow the troop picked on the page (shared with attendance).
+// Data of the leader home (SPEC §4.1). The today card follows the troop picked
+// on the page (shared with attendance); news, the calendar, photos and contacts
+// are of both troops, as the parents get them.
 export function useLeaderHome() {
   const today = pragueToday()
   const schoolYear = schoolYearRange(today)
@@ -27,9 +30,10 @@ export function useLeaderHome() {
   const loading = ref(true)
   const loadError = ref(false)
   const members = ref([])
-  const settings = ref(campRequirements(null)) // camp requirement per troop
   const events = ref([])
-  const meetings = ref([])
+  const news = ref([])
+  const albums = ref([]) // published, newest first
+  const contacts = ref([])
   const leaders = ref({}) // skautisPeople by id
   const participants = ref({}) // { eventId: { memberId: doc } }
 
@@ -38,22 +42,23 @@ export function useLeaderHome() {
 
   onMounted(async () => {
     try {
-      const [, , memberList, appSettings, eventList, people, ...meetingLists] = await Promise.all([
-        leaderTroop.init(),
-        scheduleStore.load(),
-        listMembers(),
-        getAppSettings(),
-        listEvents({ fromDate: schoolYear.from }),
-        listLeaders({ activeOnly: false }),
-        ...['vlc', 'ss'].map((t) =>
-          listMeetings({ troop: t, fromDate: schoolYear.from, toDate: today }),
-        ),
-      ])
+      const [, , memberList, eventList, newsList, albumList, contactList, people] =
+        await Promise.all([
+          leaderTroop.init(),
+          scheduleStore.load(),
+          listMembers(),
+          listEvents({ fromDate: schoolYear.from }),
+          listNews(),
+          listAlbums({ publishedOnly: true }),
+          listContacts(),
+          listLeaders({ activeOnly: false }),
+        ])
       members.value = memberList
-      settings.value = campRequirements(appSettings)
       events.value = eventList
+      news.value = newsList
+      albums.value = albumList
+      contacts.value = contactList
       leaders.value = Object.fromEntries(people.map((p) => [p.id, p]))
-      meetings.value = meetingLists.flat()
       participants.value = await loadParticipants(eventList)
     } catch (e) {
       if (left) return
@@ -64,7 +69,7 @@ export function useLeaderHome() {
     }
   })
 
-  // Sign-ups and attendance of every event with registration.
+  // Sign-ups of every event with registration.
   async function loadParticipants(eventList) {
     const withRegistration = eventList.filter((e) => e.registrationOpen)
     const lists = await Promise.all(withRegistration.map((e) => listParticipants(e.id)))
@@ -103,21 +108,13 @@ export function useLeaderHome() {
       }),
   )
 
-  // Children of the chosen troop with their meeting % and trips, and a dot per
-  // meeting date of their day, by nickname.
-  const troopStats = computed(() => {
-    const pastTrips = events.value.filter((e) => e.startDate <= today && isTrip(e))
-    return members.value
-      .filter((m) => m.troop === troop.value)
-      .map((member) => ({
-        member,
-        percent: meetingStats(member, meetings.value).percent,
-        trips: tripCount(member, pastTrips, participantOf),
-        dots: meetingDots(member, meetings.value, scheduleStore.schedule, schoolYear.from, today),
-        hasMeetingDay: scheduleStore.schedule[member.troop].days.includes(member.meetingDay),
-      }))
-      .sort((a, b) => nicknameOf(a.member).localeCompare(nicknameOf(b.member), 'cs'))
-  })
+  // Album of an event, for the „fotky“ link of past events in the calendar.
+  const albumOf = (event) => albums.value.find((a) => a.eventId === event.id) ?? null
+
+  // Contact cards with their leader's details, in the admin's order.
+  const leaderContacts = computed(() =>
+    contacts.value.map((c) => contactCard(c, leaders.value[c.personId])).filter(Boolean),
+  )
 
   return {
     today,
@@ -125,10 +122,15 @@ export function useLeaderHome() {
     loadError,
     person: computed(() => leaderTroop.person),
     troop,
-    settings,
     todayPlan,
     meetingTime,
     upcomingEvents,
-    troopStats,
+    events,
+    news: computed(() => pinnedFirst(news.value)),
+    albums: computed(() => albums.value.slice(0, 4)),
+    albumOf,
+    leaderContacts,
+    organizersOf,
+    participantOf,
   }
 }

@@ -1,6 +1,6 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { pragueToday, schoolYearRange } from '@shared/schoolYear'
-import { isTrip } from '@shared/attendance'
+import { campRequirements, isTrip, meetingDots, meetingStats, tripCount } from '@shared/attendance'
 import { canJoin } from '@shared/events'
 import { meetingDates, meetingTimeShort, noMeetingOn, weekdayOf } from '@shared/meetingDays'
 import { listEvents, setAttendance, setSignedUp, subscribeParticipants } from '@/services/events'
@@ -13,6 +13,7 @@ import {
   subscribeMeetings,
 } from '@/services/meetings'
 import { listMembers } from '@/services/members'
+import { getAppSettings } from '@/services/settings'
 import { useLeaderTroopStore } from '@/stores/leaderTroop'
 import { useMeetingScheduleStore } from '@/stores/meetingSchedule'
 import { nicknameOf } from '@shared/names'
@@ -39,6 +40,7 @@ export function useAttendance() {
   const events = ref([])
   const meetingsByTroop = ref({ vlc: [], ss: [] })
   const participants = ref({}) // { eventId: { memberId: doc } }
+  const settings = ref(campRequirements(null)) // camp requirement per troop
 
   const unsubscribes = []
   let left = false
@@ -55,13 +57,15 @@ export function useAttendance() {
 
   onMounted(async () => {
     try {
-      const [, , memberList, eventList] = await Promise.all([
+      const [, , memberList, eventList, appSettings] = await Promise.all([
         leaderTroop.init(),
         scheduleStore.load(),
         listMembers(),
         listEvents({ fromDate: schoolYear.from }),
+        getAppSettings(),
       ])
       members.value = memberList.sort(byNickname)
+      settings.value = campRequirements(appSettings)
       events.value = eventList
       // Resolves with the first snapshot, so the page shows once everything is in.
       const follow = (subscribe, apply) =>
@@ -205,6 +209,22 @@ export function useAttendance() {
   const setTripSignedUp = (event, memberId, signedUp) =>
     save(() => setSignedUp(event.id, memberId, signedUp))
 
+  // ---- camp requirement (SPEC §4.2) ----
+
+  // Children of the troop with their meeting % and trips, and a dot per
+  // meeting date of their day.
+  const troopStats = computed(() => {
+    const pastTrips = events.value.filter((e) => e.startDate <= today && isTrip(e))
+    return troopMembers.value.map((member) => ({
+      member,
+      percent: meetingStats(member, meetings.value).percent,
+      trips: tripCount(member, pastTrips, participantOf),
+      dots: meetingDots(member, meetings.value, schedule.value, schoolYear.from, today),
+      hasMeetingDay: schedule.value[member.troop].days.includes(member.meetingDay),
+    }))
+  })
+  const requirement = computed(() => settings.value[troop.value])
+
   return {
     today,
     troop,
@@ -232,5 +252,8 @@ export function useAttendance() {
     tripSummary,
     setTripFields,
     setTripSignedUp,
+    // camp requirement
+    troopStats,
+    requirement,
   }
 }
