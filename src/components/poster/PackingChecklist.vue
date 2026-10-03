@@ -1,7 +1,7 @@
 <script setup>
 import { ref, watch } from 'vue'
 
-// „sbaleno?“ — ticking is only for the parent: kept in this browser, never sent.
+// „co si vzít s sebou?“ — ticking is only for the parent: kept in this browser, never sent.
 const props = defineProps({
   eventId: { type: String, required: true },
   items: { type: Array, required: true },
@@ -36,7 +36,8 @@ function toggle(item) {
 
 <template>
   <section aria-labelledby="packing-title">
-    <h2 id="packing-title" class="m-0 mb-3 font-hand text-[24px] font-bold text-ink">sbaleno?</h2>
+    <h2 id="packing-title" class="m-0 font-hand text-[24px] font-bold text-ink">Co si vzít s sebou?</h2>
+    <p class="m-0 mb-3 text-[15px] text-muted">žádné věci do rukou, pouze batoh</p>
     <ul class="m-0 flex list-none flex-col gap-1 p-0">
       <li v-for="item in items" :key="item">
         <button
@@ -60,7 +61,7 @@ function toggle(item) {
       </li>
     </ul>
     <p class="m-0 mt-[18px] font-hand text-[19px] text-brown">
-      odškrtávátko je jen pro vás, nikam se neposílá
+      Odškrtávátko je jen pro vás, nikam se neposílá.
     </p>
   </section>
 </template>

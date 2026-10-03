@@ -200,7 +200,7 @@ Read-only page generated from the event's poster data. Parents see it only when 
 - **Sraz**, **Návrat** — composed from the Památník / Hlavní nádraží times or the „jinde“ free text.
 - **Peněz** (cost, from the event's `price`), **S sebou** (the packing items joined into a sentence), **Jídlo** (food).
 - Signature: „Těší se na vás {organizers' nicknames}“ (derived from the event's organizers).
-- **„sbaleno?“ checklist** of packing items — ticking is local only (not sent anywhere; remembered in `localStorage` per event).
+- **„Co si vzít s sebou?“ checklist** of packing items (with the note „žádné věci do rukou, pouze batoh“) — ticking is local only (not sent anywhere; remembered in `localStorage` per event).
 - Footer: „Něco není jasné? Ozvěte se organizátorovi — {nickname} ({phone}, {e-mail})“ (main organizer), back to the calendar (`/clenove#vypravnik`; leaders: back to `/vedouci`).
 
 **Reads:** `events/{id}`, `events/{id}/poster/content`, `skautisPeople` (organizers).

@@ -58,7 +58,7 @@ export default async function posterSuite({ browser, check }) {
     .getByRole('article', { name: 'Výprava do Středohoří' })
     .getByRole('link', { name: 'plakátek' })
     .click()
-  await page.getByRole('heading', { name: 'sbaleno?' }).waitFor({ timeout: 10000 })
+  await page.getByRole('heading', { name: 'Co si vzít s sebou?' }).waitFor({ timeout: 10000 })
   check('poster: opens from „Nejbližší akce“', page.url().endsWith(poster('seed-stredohori')))
   await page.screenshot({ path: `${SCREENSHOTS}poster-desktop.png`, fullPage: true })
 
@@ -103,7 +103,7 @@ export default async function posterSuite({ browser, check }) {
     await item.click()
     check('checklist: ticking an item', (await item.getAttribute('aria-checked')) === 'true')
     await page.reload({ waitUntil: 'load' })
-    await page.getByRole('heading', { name: 'sbaleno?' }).waitFor()
+    await page.getByRole('heading', { name: 'Co si vzít s sebou?' }).waitFor()
     check(
       'checklist: kept after a reload',
       (await page.getByRole('checkbox', { name: 'karimatka' }).getAttribute('aria-checked')) ===
@@ -144,7 +144,7 @@ export default async function posterSuite({ browser, check }) {
 
   await patchDoc('events/seed-uzly', { cancelled: { booleanValue: true } })
   await page.goto(page.url().replace(/\/clenove.*/, poster('seed-uzly')), { waitUntil: 'load' })
-  await page.getByRole('heading', { name: 'sbaleno?' }).waitFor({ timeout: 10000 })
+  await page.getByRole('heading', { name: 'Co si vzít s sebou?' }).waitFor({ timeout: 10000 })
   check(
     'cancelled: poster marked „Akce je zrušená“',
     await page.getByText('Akce je zrušená.').isVisible(),
@@ -168,7 +168,7 @@ export default async function posterSuite({ browser, check }) {
   // ---- leader preview ----
   {
     const { ctx, page, errors } = await openAs(browser, LEADER, poster('seed-blanik'))
-    await page.getByRole('heading', { name: 'sbaleno?' }).waitFor({ timeout: 10000 })
+    await page.getByRole('heading', { name: 'Co si vzít s sebou?' }).waitFor({ timeout: 10000 })
     const text = await main(page).innerText()
     check(
       'leader: draft shown as a preview',
@@ -190,7 +190,7 @@ export default async function posterSuite({ browser, check }) {
       height: 800,
       mobile: true,
     })
-    await page.getByRole('heading', { name: 'sbaleno?' }).waitFor({ timeout: 10000 })
+    await page.getByRole('heading', { name: 'Co si vzít s sebou?' }).waitFor({ timeout: 10000 })
     const overflow = await horizontalOverflow(page)
     const small = await page.evaluate(() =>
       [...document.querySelectorAll('a, button, input')]

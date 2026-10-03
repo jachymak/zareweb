@@ -41,6 +41,6 @@
 - doladit zneni mailu
 - tabory dosat
 - fotky kontakty vedeni
-  zadne veci do rukou, pouze batoh
+  
 - namluvene pro vedouci
 
