@@ -48,6 +48,10 @@ const childCards = (page) =>
     .filter({ has: page.getByTestId('attendance') })
     .count()
 const eventCard = (page, title) => page.getByRole('article', { name: title })
+// A child's row under an event and its sign-up state.
+const childRow = (card, nickname) => card.getByRole('group', { name: nickname })
+const signedUpIn = async (row) =>
+  (await row.getByTestId('signup-state').innerText()).trim() === '✓ přihlášeno'
 
 export default async function preview({ browser, check }) {
   await clearAuthAccounts()
@@ -89,11 +93,10 @@ export default async function preview({ browser, check }) {
     const stredohori = eventCard(page, 'Výprava do Středohoří')
     check(
       'sign-up: shows the parent’s real sign-ups',
-      (await stredohori.getByRole('button', { name: 'Sojka' }).getAttribute('aria-pressed')) ===
-        'true',
+      await signedUpIn(childRow(stredohori, 'Sojka')),
     )
     const kokorin = eventCard(page, 'Podzimní výprava na Kokořín')
-    const bobr = kokorin.getByRole('button', { name: 'Bobr' })
+    const bobr = childRow(kokorin, 'Bobr').getByRole('button', { name: 'přihlásit' })
     check('sign-up: toggle is enabled like for the parent', await bobr.isEnabled())
     await bobr.click()
     const notice = await kokorin.getByText('Tohle je jen náhled').innerText()
@@ -106,10 +109,10 @@ export default async function preview({ browser, check }) {
     check(
       'sign-up: nothing written, toggle unchanged',
       !(await participant('seed-kokorin', '900201')) &&
-        (await bobr.getAttribute('aria-pressed')) === 'false',
+        !(await signedUpIn(childRow(kokorin, 'Bobr'))),
     )
     const uzly = eventCard(page, 'Uzlovací závody')
-    await uzly.getByRole('button', { name: 'Bobr' }).click()
+    await childRow(uzly, 'Bobr').getByRole('button').click()
     check(
       'sign-up: after the deadline the parent’s notice',
       await uzly.getByText('Přihlašování už skončilo').isVisible(),

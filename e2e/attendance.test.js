@@ -1,7 +1,7 @@
 // Attendance (SPEC §4.2): meetings recorded per child with autosave and the
 // cancelled flag, links from the leader home, live updates from another
 // leader, trips with attendance / payments / amounts and the cash total, the
-// overview with meeting dots, troop switch, mobile widths. Accounts from
+// troop switch, mobile widths. Accounts from
 // `scripts/seed-users.js`, children from `scripts/seed-members.js` (vlc: Sojka
 // 900102 thu, Liška 900103 mon, Žabka and Kulíšek without a day), activity from
 // `scripts/seed-activity.js` (the latest meeting date of each day is unrecorded,
@@ -222,7 +222,7 @@ export default async function attendance({ browser, check }) {
     check('link: ?schuzka opens that meeting', true)
   }
 
-  // ---- trips ----
+  // ---- trips: overview (at home) ----
   {
     await page.goto(
       page.url().split('/vedouci')[0] + '/vedouci/dochazka?oddil=vlc&vyprava=seed-sarka',
@@ -237,10 +237,20 @@ export default async function attendance({ browser, check }) {
         (await trips.getByText('Výprava do Brd').count()) === 0 &&
         (await trips.getByText('Zahajovací odpoledne v klubovně').count()) === 0,
     )
+    const mode = sheet.getByRole('group', { name: 'Režim' })
+    check(
+      'trips: a past trip opens in „přehled“',
+      await pressed(mode.getByRole('button', { name: 'přehled' })),
+    )
+    check(
+      'trips: only children on the list are shown',
+      (await sheet.getByRole('group', { name: 'Sojka' }).count()) === 1 &&
+        (await sheet.getByRole('group', { name: 'Liška' }).count()) === 0,
+    )
     const sojka = sheet.getByRole('group', { name: 'Sojka' })
     check(
       'trips: signed-up Sojka attended per seed',
-      await pressed(sojka.getByRole('button', { name: 'přijel', exact: true })),
+      await pressed(sojka.getByRole('button', { name: '✓ přijel' })),
     )
     await sojka.getByRole('button', { name: 'nezaplaceno' }).click()
     const path = 'events/seed-sarka/participants/900102'
@@ -259,23 +269,71 @@ export default async function attendance({ browser, check }) {
       await until(async () => (await page.getByTestId('trip-cash').innerText()) === '250 Kč'),
     )
 
-    const liska = sheet.getByRole('group', { name: 'Liška' })
-    await liska.getByRole('button', { name: 'přijel', exact: true }).click()
+    // A late sign-up by the leader through the picker, and off again.
     const liskaPath = 'events/seed-sarka/participants/900103'
+    await sheet.getByLabel('přihlásit dítě').selectOption('900103')
+    const liska = sheet.getByRole('group', { name: 'Liška' })
     check(
-      'trips: a child who was not signed up can be marked as came',
-      await until(async () => fieldValue((await getDoc(liskaPath))?.attended) === true),
+      'trips: „přihlásit dítě“ signs a child up (by the leader)',
+      (await until(async () => fieldValue((await getDoc(liskaPath))?.signedUp) === true)) &&
+        !!fieldValue((await getDoc(liskaPath))?.signedUpBy) &&
+        (await until(async () =>
+          (await page.getByTestId('trip-summary').innerText()).startsWith('přihlášeno 2'),
+        )),
     )
+    await liska.getByRole('button', { name: 'odhlásit' }).click()
     check(
-      'trips: summary counts',
-      await until(async () =>
-        (await page.getByTestId('trip-summary').innerText()).startsWith(
-          'přijelo 2 · zaplaceno 1 z přihlášených 1',
-        ),
-      ),
-      await page.getByTestId('trip-summary').innerText(),
+      'trips: „odhlásit“ signs the child off, the row goes',
+      (await until(async () => fieldValue((await getDoc(liskaPath))?.signedUp) === false)) &&
+        (await until(async () => (await liska.count()) === 0)),
     )
     await page.screenshot({ path: `${SCREENSHOTS}attendance-trips.png`, fullPage: true })
+
+    // ---- trips: at the meeting point ----
+    await mode.getByRole('button', { name: 'na srazu' }).click()
+    check(
+      'gather: only the trip is shown — no switches above it',
+      (await page.getByRole('group', { name: 'Část docházky' }).count()) === 0 &&
+        !(await trips.isVisible()) &&
+        (await sheet.getByRole('group', { name: 'Režim' }).count()) === 0,
+    )
+    const count = () => sheet.getByTestId('gather-count').innerText()
+    check(
+      'gather: count and cash',
+      (await count()) === 'přijelo 1 z 1' &&
+        (await sheet.getByTestId('gather-cash').innerText()) === '250 Kč',
+    )
+    const card = sheet.getByRole('group', { name: 'Sojka' })
+    await card.getByRole('button', { name: 'Sojka zaplatil' }).click()
+    await card.getByRole('button', { name: 'Sojka přijel' }).click()
+    check(
+      'gather: tapping the card unmarks „přijel“, the pay button unmarks paid',
+      (await until(async () => {
+        const f = await getDoc(path)
+        return fieldValue(f?.paid) === false && fieldValue(f?.attended) === null
+      })) && (await until(async () => (await count()) === 'přijelo 0 z 1')),
+    )
+    await card.getByRole('button', { name: 'Sojka zaplatil' }).click()
+    check(
+      'gather: paying marks „přijel“ too',
+      await until(async () => {
+        const f = await getDoc(path)
+        return fieldValue(f?.paid) === true && fieldValue(f?.attended) === true
+      }),
+    )
+    await sheet.getByLabel('přišel někdo nepřihlášený').selectOption('900103')
+    check(
+      'gather: a child who was not signed up can be added as came',
+      (await until(async () => fieldValue((await getDoc(liskaPath))?.attended) === true)) &&
+        (await until(async () => (await count()) === 'přijelo 2 z 2')) &&
+        (await sheet.getByRole('group', { name: 'Liška' }).getByText('nepřihlášen').count()) === 1,
+    )
+    await page.screenshot({ path: `${SCREENSHOTS}attendance-gather.png`, fullPage: true })
+    await sheet.getByRole('button', { name: '← přehled' }).click()
+    check(
+      'gather: „← přehled“ brings the switches back',
+      await page.getByRole('group', { name: 'Část docházky' }).isVisible(),
+    )
   }
 
   // ---- a trip for everyone lists the children of both troops ----
@@ -290,7 +348,7 @@ export default async function attendance({ browser, check }) {
     )
     check(
       'all-trip: Sojka and Bobr signed up',
-      (await sheet.getByTestId('trip-summary').innerText()).includes('z přihlášených 2'),
+      (await sheet.getByTestId('trip-summary').innerText()).startsWith('přihlášeno 2'),
     )
     await bobr.getByRole('button', { name: 'nezaplaceno' }).click()
     check(
@@ -302,63 +360,20 @@ export default async function attendance({ browser, check }) {
     )
   }
 
-  // ---- overview ----
-  {
-    await page
-      .getByRole('group', { name: 'Část docházky' })
-      .getByRole('button', { name: 'přehled dětí' })
-      .click()
-    const card = page.getByRole('article', { name: 'Sojka' })
-    await card.waitFor()
-    const meetings = (await listDocs('meetings'))
-      .map((d) => d.fields)
-      .filter((f) => fieldValue(f.troop) === 'vlc' && fieldValue(f.weekday) === 'thu')
-    const recorded = meetings.filter((f) => !fieldValue(f.cancelled))
-    const present = recorded.filter((f) => presentIds(f).includes('900102')).length
-    const percent = `${Math.round((present * 100) / recorded.length)} %`
-    check(
-      `overview: Sojka meeting % ${percent}`,
-      (await card.getByTestId('attendance').innerText()) === percent,
-    )
-    check(
-      'overview: Sojka trips include Šárka and the opening trip',
-      (await card.getByTestId('trips').innerText()) === '2',
-    )
-    const dots = card.getByRole('listitem')
-    const states = await dots.evaluateAll((els) => els.map((e) => e.dataset.state))
-    check(
-      `overview: one dot per Thursday (${thursdays.length})`,
-      states.length === thursdays.length,
-      String(states.length),
-    )
-    check(
-      'overview: dot states from the meetings',
-      states.includes('cancelled') === thursdays.length > 2 &&
-        states.filter((s) => s === 'present').length === present,
-      states.join(),
-    )
-    check(
-      'overview: child without a meeting day explained',
-      await page.getByRole('article', { name: 'Žabka' }).getByText('Nemá den schůzek').isVisible(),
-    )
-    await page.screenshot({ path: `${SCREENSHOTS}attendance-overview.png`, fullPage: true })
-  }
-
   // ---- troop switch ----
   {
     await page
       .getByRole('group', { name: 'Oddíl' })
       .getByRole('button', { name: 'skauti a skautky' })
       .click()
-    check(
-      'switch: ss children in the overview',
-      (await until(() => page.getByRole('article', { name: 'Bobr' }).isVisible())) &&
-        new URL(page.url()).searchParams.get('oddil') === 'ss',
-    )
     await page
       .getByRole('group', { name: 'Část docházky' })
       .getByRole('button', { name: 'schůzky' })
       .click()
+    check(
+      'switch: ss chosen, kept in the URL',
+      await until(() => new URL(page.url()).searchParams.get('oddil') === 'ss'),
+    )
     check(
       'switch: ss meeting days',
       (await page.getByRole('group', { name: 'Den schůzek' }).innerText()).includes('úterý'),
@@ -392,8 +407,16 @@ export default async function attendance({ browser, check }) {
       chip && chip.x >= 0 && chip.x + chip.width <= width,
       JSON.stringify(chip),
     )
+    check(
+      `mobile ${width}: no troop switch, the troop named by its tag`,
+      !(await page.getByRole('group', { name: 'Oddíl' }).isVisible()) &&
+        (await page
+          .getByRole('heading', { name: /Docházka/ })
+          .getByTitle('vlčušky')
+          .isVisible()),
+    )
     const problems = []
-    for (const tab of ['výpravy', 'schůzky', 'přehled dětí']) {
+    for (const tab of ['výpravy', 'schůzky']) {
       await page
         .getByRole('group', { name: 'Část docházky' })
         .getByRole('button', { name: tab })
@@ -415,6 +438,23 @@ export default async function attendance({ browser, check }) {
         fullPage: true,
       })
     }
+    await page
+      .getByRole('group', { name: 'Část docházky' })
+      .getByRole('button', { name: 'výpravy' })
+      .click()
+    await page
+      .getByRole('group', { name: 'Režim' })
+      .getByRole('button', { name: 'na srazu' })
+      .click()
+    await page.waitForTimeout(300)
+    const gatherOverflow = await horizontalOverflow(page)
+    if (gatherOverflow > 0) problems.push(`na srazu: overflow ${gatherOverflow}`)
+    const firstCard = await page.getByTestId('gather-count').boundingBox()
+    if (!firstCard || firstCard.y > 400) problems.push(`na srazu: count at ${firstCard?.y}`)
+    await page.screenshot({
+      path: `${SCREENSHOTS}attendance-${width}-na-srazu.png`,
+      fullPage: true,
+    })
     check(`mobile ${width}: no overflow, tap targets ≥ 24px`, !problems.length, problems.join('; '))
     check(`mobile ${width}: no console errors`, errors.length === 0, errors.join(' | '))
     await ctx.close()

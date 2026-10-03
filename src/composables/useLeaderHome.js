@@ -1,6 +1,6 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { pragueToday, schoolYearRange } from '@shared/schoolYear'
-import { campRequirements, isTrip, meetingStats, tripCount } from '@shared/attendance'
+import { campRequirements, isTrip, meetingDots, meetingStats, tripCount } from '@shared/attendance'
 import { canJoin, isOpenForSignUp } from '@shared/events'
 import { meetingTimeShort, troopDay } from '@shared/meetingDays'
 import { listEvents, listParticipants } from '@/services/events'
@@ -84,18 +84,27 @@ export function useLeaderHome() {
   )
   const meetingTime = computed(() => meetingTimeShort(scheduleStore.schedule[troop.value]))
 
-  // Upcoming events with registration: signed up / eligible children.
+  // Upcoming events with registration: signed up / eligible children, and who.
   const upcomingEvents = computed(() =>
     events.value
       .filter((e) => isOpenForSignUp(e, today))
       .map((event) => {
         const eligible = members.value.filter((m) => canJoin(event, m))
-        const signedUp = eligible.filter((m) => participantOf(event.id, m.id)?.signedUp).length
-        return { event, organizers: organizersOf(event), signedUp, eligible: eligible.length }
+        const signedUp = eligible
+          .filter((m) => participantOf(event.id, m.id)?.signedUp)
+          .sort((a, b) => nicknameOf(a).localeCompare(nicknameOf(b), 'cs'))
+        return {
+          event,
+          organizers: organizersOf(event),
+          signedUp: signedUp.length,
+          signedUpNames: signedUp.map(nicknameOf),
+          eligible: eligible.length,
+        }
       }),
   )
 
-  // Children of the chosen troop with their meeting % and trips, by nickname.
+  // Children of the chosen troop with their meeting % and trips, and a dot per
+  // meeting date of their day, by nickname.
   const troopStats = computed(() => {
     const pastTrips = events.value.filter((e) => e.startDate <= today && isTrip(e))
     return members.value
@@ -104,6 +113,8 @@ export function useLeaderHome() {
         member,
         percent: meetingStats(member, meetings.value).percent,
         trips: tripCount(member, pastTrips, participantOf),
+        dots: meetingDots(member, meetings.value, scheduleStore.schedule, schoolYear.from, today),
+        hasMeetingDay: scheduleStore.schedule[member.troop].days.includes(member.meetingDay),
       }))
       .sort((a, b) => nicknameOf(a.member).localeCompare(nicknameOf(b.member), 'cs'))
   })

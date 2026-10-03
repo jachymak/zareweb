@@ -83,6 +83,10 @@ const expectedTrips = (memberId) =>
   ).length
 
 const eventCard = (page, title) => page.getByRole('article', { name: title })
+// A child's row under an event and its sign-up state.
+const childRow = (card, nickname) => card.getByRole('group', { name: nickname })
+const signedUpIn = async (row) =>
+  (await row.getByTestId('signup-state').innerText()).trim() === '✓ přihlášeno'
 
 export default async function parent({ browser, check }) {
   await clearAuthAccounts()
@@ -140,15 +144,16 @@ export default async function parent({ browser, check }) {
     const kokorin = eventCard(page, 'Podzimní výprava na Kokořín')
     check(
       'sign-up: event for all shows both children',
-      (await kokorin.getByRole('button', { name: 'Sojka' }).count()) === 1 &&
-        (await kokorin.getByRole('button', { name: 'Bobr' }).count()) === 1,
+      (await childRow(kokorin, 'Sojka').count()) === 1 &&
+        (await childRow(kokorin, 'Bobr').count()) === 1,
     )
     const stredohori = eventCard(page, 'Výprava do Středohoří')
     check(
       'sign-up: vlc event shows only Sojka, already signed up',
-      (await stredohori.getByRole('button').count()) === 1 &&
-        (await stredohori.getByRole('button', { name: 'Sojka' }).getAttribute('aria-pressed')) ===
-          'true',
+      (await stredohori.getByRole('group').count()) === 1 &&
+        (await signedUpIn(childRow(stredohori, 'Sojka'))) &&
+        (await childRow(stredohori, 'Sojka').getByRole('button', { name: 'odhlásit' }).count()) ===
+          1,
     )
     check(
       'sign-up: poster link only for published poster',
@@ -156,30 +161,54 @@ export default async function parent({ browser, check }) {
         (await kokorin.getByText('plakátek se chystá').count()) === 1,
     )
 
-    const bobr = kokorin.getByRole('button', { name: 'Bobr' })
-    await bobr.click()
+    const bobr = childRow(kokorin, 'Bobr')
+    check('sign-up: Bobr not signed up yet', !(await signedUpIn(bobr)))
+    await bobr.getByRole('button', { name: 'přihlásit' }).click()
     const uid = (await signInRest(EMAIL, PASSWORD)).uid
     const saved = await until(async () => {
       const f = await participant('seed-kokorin', '900201')
       return fieldValue(f?.signedUp) === true && fieldValue(f.signedUpBy) === uid
     })
     check('sign-up: Bobr signed up in Firestore by the parent', saved)
+    check(
+      'sign-up: state and time shown once saved',
+      (await until(() => signedUpIn(bobr))) &&
+        /^přihlásili jste dnes v \d{1,2}:\d{2}$/.test(
+          (await bobr.getByText('přihlásili jste').innerText()).trim(),
+        ),
+    )
     await page.reload({ waitUntil: 'load' })
     await page.getByRole('heading', { name: 'Výpravník' }).waitFor()
     check(
       'sign-up: survives a reload',
-      (await eventCard(page, 'Podzimní výprava na Kokořín')
-        .getByRole('button', { name: 'Bobr' })
-        .getAttribute('aria-pressed')) === 'true',
+      await signedUpIn(childRow(eventCard(page, 'Podzimní výprava na Kokořín'), 'Bobr')),
     )
-    await eventCard(page, 'Podzimní výprava na Kokořín')
-      .getByRole('button', { name: 'Bobr' })
-      .click()
+
+    const bobrAgain = childRow(eventCard(page, 'Podzimní výprava na Kokořín'), 'Bobr')
+    await bobrAgain.getByRole('button', { name: 'odhlásit' }).click()
     check(
-      'sign-up: signing off saves signedUp false',
+      'sign-off: asks first, nothing written yet',
+      (await bobrAgain.getByText('Opravdu zrušit přihlášku').isVisible()) &&
+        fieldValue((await participant('seed-kokorin', '900201'))?.signedUp) === true,
+    )
+    await bobrAgain.getByRole('button', { name: 'ne, nechat přihlášené' }).click()
+    check(
+      'sign-off: „ne“ keeps the sign-up',
+      (await bobrAgain.getByText('Opravdu zrušit přihlášku').count()) === 0 &&
+        (await signedUpIn(bobrAgain)),
+    )
+    await bobrAgain.getByRole('button', { name: 'odhlásit' }).click()
+    await bobrAgain.getByRole('button', { name: 'ano, odhlásit' }).click()
+    check(
+      'sign-off: confirmed saves signedUp false',
       await until(
         async () => fieldValue((await participant('seed-kokorin', '900201'))?.signedUp) === false,
       ),
+    )
+    check(
+      'sign-off: state shown',
+      (await until(async () => !(await signedUpIn(bobrAgain)))) &&
+        (await bobrAgain.getByText('odhlásili jste').isVisible()),
     )
   }
 
@@ -190,7 +219,7 @@ export default async function parent({ browser, check }) {
       'deadline: shows „přihlašování skončilo“',
       (await uzly.getByTestId('deadline').innerText()) === 'přihlašování skončilo',
     )
-    await uzly.getByRole('button', { name: 'Bobr' }).click()
+    await childRow(uzly, 'Bobr').getByRole('button').click()
     const notice = await uzly.getByText('Přihlašování už skončilo').innerText()
     check(
       'deadline: click explains whom to write to',

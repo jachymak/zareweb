@@ -1,5 +1,6 @@
 // Attendance and the camp requirement — SPEC §6.3.
 // Callers pass only meetings and events of the current school year.
+import { meetingDates, noMeetingOn } from './meetingDays.js'
 
 // Meeting attendance of a child: recorded (not cancelled) meetings of their
 // troop on their meeting day. `percent` is null when none was recorded yet.
@@ -10,6 +11,28 @@ export function meetingStats(member, meetings) {
   const present = recorded.filter((m) => m.presentIds?.includes(member.id)).length
   const percent = recorded.length ? Math.round((present * 100) / recorded.length) : null
   return { present, recorded: recorded.length, percent }
+}
+
+// A dot per meeting date of the child's day between two dates, oldest first:
+// 'present' | 'absent' | 'cancelled' | 'unrecorded'. Dates without meetings
+// (Administration) are left out unless a meeting was recorded on them anyway.
+// [] when the child has no meeting day of the troop.
+export function meetingDots(member, meetings, schedule, fromDate, toDate) {
+  const { troop, meetingDay } = member
+  if (!schedule[troop]?.days.includes(meetingDay)) return []
+  const byDate = new Map(meetings.filter((m) => m.troop === troop).map((m) => [m.date, m]))
+  const skip = (date) => !!noMeetingOn(schedule, troop, date) && !byDate.has(date)
+  return meetingDates(meetingDay, fromDate, toDate, skip).map((date) => {
+    const meeting = byDate.get(date)
+    const state = !meeting
+      ? 'unrecorded'
+      : meeting.cancelled
+        ? 'cancelled'
+        : meeting.presentIds?.includes(member.id)
+          ? 'present'
+          : 'absent'
+    return { date, state }
+  })
 }
 
 // Events whose attendance counts as a trip: registration enabled, not the camp.

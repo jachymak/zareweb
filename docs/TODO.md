@@ -39,8 +39,6 @@ logo - udelat pro vedouci do design slozky
 
 namluvene pro vedouci
 
-upozorneni pri velkych fotkach
-
 tabory dosat
 
 export kontaktu na vedeni a deti?
@@ -52,8 +50,7 @@ potravinove intolerance
 
 
 udelat ted
-- [ ] schuzka do stavu nezapsano
 - [ ] kde se prihlasuje
 - doladit zneni mailu
-- hezci vyprava + prihlasovani post
-- https
+- klubovna sediva
+- ve

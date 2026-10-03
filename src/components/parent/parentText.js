@@ -63,6 +63,15 @@ export function formatRange(start, end) {
   return sm === em ? `${sd}.–${formatDay(end)}` : `${formatDay(start)}–${formatDay(end)}`
 }
 
+// Whole days from `today` to `iso` (negative when it is past).
+export function daysUntil(iso, today) {
+  const utc = (date) => {
+    const [y, m, d] = parts(date)
+    return Date.UTC(y, m - 1, d)
+  }
+  return Math.round((utc(iso) - utc(today)) / 86_400_000)
+}
+
 // Calendar month heading: „Říjen“, with the year when it isn't this year.
 export function formatMonth(yearMonth, thisYear) {
   const [y, m] = parts(yearMonth)
@@ -78,7 +87,31 @@ export function formatTimestamp(ts) {
   return date ? formatDay(pragueDate.format(date)) : ''
 }
 
+const pragueTime = new Intl.DateTimeFormat('cs-CZ', {
+  timeZone: 'Europe/Prague',
+  hour: 'numeric',
+  minute: '2-digit',
+})
+
+// Firestore Timestamp → „dnes v 14:05“, „12. 3. v 9:30“
+export function formatTimestampTime(ts, today) {
+  const date = ts?.toDate?.()
+  if (!date) return ''
+  const day = pragueDate.format(date)
+  return `${day === today ? 'dnes' : formatDay(day)} v ${pragueTime.format(date)}`
+}
+
 export const plural = (n, one, few, many) => (n === 1 ? one : n >= 2 && n <= 4 ? few : many)
+
+// Time left to sign up: „ještě 5 dní“, „zítra poslední den“, „dnes poslední den“;
+// '' after the deadline.
+export function daysLeftText(deadline, today) {
+  const days = daysUntil(deadline, today)
+  if (days < 0) return ''
+  if (days === 0) return 'dnes poslední den'
+  if (days === 1) return 'zítra poslední den'
+  return `ještě ${days} ${plural(days, 'den', 'dny', 'dní')}`
+}
 
 // „na tábor je potřeba 4 výpravy a 60 % schůzek“ — only the required parts;
 // '' when the troop requires nothing. `req` = campRequirements(…)[troop].

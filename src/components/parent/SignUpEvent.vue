@@ -2,7 +2,10 @@
 import { computed, ref } from 'vue'
 import HandDrawnBox from '@/components/HandDrawnBox.vue'
 import AudienceTag from './AudienceTag.vue'
+import SignUpChild from './SignUpChild.vue'
 import {
+  daysLeftText,
+  daysUntil,
   formatDay,
   formatRange,
   lateSignUpText,
@@ -12,30 +15,38 @@ import {
 } from './parentText'
 import { nicknameOf } from '@shared/names'
 
-// One event open for sign-up: a toggle per eligible child (none for a parent
-// without children — then just the event, its poster and deadline). After the deadline
-// the toggles are locked and clicking one says whom to write to. In the
-// leaders' preview a click only explains what it would do for the parent.
+// One event open for sign-up: a row per eligible child with its state and a
+// button (none for a parent without children — then just the event, its poster
+// and deadline). After the deadline the buttons are locked and clicking one says
+// whom to write to. In the leaders' preview a click only explains what it would
+// do for the parent.
 const props = defineProps({
   event: { type: Object, required: true },
   state: { type: String, required: true }, // 'open' | 'ended'
   organizers: { type: Array, required: true }, // skautisPeople docs, first = main
-  children: { type: Array, required: true }, // [{ member, signedUp, saving }]
+  children: { type: Array, required: true }, // [{ member, participant, mine, saving }]
   error: { type: Boolean, default: false },
   preview: { type: Boolean, default: false }, // leaders' preview: nothing is saved
   posterQuery: { type: Object, default: () => ({}) },
+  today: { type: String, required: true },
 })
 const emit = defineEmits(['toggle'])
 
 const ended = computed(() => props.state === 'ended')
+const daysLeft = computed(() =>
+  ended.value ? '' : daysLeftText(props.event.registrationDeadline, props.today),
+)
+const lastDays = computed(
+  () => !ended.value && daysUntil(props.event.registrationDeadline, props.today) <= 2,
+)
 const notice = ref('')
 
-function click({ member, signedUp }) {
+function click({ member, participant }) {
   const nickname = nicknameOf(member)
   if (ended.value) {
     notice.value = lateSignUpText(nickname, props.organizers[0])
   } else if (props.preview) {
-    notice.value = previewSignUpText(nickname, signedUp)
+    notice.value = previewSignUpText(nickname, !!participant?.signedUp)
   } else {
     emit('toggle', member)
   }
@@ -52,59 +63,64 @@ function click({ member, signedUp }) {
           {{ formatRange(event.startDate, event.endDate) }}
         </span>
         <AudienceTag :audience="event.audience" />
-        <span class="min-w-0 basis-full sm:basis-auto">
+        <span class="order-last min-w-0 basis-full sm:order-none sm:basis-auto">
           <span class="text-[18.5px] font-medium text-ink">{{ event.title }}</span>
           <span v-if="organizers.length" class="text-[15.5px] text-muted">
             · vede {{ organizerNames(organizers) }}
+          </span>
+          <span class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span
+              class="rounded-full px-2.5 py-0.5 text-[14.5px]"
+              :class="ended ? 'bg-[#efe9da] text-muted' : 'bg-gold-light text-ink'"
+              data-testid="deadline"
+            >
+              {{
+                ended
+                  ? 'přihlašování skončilo'
+                  : `přihlášky do ${formatDay(event.registrationDeadline)}`
+              }}
+            </span>
+            <span
+              v-if="daysLeft"
+              class="font-hand text-[20px] leading-none font-bold"
+              :class="lastDays ? 'text-red' : 'text-brown'"
+            >
+              {{ daysLeft }}
+            </span>
           </span>
         </span>
         <RouterLink
           v-if="event.posterStatus === 'published'"
           :to="{ name: 'event-poster', params: { eventId: event.id }, query: posterQuery }"
-          class="inline-block -rotate-[1.4deg] border-[1.5px] border-ink bg-gold-light px-3.5 py-1 font-hand text-[21px] font-bold text-ink no-underline sm:justify-self-end"
+          class="ml-auto inline-block -rotate-[1.4deg] border-[1.5px] border-ink bg-gold-light px-2.5 py-0.5 font-hand text-[18px] font-bold text-ink no-underline sm:ml-0 sm:justify-self-end sm:px-3.5 sm:py-1 sm:text-[21px]"
         >
           plakátek
         </RouterLink>
         <span
           v-else
-          class="inline-block -rotate-[1.4deg] border-[1.5px] border-dashed border-line-strong px-3.5 py-1 font-hand text-[19px] font-medium text-brown sm:justify-self-end"
+          class="ml-auto inline-block -rotate-[1.4deg] border-[1.5px] border-dashed border-line-strong px-2.5 py-0.5 font-hand text-[16px] font-medium text-brown sm:ml-0 sm:justify-self-end sm:px-3.5 sm:py-1 sm:text-[19px]"
         >
           plakátek se chystá
         </span>
       </div>
 
       <div
-        class="mt-[13px] flex flex-wrap items-center gap-x-3.5 gap-y-2 border-t border-dashed border-line-soft pt-3"
+        v-if="children.length"
+        class="mt-4 flex flex-col gap-2 border-t border-dashed border-line-soft pt-4"
       >
-        <span v-if="children.length" class="font-hand text-[21px] text-muted-2">
-          {{ children.length > 1 ? 'přihlásit:' : 'přihlásit' }}
-        </span>
-        <button
+        <SignUpChild
           v-for="child in children"
           :key="child.member.id"
-          type="button"
-          :aria-pressed="child.signedUp"
-          :disabled="child.saving"
-          :title="preview && !ended ? 'v náhledu se nic neuloží' : undefined"
-          class="inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-full border-[1.5px] px-3.5 py-1.5 text-[15px] disabled:cursor-default"
-          :class="[
-            child.signedUp
-              ? 'border-green bg-[#e9f1ea] text-[#1f5138]'
-              : 'border-[#d6ccb4] bg-cream text-muted',
-            ended && 'opacity-75',
-          ]"
-          @click="click(child)"
-        >
-          <span v-if="child.signedUp" aria-hidden="true">✓</span>
-          {{ nicknameOf(child.member) }}
-        </button>
-        <span class="text-[14.5px] text-[#8a7b5e] sm:ml-auto" data-testid="deadline">
-          {{
-            ended
-              ? 'přihlašování skončilo'
-              : `přihlášky do ${formatDay(event.registrationDeadline)}`
-          }}
-        </span>
+          :member="child.member"
+          :participant="child.participant"
+          :mine="child.mine"
+          :saving="child.saving"
+          :ended="ended"
+          :event-title="event.title"
+          :today="today"
+          :hint="preview && !ended ? 'v náhledu se nic neuloží' : undefined"
+          @toggle="click(child)"
+        />
       </div>
 
       <p aria-live="polite" class="m-0 empty:hidden">

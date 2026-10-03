@@ -11,6 +11,14 @@ export const TOOLS = [
 ]
 export const ADMIN_TOOL = { to: '/vedouci/administrace', label: 'Administrace' }
 
+// Tooltip of a meeting dot in the troop attendance.
+export const DOT_STATES = {
+  present: 'na schůzce',
+  absent: 'chyběl(a)',
+  cancelled: 'schůzka nebyla',
+  unrecorded: 'nezapsáno',
+}
+
 // „Docházka vlčušek“
 export const TROOP_GENITIVE = { vlc: 'vlčušek', ss: 'skautů a skautek' }
 

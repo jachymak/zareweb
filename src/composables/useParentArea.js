@@ -135,25 +135,23 @@ export function useParentArea(loadChildren) {
   const saving = ref(new Set()) // `eventId/memberId`
   const signUpErrors = ref({}) // { eventId: message }
 
-  // Saves immediately; the toggle flips at once and reverts when saving fails.
+  // Saves at once; the state shows only once the server has it, read back with
+  // the server time of the change, so the parent sees it really went through.
   async function toggleSignUp(event, member) {
     const key = `${event.id}/${member.id}`
     if (saving.value.has(key)) return
-    const previous = participantOf(event.id, member.id)
-    const signedUp = !previous?.signedUp
-    const setLocal = (doc) =>
-      (participants.value = {
-        ...participants.value,
-        [event.id]: { ...participants.value[event.id], [member.id]: doc },
-      })
-    setLocal({ ...previous, signedUp })
+    const signedUp = !participantOf(event.id, member.id)?.signedUp
     saving.value = new Set(saving.value).add(key)
-    signUpErrors.value = { ...signUpErrors.value, [event.id]: '' }
+    signUpErrors.value = { ...signUpErrors.value, [event.id]: false }
     try {
       await setSignedUp(event.id, member.id, signedUp)
+      const doc = await getParticipant(event.id, member.id)
+      participants.value = {
+        ...participants.value,
+        [event.id]: { ...participants.value[event.id], [member.id]: doc },
+      }
     } catch (e) {
       console.error('Saving the sign-up failed', e)
-      setLocal(previous)
       signUpErrors.value = { ...signUpErrors.value, [event.id]: true }
     } finally {
       const next = new Set(saving.value)

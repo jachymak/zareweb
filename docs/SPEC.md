@@ -168,15 +168,15 @@ Common header: „Skautský oddíl Záře — pro členy“, the user's e-mail, 
 
 ### 3.1 Parent home (`/clenove`)
 
-A parent without paired children (§4.8) sees everything of **both troops** (news, Výpravník, photos, as if they had children in both), instead of the children cards the note „K účtu nemáte přiřazené žádné dítě, a tak tu vidíte akce, aktuality a fotky obou oddílů.“, and „Nejbližší akce“ without the sign-up toggles (just the event, poster and deadline; nobody to sign up). The leaders' preview (§4.7) shows this page while no child is picked.
+A parent without paired children (§4.8) sees everything of **both troops** (news, Výpravník, photos, as if they had children in both), instead of the children cards the note „K účtu nemáte přiřazené žádné dítě, a tak tu vidíte akce, aktuality a fotky obou oddílů.“, and „Nejbližší akce“ without the children rows (just the event, poster and deadline; nobody to sign up). The leaders' preview (§4.7) shows this page while no child is picked.
 
 1. **Greeting** — „Ahoj!“, today's date, nearest upcoming relevant event (name + date).
 2. **Children cards** — one per paired child: nickname, troop tag, full name, meeting day, attendance % at meetings, number of trips attended (current school year). Below: the camp requirement of the children's troop(s) (§6.3), only its required parts — *„na tábor je potřeba 4 výpravy a 60 % schůzek“*; one line when all children's troops have the same one, else one line per troop prefixed with the troop name; nothing when not required.
 3. **News (Aktuality)** — non-withdrawn news whose audience is `all` or one of the children's troops. The first item — **important** news pinned on top, otherwise the newest — is shown expanded and highlighted as a card (date, tag, author, title, text, optional link); the rest as an accordion (one open at a time).
-4. **Open for sign-up (Nejbližší akce)** — relevant events with registration enabled. Each row: date, tag, title, organizer, poster link („plakátek“ if published, otherwise disabled „plakátek se chystá“), sign-up toggles — one per child **whose troop matches the event audience** — and the deadline („přihlášky do 12. 3.“).
-   - Before the deadline: toggling signs the child up / off immediately.
+4. **Open for sign-up (Nejbližší akce)** — relevant events with registration enabled. Each row: date, tag, title, organizer, poster link („plakátek“ if published, otherwise disabled „plakátek se chystá“), and under the title the deadline as a chip („přihlášky do 12. 3.“) followed by the time left in handwriting („ještě 5 dní“, „zítra poslední den“, „dnes poslední den“ — red for the last two days); below, a row per child (green tinted when signed up, dashed when not) **whose troop matches the event audience**: nickname, state in words („✓ přihlášeno“ / „nepřihlášeno“), when it last changed („přihlásili jste dnes v 14:05“ when this parent did it, else „přihlášeno …“ / „odhlášeno …“) and one button „přihlásit“ / „odhlásit“.
+   - Before the deadline: „přihlásit“ saves at once; the new state (with the server time of the change, read back) shows only once it is saved („ukládá se…“ meanwhile). „Odhlásit“ asks first, inside the card: „Opravdu zrušit přihlášku na akci „{název}“ ({přezdívka})?“ — „ano, odhlásit“ / „ne, nechat přihlášené“.
    - The poster link leads to page 6.
-   - After the deadline (event stays listed until it starts): toggles are locked; deadline text changes to „přihlašování skončilo“ and clicking a child shows *„Přihlašování už skončilo, takže tady {přezdívka} přihlásit ani odhlásit nejde. Napište prosím organizátorovi akce — {přezdívka organizátora} ({telefon}, {e-mail}). Pokud to ještě půjde, změnu zařídí.“* Signing off after the deadline also goes through the organizer.
+   - After the deadline (event stays listed until it starts): the button becomes „chci to změnit“; deadline text changes to „přihlašování skončilo“ and clicking it shows *„Přihlašování už skončilo, takže tady {přezdívka} přihlásit ani odhlásit nejde. Napište prosím organizátorovi akce — {přezdívka organizátora} ({telefon}, {e-mail}). Pokud to ještě půjde, změnu zařídí.“* Signing off after the deadline also goes through the organizer.
 5. **Výpravník (calendar)** — events grouped by month.
    - Toggle „co nás čeká“ (upcoming) / „proběhlo“ (past).
    - Toggle „i akce druhého oddílu“ / „jen naše akce“ — by default only events for the children's troops + `all`. Hidden when the children are in both troops.
@@ -233,7 +233,7 @@ Common header (as in the design, no menu): „Skautský oddíl Záře“ (→ le
 
 1. **Greeting** — „Ahoj, {nickname}!“, role title + troop, today's date.
 2. **Tools** — links to Docházka, Akce a plakátky, Aktuality, Fotky, Klubovna, Čekací listina; **Administrace** only for admin.
-The troop-dependent parts (today card, attendance summary) follow the troop switch. The greeting uses the linked person's nickname and role title, otherwise the account's first name and „vedoucí“ / „správce“.
+The troop-dependent parts (today card, attendance summary) follow the troop switch. The greeting uses the linked person's nickname and role title, otherwise the account's first name and „vedoucí“ / „správce“. Today's date next to it is left out on a phone.
 
 3. **Today card** (based on the chosen troop and today's date):
    - today is a meeting day of the troop → „schůzka v klubovně, 17–19 h“ + „zapsat docházku →“ (opens that meeting: `/vedouci/dochazka?oddil={troop}&schuzka={date}`);
@@ -242,14 +242,14 @@ The troop-dependent parts (today card, attendance summary) follow the troop swit
    - today is a meeting day of the troop but falls into a range without meetings (§4.8 Meetings) → „dneska schůzka není — {reason}“;
    - otherwise → „dneska není schůzka ani výprava — klidný den“, link „zapsat jiný termín →“.
    The meeting time („17–19 h“) comes from the schedule.
-4. **Nearest events** — upcoming events of both troops with registration started (as in §3.1, incl. those past the deadline): date, tag, title, organizer, **signed up / eligible** count (active children who can join, §6.4) with a progress bar, poster link („plakátek“ → poster page, or „vyplnit plakátek“ → editor `/vedouci/akce?akce={eventId}`), link „jmenný seznam a platby →“ (attendance → trips tab). Link „přidat akci nebo plakátek →“.
-5. **Troop attendance summary** — for the chosen troop: each child with meeting % and trips count; children not meeting the camp requirement highlighted red.
+4. **Nearest events** — upcoming events of both troops with registration started (as in §3.1, incl. those past the deadline): date, tag, title, organizer, **signed up / eligible** count (active children who can join, §6.4); below, the deadline chip with the time left as on the parent home (§3.1) and „přihlášení:“ with the nicknames of the signed-up children (first 6, then „+ N dalších“; „zatím nikdo“), poster link („plakátek“ → poster page, or „vyplnit plakátek“ → editor `/vedouci/akce?akce={eventId}`), link „jmenný seznam a platby →“ (attendance → trips tab). Link „přidat akci nebo plakátek →“.
+5. **Troop attendance summary** — for the chosen troop: each child with meeting % and trips count; children not meeting the camp requirement highlighted red. Clicking a child shows a dot per meeting date of their day this school year — filled = present, empty = absent, hatched = meeting cancelled, dashed = not recorded yet; tooltip with date and state; a child without a meeting day gets a note instead; a legend below the list. On a phone the list is folded behind a summary („55 dětí · 12 nesplňuje podmínku na tábor“, „zobrazit ↓“).
 
 **Reads:** own `users/{uid}`, `members`, `meetings`, `events` + `participants`, `settings/app`.
 
 ### 4.2 Attendance (`/vedouci/dochazka`)
 
-Troop switch (top right, §4 intro). Three tabs. The selection is kept in the URL: `?oddil={troop}&schuzka={date}` (meetings), `&vyprava={eventId}` (trips), `&prehled` (overview) — links from the leader home use it. Without a selection the page opens today's meeting if today is a meeting day, else the troop's most recent meeting date.
+Troop switch (top right, §4 intro; on a phone only the troop tag next to the heading — the troop is chosen on the leader home). Two tabs, meetings and trips (each child's year is on the leader home, §4.1). The selection is kept in the URL: `?oddil={troop}&schuzka={date}` (meetings), `&vyprava={eventId}` (trips) — links from the leader home use it. Without a selection the page opens today's meeting if today is a meeting day, else the troop's most recent meeting date.
 
 **Meetings (schůzky)**
 
@@ -265,17 +265,15 @@ Troop switch (top right, §4 intro). Three tabs. The selection is kept in the UR
 
 - List of the troop's trips (§6.3: registration enabled, not the camp, not cancelled; audience troop + `all`) of this school year incl. upcoming ones, horizontally scrollable, newest first. Opens on the trip that started last.
 - Children who can join are listed: the troop's children, and for `all` trips the children of **both** troops (with their troop tag) — usually one leader records such a trip for everybody.
-- Header: title, tag, date, price (or „cena zatím není“); summary „přijelo X · zaplaceno Y z přihlášených Z · máš mít u sebe N Kč“ — the cash is the sum of amounts of children marked paid (the entered amount, else the event price).
-- **Signed up** children: „přijel“ / „nepřijel“ (clicking the active one clears it), „zaplaceno“ / „nezaplaceno“ toggle, amount (placeholder = the event price; saved when the field is left; empty = the price).
-- **Not signed up** („kdyby někdo přišel“): „přijel“, payment toggle, amount.
+- Header: title, tag, date, price (or „cena zatím není“), and a mode switch **„přehled“ / „na srazu“** — „na srazu“ is preselected on the days of the trip (start–end), „přehled“ otherwise.
+- Only children **on the list** are shown: signed up, or marked as came / paid without signing up („nepřihlášen(a)“). Other children who can join are added through a picker instead of being listed.
+- **Přehled** (at home — who goes, settling the money): summary „přihlášeno N · přijelo X · zaplaceno Y · máš mít u sebe Z Kč“ — the cash is the sum of amounts of children marked paid (the entered amount, else the event price). A row per child: „přijel“ toggle, „zaplaceno“ / „nezaplaceno“ toggle, amount (placeholder = the event price; saved when the field is left; empty = the price), „odhlásit“ (or „přihlásit“ for a child who came without signing up). Below, „+ přihlásit dítě“ (a select) — leaders sign children up at any time, also after the deadline (the same as „Kdo je přihlášený“ in the event detail, §4.3).
+- **Na srazu** (at the meeting point, on a phone): the page shows only the trip — no title, troop switch, tabs, trip strip or mode switch, just „← přehled“, the trip title and tag; big „přijelo X z Y · máš u sebe Z Kč“ and a card per child — tapping the card toggles „přijel“, the amount button on it („250 Kč“, or „zaplatil“ without a price) toggles paid and marks „přijel“ too (who brings money has come). Below, „+ přišel někdo nepřihlášený“ (a select) marks a child as came.
+- There is no „nepřijel“: a child not marked „přijel“ did not come.
 - Autosave, followed live.
 
-**Overview (přehled dětí)**
-
-- For each child: meeting %, trips count (each red if below the camp requirement), and a row of dots per meeting date of the child's day this school year — filled = present, empty = absent, hatched = meeting cancelled, dashed = not recorded yet; tooltip with date and state. A child without a meeting day shows a note instead.
-
-**Reads:** `members`, `meetings`, `events` + `participants`, `settings/app`.
-**Writes:** `meetings` (presence, cancelled flag), `events/{id}/participants` (attended, paid, amountPaid).
+**Reads:** `members`, `meetings`, `events` + `participants`.
+**Writes:** `meetings` (presence, cancelled flag; deleted by „vrátit na nezapsáno“), `events/{id}/participants` (sign-up fields, attended, paid, amountPaid).
 
 ### 4.3 Events & posters (`/vedouci/akce`)
 
@@ -373,7 +371,7 @@ Effect (entries are **archived, not deleted**, to keep the original sign-up date
 
 „Náhled pro rodiče“: the leader picks any active child (select grouped by troop, first option „žádné (rodič bez dětí)“; kept in the URL as `?dite=<memberId>`; with no child picked the page is shown as to a parent without children, §3.1, posters and albums opened from it carry `?nahled=bez-deti`) and sees the parent home (§3.1) exactly as that child's parent would — parent header, the child **and its siblings** (all children paired with any of its parents; just the child when it has no parent account), real sign-ups and attendance. A green bar on top says it is the preview, holds the child picker and „← zpět do sekce pro vedoucí“.
 
-- Sign-up toggles look and behave like for the parent but **save nothing**: a click shows „Tohle je jen náhled, tady se nic neuloží. Rodič tímhle tlačítkem {přezdívka} rovnou přihlásí / odhlásí…“ (hover: „v náhledu se nic neuloží“); after the deadline the parent's notice is shown.
+- Sign-up buttons look and behave like for the parent (incl. the sign-off question) but **save nothing**: a click shows „Tohle je jen náhled, tady se nic neuloží. Rodič tímhle tlačítkem {přezdívka} rovnou přihlásí / odhlásí…“ (hover: „v náhledu se nic neuloží“); after the deadline the parent's notice is shown.
 - The poster link keeps the preview (`/clenove/akce/:eventId?nahled=<memberId>`): the poster is shown as to the parent (unpublished → „plakátek se ještě chystá“), with the preview bar, and „zpět do výpravníku“ returns to the preview.
 
 **Reads:** `members` (+ everything of §3.1). **Writes:** nothing.

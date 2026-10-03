@@ -1,9 +1,9 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { pragueToday, schoolYearRange } from '@shared/schoolYear'
-import { campRequirements, isTrip, meetingStats, tripCount } from '@shared/attendance'
+import { isTrip } from '@shared/attendance'
 import { canJoin } from '@shared/events'
 import { meetingDates, meetingTimeShort, noMeetingOn, weekdayOf } from '@shared/meetingDays'
-import { listEvents, setAttendance, subscribeParticipants } from '@/services/events'
+import { listEvents, setAttendance, setSignedUp, subscribeParticipants } from '@/services/events'
 import {
   clearMeeting,
   meetingId,
@@ -13,7 +13,6 @@ import {
   subscribeMeetings,
 } from '@/services/meetings'
 import { listMembers } from '@/services/members'
-import { getAppSettings } from '@/services/settings'
 import { useLeaderTroopStore } from '@/stores/leaderTroop'
 import { useMeetingScheduleStore } from '@/stores/meetingSchedule'
 import { nicknameOf } from '@shared/names'
@@ -37,7 +36,6 @@ export function useAttendance() {
   const loadError = ref(false)
   const saveError = ref(false)
   const members = ref([])
-  const settings = ref(campRequirements(null)) // camp requirement per troop
   const events = ref([])
   const meetingsByTroop = ref({ vlc: [], ss: [] })
   const participants = ref({}) // { eventId: { memberId: doc } }
@@ -57,15 +55,13 @@ export function useAttendance() {
 
   onMounted(async () => {
     try {
-      const [, , memberList, appSettings, eventList] = await Promise.all([
+      const [, , memberList, eventList] = await Promise.all([
         leaderTroop.init(),
         scheduleStore.load(),
         listMembers(),
-        getAppSettings(),
         listEvents({ fromDate: schoolYear.from }),
       ])
       members.value = memberList.sort(byNickname)
-      settings.value = campRequirements(appSettings)
       events.value = eventList
       // Resolves with the first snapshot, so the page shows once everything is in.
       const follow = (subscribe, apply) =>
@@ -198,34 +194,16 @@ export function useAttendance() {
     return {
       signedUp: rows.filter((p) => p.signedUp).length,
       attended: rows.filter((p) => p.attended === true).length,
-      paidSignedUp: rows.filter((p) => p.signedUp && p.paid).length,
+      paid: rows.filter((p) => p.paid).length,
       cash: rows.filter((p) => p.paid).reduce((sum, p) => sum + paidAmount(event, p), 0),
     }
   }
 
   const setTripFields = (event, memberId, fields) =>
     save(() => setAttendance(event.id, memberId, fields))
-
-  // ---- overview ----
-
-  const overview = computed(() => {
-    const pastTrips = events.value.filter((e) => e.startDate <= today && isTrip(e))
-    return troopMembers.value.map((member) => ({
-      member,
-      percent: meetingStats(member, meetings.value).percent,
-      trips: tripCount(member, pastTrips, participantOf),
-      dots: hasMeetingDay(member)
-        ? pastDates(member.meetingDay).map((date) => {
-            const state = meetingState(date)
-            return {
-              date,
-              state:
-                state === 'recorded' ? (isPresent(date, member.id) ? 'present' : 'absent') : state,
-            }
-          })
-        : [],
-    }))
-  })
+  // Leaders sign children up or off any time, also after the deadline.
+  const setTripSignedUp = (event, memberId, signedUp) =>
+    save(() => setSignedUp(event.id, memberId, signedUp))
 
   return {
     today,
@@ -233,7 +211,6 @@ export function useAttendance() {
     loading,
     loadError,
     saveError,
-    settings,
     // meetings
     weekdays,
     meetingTime,
@@ -254,7 +231,6 @@ export function useAttendance() {
     participantOf,
     tripSummary,
     setTripFields,
-    // overview
-    overview,
+    setTripSignedUp,
   }
 }

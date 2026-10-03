@@ -1,15 +1,15 @@
 <script setup>
-import { reactive, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { weekdayOf } from '@shared/meetingDays'
 import { useAttendance } from '@/composables/useAttendance'
 import AreaFooter from '@/components/AreaFooter.vue'
 import MeetingsTab from '@/components/attendance/MeetingsTab.vue'
-import OverviewTab from '@/components/attendance/OverviewTab.vue'
 import TripsTab from '@/components/attendance/TripsTab.vue'
 import { TABS } from '@/components/attendance/attendanceText'
 import LeaderHeader from '@/components/leader/LeaderHeader.vue'
 import TroopSwitch from '@/components/leader/TroopSwitch.vue'
+import AudienceTag from '@/components/parent/AudienceTag.vue'
 import PillSwitch from '@/components/parent/PillSwitch.vue'
 import { LOAD_ERROR, SAVE_ERROR } from '@/components/parent/parentText'
 
@@ -22,10 +22,13 @@ const a = reactive(useAttendance())
 
 const query = route.query
 if (['vlc', 'ss'].includes(query.oddil)) a.troop = query.oddil
-const tab = ref(query.vyprava ? 'trips' : 'prehled' in query ? 'overview' : 'meetings')
+const tab = ref(query.vyprava ? 'trips' : 'meetings')
 const weekday = ref(null)
 const date = ref(null)
 const tripId = ref(null)
+const tripMode = ref('overview') // 'overview' | 'gather' — set by TripsTab per trip
+// At the meeting point only the trip is shown, nothing to switch by mistake.
+const gathering = computed(() => tab.value === 'trips' && tripMode.value === 'gather' && !a.loading)
 
 function selectDefaults({ meeting = null, trip = null } = {}) {
   if (
@@ -58,9 +61,7 @@ watch(
 
 watch([tab, date, tripId, () => a.troop], () => {
   if (a.loading) return
-  const selection = { meetings: { schuzka: date.value }, trips: { vyprava: tripId.value } }[
-    tab.value
-  ] ?? { prehled: null }
+  const selection = tab.value === 'trips' ? { vyprava: tripId.value } : { schuzka: date.value }
   router.replace({ query: { oddil: a.troop, ...selection } })
 })
 
@@ -70,7 +71,7 @@ const section = 'mx-auto max-w-[1040px] px-4 sm:px-6'
 <template>
   <LeaderHeader />
   <main>
-    <div :class="section" class="pt-[22px]">
+    <div v-if="!gathering" :class="section" class="pt-[22px]">
       <div class="flex flex-wrap items-start gap-x-5 gap-y-3">
         <div class="mr-auto">
           <p class="m-0 mb-2 text-[15px]">
@@ -79,11 +80,15 @@ const section = 'mx-auto max-w-[1040px] px-4 sm:px-6'
             </RouterLink>
           </p>
           <p class="kicker m-0 -mb-0.5">kdo byl a kdo ne</p>
-          <h1 class="m-0 text-[28px] font-medium tracking-[-0.04em] text-ink sm:text-[38px]">
+          <h1
+            class="m-0 flex items-center gap-2.5 text-[28px] font-medium tracking-[-0.04em] text-ink sm:text-[38px]"
+          >
             Docházka
+            <!-- On a phone the troop comes from the leader home, just named here. -->
+            <AudienceTag :audience="a.troop" class="sm:hidden" />
           </h1>
         </div>
-        <TroopSwitch v-model="a.troop" />
+        <TroopSwitch v-model="a.troop" class="hidden sm:block" />
       </div>
       <PillSwitch v-model="tab" :options="TABS" label="Část docházky" class="mt-[18px]" />
     </div>
@@ -92,7 +97,7 @@ const section = 'mx-auto max-w-[1040px] px-4 sm:px-6'
     <p v-else-if="a.loadError" role="alert" :class="section" class="pt-8 text-red">
       {{ LOAD_ERROR }}
     </p>
-    <div v-else :class="section" class="pt-5">
+    <div v-else :class="[section, gathering ? 'pt-3.5' : 'pt-5']">
       <p v-if="a.saveError" role="alert" class="m-0 mb-3 text-[15px] text-red">{{ SAVE_ERROR }}</p>
       <MeetingsTab
         v-if="tab === 'meetings' && weekday"
@@ -100,8 +105,12 @@ const section = 'mx-auto max-w-[1040px] px-4 sm:px-6'
         v-model:date="date"
         :attendance="a"
       />
-      <TripsTab v-else-if="tab === 'trips'" v-model:trip-id="tripId" :attendance="a" />
-      <OverviewTab v-else-if="tab === 'overview'" :attendance="a" />
+      <TripsTab
+        v-else-if="tab === 'trips'"
+        v-model:trip-id="tripId"
+        v-model:mode="tripMode"
+        :attendance="a"
+      />
     </div>
   </main>
   <AreaFooter>

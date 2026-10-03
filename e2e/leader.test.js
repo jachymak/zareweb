@@ -18,10 +18,12 @@ import {
 } from './lib.js'
 import { addDays, EVENTS } from '../scripts/seed-activity.js'
 import { schoolYearRange } from '../functions/src/shared/schoolYear.js'
-import { troopDay, weekdayOf } from '../functions/src/shared/meetingDays.js'
+import { meetingSchedule, troopDay, weekdayOf } from '../functions/src/shared/meetingDays.js'
 import { canJoin, isOpenForSignUp } from '../functions/src/shared/events.js'
+import { nicknameOf } from '../functions/src/shared/names.js'
 import {
   DEFAULT_CAMP_REQUIREMENTS,
+  meetingDots,
   meetingStats,
   meetsCampRequirement,
 } from '../functions/src/shared/attendance.js'
@@ -125,6 +127,21 @@ export default async function leader({ browser, check }) {
         count === `${signedUp} / ${eligible.length}`,
         count,
       )
+      const names = await card.getByTestId('signed-up-names').innerText()
+      const expected = eligible.filter((m) => event.participants?.[m.id]?.signedUp).map(nicknameOf)
+      check(
+        `events: ${event.title} names who signed up`,
+        expected.length
+          ? expected.slice(0, 6).every((n) => names.includes(n))
+          : names === 'zatím nikdo',
+        names,
+      )
+      check(
+        `events: ${event.title} deadline shown`,
+        /^(přihlášky do \d{1,2}\. \d{1,2}\.|přihlašování skončilo)$/.test(
+          await card.getByTestId('deadline').innerText(),
+        ),
+      )
       const poster = event.posterStatus === 'published' ? 'plakátek' : 'vyplnit plakátek'
       check(
         `events: ${event.title} poster link „${poster}“`,
@@ -169,6 +186,27 @@ export default async function leader({ browser, check }) {
       if (want.join() !== got.join()) wrong.push(`${member.nickname}: ${got} ≠ ${want}`)
     }
     check('attendance: meeting %, trips and camp flag per child', !wrong.length, wrong.join('; '))
+
+    const rowOf = (member) =>
+      rows.filter({ has: page.getByText(`${member.firstName} ${member.lastName}`) })
+    const sojka = members.find((m) => m.id === '900102')
+    await rowOf(sojka).getByRole('button').click()
+    const states = await rowOf(sojka)
+      .getByTestId('dots')
+      .locator('[data-state]')
+      .evaluateAll((els) => els.map((e) => e.dataset.state))
+    const wantDots = meetingDots(sojka, meetings, meetingSchedule(null), yearStart, today)
+    check(
+      `attendance: clicking a child shows a dot per meeting of their day (${wantDots.length})`,
+      wantDots.length > 0 && states.join() === wantDots.map((d) => d.state).join(),
+      states.join(),
+    )
+    const noDay = vlc.find((m) => !m.meetingDay)
+    await rowOf(noDay).getByRole('button').click()
+    check(
+      'attendance: a child without a meeting day explained',
+      await rowOf(noDay).getByText('Nemá den schůzek').isVisible(),
+    )
   }
 
   // ---- today card on other days (browser clock moved to noon in Prague) ----
@@ -312,6 +350,17 @@ export default async function leader({ browser, check }) {
           return r.width > 0 && r.height < 24 && !el.closest('p')
         })
         .map((el) => el.textContent.trim() || el.name),
+    )
+    const attendance = page.getByRole('region', { name: 'Docházka vlčušek' })
+    const folded = !(await attendance.getByRole('list').isVisible())
+    await attendance.getByRole('button', { name: /zobrazit/ }).click()
+    check(
+      `mobile ${width}: troop attendance folded, opens on a tap`,
+      folded && (await attendance.getByRole('list').isVisible()),
+    )
+    check(
+      `mobile ${width}: no date under the greeting`,
+      !(await page.getByText('dneska je').isVisible()),
     )
     await page.screenshot({ path: `${SCREENSHOTS}leader-${width}.png`, fullPage: true })
     check(`mobile ${width}: no horizontal overflow`, overflow <= 0, String(overflow))

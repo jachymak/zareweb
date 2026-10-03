@@ -45,7 +45,7 @@ const section = 'mx-auto max-w-[1000px] px-4 sm:px-6'
       </div>
 
       <div :class="section" class="pt-8">
-        <UpcomingEvents :items="upcomingEvents" :troop="troop" />
+        <UpcomingEvents :items="upcomingEvents" :troop="troop" :today="today" />
       </div>
 
       <div class="mt-[34px] border-y-2 border-[#e0d3af] bg-[#f6efdc]">

@@ -1,5 +1,6 @@
 <script setup>
 import { canJoin, registrationState } from '@shared/events'
+import { useAuthStore } from '@/stores/auth'
 import SectionHeading from './SectionHeading.vue'
 import SignUpEvent from './SignUpEvent.vue'
 
@@ -17,14 +18,20 @@ const props = defineProps({
 })
 defineEmits(['toggle'])
 
+const auth = useAuthStore()
+
 const childrenFor = (event) =>
   props.children
     .filter((m) => canJoin(event, m))
-    .map((member) => ({
-      member,
-      signedUp: !!props.participantOf(event.id, member.id)?.signedUp,
-      saving: props.saving.has(`${event.id}/${member.id}`),
-    }))
+    .map((member) => {
+      const participant = props.participantOf(event.id, member.id)
+      return {
+        member,
+        participant,
+        mine: !!participant?.signedUpBy && participant.signedUpBy === auth.user?.uid,
+        saving: props.saving.has(`${event.id}/${member.id}`),
+      }
+    })
 </script>
 
 <template>
@@ -45,6 +52,7 @@ const childrenFor = (event) =>
       :error="!!errors[event.id]"
       :preview="preview"
       :poster-query="posterQuery"
+      :today="today"
       @toggle="(member) => $emit('toggle', event, member)"
     />
   </section>

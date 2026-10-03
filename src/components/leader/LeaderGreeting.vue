@@ -6,7 +6,8 @@ import { formatToday } from '@/components/parent/parentText'
 import { ADMIN_TOOL, TOOLS } from './leaderText'
 import { nicknameOf } from '@shared/names'
 
-// „Ahoj, {přezdívka}!“, role and troop, today's date and links to the tools.
+// „Ahoj, {přezdívka}!“, role and troop, today's date (not on a phone) and links
+// to the tools.
 // The slot sits top right (troop switch).
 const props = defineProps({
   person: { type: Object, default: null }, // the leader's skautisPeople doc, if linked
@@ -36,7 +37,7 @@ const tool =
           {{ name ? `Ahoj, ${name}!` : 'Ahoj!' }}
         </h1>
         <p class="m-0 text-[16.5px] text-muted" data-testid="leader-role">
-          {{ role }} · dneska je {{ formatToday(today) }}
+          {{ role }}<span class="hidden sm:inline"> · dneska je {{ formatToday(today) }}</span>
         </p>
       </div>
       <slot />
