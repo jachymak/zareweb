@@ -2,8 +2,6 @@ import {
   addDoc,
   collection,
   doc,
-  getDoc,
-  getDocs,
   onSnapshot,
   orderBy,
   query,
@@ -14,7 +12,7 @@ import {
 import { httpsCallable } from 'firebase/functions'
 import { getDownloadURL, ref as storageRef, uploadBytesResumable } from 'firebase/storage'
 import { originalPath } from '@shared/photos'
-import { auth, db, functions, storage } from './firebase'
+import { auth, db, functions, getDoc, getDocs, storage } from './firebase'
 import { fromDoc, fromQuery } from './utils'
 
 // Photo albums — SPEC §4.9. Photo documents are written by the `processPhoto`

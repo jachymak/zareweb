@@ -1,7 +1,7 @@
-import { collection, doc, getDocs, orderBy, query, writeBatch } from 'firebase/firestore'
+import { collection, doc, orderBy, query, writeBatch } from 'firebase/firestore'
 import { deleteObject, getDownloadURL, ref as storageRef, uploadBytes } from 'firebase/storage'
 import { contactPhotoPath } from '@shared/contacts'
-import { db, storage } from './firebase'
+import { db, getDocs, storage } from './firebase'
 import { fromQuery } from './utils'
 
 // Leader contacts shown to parents — SPEC §4.8 Contacts. A contact linked to a

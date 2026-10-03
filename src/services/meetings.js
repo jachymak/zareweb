@@ -3,7 +3,6 @@ import {
   arrayUnion,
   collection,
   doc,
-  getDocs,
   onSnapshot,
   orderBy,
   query,
@@ -11,7 +10,7 @@ import {
   setDoc,
   where,
 } from 'firebase/firestore'
-import { auth, db } from './firebase'
+import { auth, db, getDocs } from './firebase'
 import { fromDoc, fromQuery } from './utils'
 
 const meetings = collection(db, 'meetings')

@@ -2,7 +2,6 @@ import {
   addDoc,
   collection,
   doc,
-  getDocs,
   onSnapshot,
   orderBy,
   query,
@@ -10,7 +9,7 @@ import {
   updateDoc,
   where,
 } from 'firebase/firestore'
-import { auth, db } from './firebase'
+import { auth, db, getDocs } from './firebase'
 import { fromQuery } from './utils'
 
 const news = collection(db, 'news')

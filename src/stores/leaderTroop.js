@@ -31,6 +31,10 @@ export const useLeaderTroopStore = defineStore('leaderTroop', () => {
     loadedFor = personId
     loaded = (personId ? getPerson(personId) : Promise.resolve(null)).then(
       (p) => (person.value = p),
+      (e) => {
+        loaded = null // a failed load is tried again on the next page
+        throw e
+      },
     )
     return loaded
   }

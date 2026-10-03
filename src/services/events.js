@@ -2,8 +2,6 @@ import {
   addDoc,
   collection,
   doc,
-  getDoc,
-  getDocs,
   onSnapshot,
   orderBy,
   query,
@@ -13,7 +11,7 @@ import {
   where,
   writeBatch,
 } from 'firebase/firestore'
-import { auth, db } from './firebase'
+import { auth, db, getDoc, getDocs } from './firebase'
 import { fromDoc, fromQuery } from './utils'
 
 const events = collection(db, 'events')

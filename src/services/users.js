@@ -3,8 +3,6 @@ import {
   collection,
   deleteField,
   doc,
-  getDoc,
-  getDocs,
   onSnapshot,
   serverTimestamp,
   setDoc,
@@ -12,7 +10,7 @@ import {
   writeBatch,
 } from 'firebase/firestore'
 import { httpsCallable } from 'firebase/functions'
-import { db, functions } from './firebase'
+import { db, functions, getDoc, getDocs } from './firebase'
 import { fromDoc, fromQuery } from './utils'
 
 const users = collection(db, 'users')

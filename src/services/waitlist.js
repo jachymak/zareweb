@@ -2,7 +2,6 @@ import {
   collection,
   deleteDoc,
   doc,
-  getDocs,
   onSnapshot,
   orderBy,
   query,
@@ -10,7 +9,7 @@ import {
   where,
 } from 'firebase/firestore'
 import { httpsCallable } from 'firebase/functions'
-import { db, ensureAppCheck, functions } from './firebase'
+import { db, ensureAppCheck, functions, getDocs } from './firebase'
 import { fromQuery } from './utils'
 
 const waitlist = collection(db, 'waitlist')

@@ -1,5 +1,5 @@
-import { doc, getDoc, onSnapshot, setDoc } from 'firebase/firestore'
-import { db } from './firebase'
+import { doc, onSnapshot, setDoc } from 'firebase/firestore'
+import { db, getDoc } from './firebase'
 
 // settings/public, settings/meetings — public; settings/app — logged-in users;
 // settings/emails, settings/skautis — leaders (SPEC §5).

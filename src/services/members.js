@@ -3,15 +3,13 @@ import {
   arrayUnion,
   collection,
   doc,
-  getDoc,
-  getDocs,
   onSnapshot,
   query,
   updateDoc,
   where,
   writeBatch,
 } from 'firebase/firestore'
-import { db } from './firebase'
+import { db, getDoc, getDocs } from './firebase'
 import { fromDoc, fromQuery } from './utils'
 
 // Children imported from skautIS; document id = skautIS person id.

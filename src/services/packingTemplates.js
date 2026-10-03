@@ -1,5 +1,5 @@
-import { addDoc, collection, deleteDoc, doc, getDocs, updateDoc } from 'firebase/firestore'
-import { db } from './firebase'
+import { addDoc, collection, deleteDoc, doc, updateDoc } from 'firebase/firestore'
+import { db, getDocs } from './firebase'
 import { fromQuery } from './utils'
 
 const templates = collection(db, 'packingTemplates')

@@ -1,5 +1,5 @@
-import { collection, doc, getDoc, getDocs, onSnapshot, query, where } from 'firebase/firestore'
-import { db } from './firebase'
+import { collection, doc, onSnapshot, query, where } from 'firebase/firestore'
+import { db, getDoc, getDocs } from './firebase'
 import { fromDoc, fromQuery } from './utils'
 
 // Leaders imported from skautIS; document id = skautIS person id.
