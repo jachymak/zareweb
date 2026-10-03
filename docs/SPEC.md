@@ -257,6 +257,7 @@ Troop switch (top right, §4 intro). Three tabs. The selection is kept in the UR
 - Header: „Schůzka {den} {datum}“, troop tag, „přišlo X z Y“.
 - Grid of children **whose meeting day is the selected weekday** (nickname + name) — click toggles present. Buttons „přišli všichni“, „zrušit výběr“, „schůzka nebyla“. Children of the troop without a meeting day are named below the grid (they are not in any meeting; the admin sets the day).
 - „Schůzka nebyla“ marks the meeting cancelled: it does not count towards anyone's attendance nor the number of meetings. Can be undone („schůzka přece byla“) — the recorded presence is kept.
+- „Vrátit na nezapsáno“ (on a recorded or cancelled meeting) deletes the record, e.g. after a child was ticked by mistake on a meeting that should stay unrecorded; asks first when more than one child is ticked.
 - **Autosave** („ukládá se samo“). A meeting is **recorded** once its attendance is saved (or it is marked „schůzka nebyla“). Clicking a child changes only that child (`arrayUnion` / `arrayRemove`), and the page follows the meetings live, so two leaders can record the same meeting at once.
 - Past meeting dates that have not been recorded are flagged („nezapsáno“) so the leader can catch up; they don't count towards attendance until recorded.
 

@@ -52,9 +52,8 @@ potravinove intolerance
 
 
 udelat ted
-- [ ] pro mobily
 - [ ] schuzka do stavu nezapsano
-- [ ] obcas se stuckne na nakonecnem nacitani
 - [ ] kde se prihlasuje
-- [x] prezdivka = jmeno, kdyz nema prezdivku nastavenou - napr ve vypravach
 - doladit zneni mailu
+- hezci vyprava + prihlasovani post
+- https

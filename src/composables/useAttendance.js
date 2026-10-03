@@ -5,6 +5,7 @@ import { canJoin } from '@shared/events'
 import { meetingDates, meetingTimeShort, noMeetingOn, weekdayOf } from '@shared/meetingDays'
 import { listEvents, setAttendance, subscribeParticipants } from '@/services/events'
 import {
+  clearMeeting,
   meetingId,
   setCancelled,
   setPresence,
@@ -170,6 +171,7 @@ export function useAttendance() {
   const setAllPresent = (date, memberIds) => save(() => setPresence(meetingKey(date), memberIds))
   const setMeetingCancelled = (date, cancelled) =>
     save(() => setCancelled(meetingKey(date), cancelled))
+  const unrecordMeeting = (date) => save(() => clearMeeting(meetingKey(date)))
 
   // ---- trips ----
 
@@ -244,6 +246,7 @@ export function useAttendance() {
     togglePresent,
     setAllPresent,
     setMeetingCancelled,
+    unrecordMeeting,
     // trips
     trips,
     defaultTrip,

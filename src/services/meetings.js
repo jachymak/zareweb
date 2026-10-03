@@ -2,6 +2,7 @@ import {
   arrayRemove,
   arrayUnion,
   collection,
+  deleteDoc,
   doc,
   onSnapshot,
   orderBy,
@@ -79,4 +80,9 @@ export function setPresent(meeting, memberId, present) {
 
 export function setCancelled(meeting, cancelled) {
   return saveMeeting(meeting, { cancelled })
+}
+
+// Back to unrecorded (e.g. a child ticked by mistake on a meeting nobody records).
+export function clearMeeting({ troop, date }) {
+  return deleteDoc(doc(meetings, meetingId(troop, date)))
 }

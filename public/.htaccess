@@ -1,6 +1,14 @@
 RewriteEngine On
 DirectoryIndex index.html index.php
 
+# Everything over HTTPS: http:// addresses (typed without a scheme, old links, QR codes)
+# redirect to the same address on https://. The ACME challenge stays reachable over http
+# in case the hosting renews its certificate that way.
+RewriteCond %{HTTPS} !=on
+RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+RewriteCond %{REQUEST_URI} !^/\.well-known/acme-challenge/
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
 # Skip rewrite for anything under /el_prihlaska/
 RewriteCond %{REQUEST_URI} ^/el_prihlaska/ [NC]
 RewriteRule ^ - [L]

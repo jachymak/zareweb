@@ -24,6 +24,13 @@ const presentCount = computed(
   () => children.value.filter((m) => a.isPresent(date.value, m.id)).length,
 )
 
+// Drops the record (incl. who came); asks first when more than a stray tick would go.
+function unrecord() {
+  const count = presentCount.value
+  if (count > 1 && !window.confirm(`Smazat zápis schůzky i s ${count} zaškrtnutými dětmi?`)) return
+  a.unrecordMeeting(date.value)
+}
+
 function pickWeekday(value) {
   weekday.value = value
   date.value = a.datesOf(value)[0] ?? null
@@ -118,14 +125,25 @@ const small =
               Tenhle termín schůzka nebyla — nepočítá se nikomu do docházky ani do celkového počtu
               schůzek.
             </p>
-            <button
-              type="button"
-              :class="small"
-              class="border-[#c9bfa6] bg-[#f2eee1] text-ink"
-              @click="a.setMeetingCancelled(date, false)"
-            >
-              schůzka přece byla
-            </button>
+            <div class="flex flex-wrap gap-2">
+              <button
+                type="button"
+                :class="small"
+                class="border-[#c9bfa6] bg-[#f2eee1] text-ink"
+                @click="a.setMeetingCancelled(date, false)"
+              >
+                schůzka přece byla
+              </button>
+              <button
+                type="button"
+                :class="small"
+                class="border-[#c9bfa6] bg-transparent text-muted"
+                data-testid="unrecord"
+                @click="unrecord"
+              >
+                vrátit na nezapsáno
+              </button>
+            </div>
           </div>
 
           <template v-else>
@@ -158,6 +176,16 @@ const small =
                 @click="a.setMeetingCancelled(date, true)"
               >
                 schůzka nebyla
+              </button>
+              <button
+                v-if="state === 'recorded'"
+                type="button"
+                :class="small"
+                class="border-[#c9bfa6] bg-transparent text-muted"
+                data-testid="unrecord"
+                @click="unrecord"
+              >
+                vrátit na nezapsáno
               </button>
               <span class="font-hand text-[20px] text-brown sm:ml-auto">ukládá se samo</span>
             </div>

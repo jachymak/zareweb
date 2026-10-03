@@ -163,6 +163,18 @@ export default async function attendance({ browser, check }) {
       'meetings: selection kept in the URL',
       new URL(page.url()).searchParams.get('schuzka') === latestThu,
     )
+
+    // A child ticked by mistake on a meeting that should stay unrecorded.
+    page.once('dialog', (dialog) => dialog.accept()) // more than one child ticked
+    await page.getByTestId('unrecord').click()
+    check(
+      'meetings: „vrátit na nezapsáno“ deletes the meeting',
+      (await until(async () => !(await getDoc(meetingPath)))) &&
+        (await until(() => page.getByTestId('unrecorded').isVisible())) &&
+        !(await pressed(page.getByRole('button', { name: 'Sojka' }))),
+    )
+    await page.getByRole('button', { name: 'Sojka' }).click()
+    await until(async () => presentIds(await getDoc(meetingPath)).includes('900102'))
   }
 
   // ---- meetings: an older recorded meeting can be changed ----
