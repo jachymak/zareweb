@@ -177,15 +177,15 @@ A parent without paired children (§4.8) sees everything of **both troops** (new
    - Before the deadline: „přihlásit“ saves at once; the new state (with the server time of the change, read back) shows only once it is saved („ukládá se…“ meanwhile). „Odhlásit“ asks first, inside the card: „Opravdu zrušit přihlášku na akci „{název}“ ({přezdívka})?“ — „ano, odhlásit“ / „ne, nechat přihlášené“.
    - The poster link leads to page 6.
    - After the deadline (event stays listed until it starts): the button becomes „chci to změnit“; deadline text changes to „přihlašování skončilo“ and clicking it shows *„Přihlašování už skončilo, takže tady {přezdívka} přihlásit ani odhlásit nejde. Napište prosím organizátorovi akce — {přezdívka organizátora} ({telefon}, {e-mail}). Pokud to ještě půjde, změnu zařídí.“* Signing off after the deadline also goes through the organizer.
-5. **Výpravník (calendar)** — events grouped by month.
+5. **Photos (Fotky)** — the 4 latest published albums of the children's troops (+ `all`), as tilted polaroids: cover, troop tag, title, detail like „únor · 31 fotek“ (month with the year when not this year); each opens the album (§3.3); „všechna alba →“ opens all albums. No albums → „Zatím tu nejsou žádná alba…“.
+6. **Výpravník (calendar)** — events grouped by month.
    - Toggle „co nás čeká“ (upcoming) / „proběhlo“ (past).
    - Toggle „i akce druhého oddílu“ / „jen naše akce“ — by default only events for the children's troops + `all`. Hidden when the children are in both troops.
    - Shows first 2 months, button „zobrazit celý rok“ expands.
    - Row: date, tag, title, organizer; cancelled events struck through with „zrušeno“.
    - An event with a published album shows „fotky →“ (→ the album, §3.3).
    - „proběhlo“ lists past events of the current school year, newest first; each child who could join shows ✓/✗ attendance, only for trips (events with registration, not the camp).
-6. **Photos (Fotky)** — the 4 latest published albums of the children's troops (+ `all`), as tilted polaroids: cover, troop tag, title, detail like „únor · 31 fotek“ (month with the year when not this year); each opens the album (§3.3); „všechna alba →“ opens all albums. No albums → „Zatím tu nejsou žádná alba…“.
-7. **Leaders (Vedoucí)** — contact cards (photo, nickname, name · role, phone, e-mail) filtered by tabs „vlčušky“ / „skauti a skautky“ / „ostatní“.
+7. **Leaders (Vedoucí)** — contact cards (photo, nickname, name · role, phone split into threes — „777 123 456“, „+420 777 123 456“, e-mail) filtered by tabs „vlčušky“ / „skauti a skautky“ / „ostatní“.
 
 **Reads:** own `users/{uid}`, `members` (own children), `meetings` (attendance), today's `excuses` of own children, `events` + own children's `participants`, `news`, `albums`, `contacts`, `settings/app`, `settings/meetings`.
 **Writes:** `events/{id}/participants/{memberId}` — only sign-up fields, only own children, only while registration is open and before the deadline. `excuses` — create / delete for own children, only on the meeting day.

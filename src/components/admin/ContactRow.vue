@@ -2,6 +2,7 @@
 import { computed, onUnmounted, ref, useId, watch } from 'vue'
 import { CONTACT_GROUP_NAMES } from '@/constants/troops'
 import { contactPhotoBlob } from './contactPhoto'
+import { displayPhone } from '@shared/contacts'
 import { nicknameOf } from '@shared/names'
 
 // One contact in Administration → kontakty. A skautIS contact shows the
@@ -122,7 +123,7 @@ function removePhoto() {
         <template v-if="person">
           <p class="m-0 text-[14.5px] text-muted">{{ person.name }}</p>
           <p class="m-0 text-[15px] break-words">
-            <span v-if="person.phone">{{ person.phone }}</span>
+            <span v-if="person.phone">{{ displayPhone(person.phone) }}</span>
             <span v-else class="text-red">doplň telefon ve skautISu</span>
             ·
             <span v-if="person.email">{{ person.email }}</span>

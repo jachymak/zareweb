@@ -123,7 +123,11 @@ const section = 'mx-auto max-w-[960px] px-4 sm:px-6'
         </div>
       </div>
 
-      <div id="vypravnik" :class="section" class="pt-[34px]">
+      <div :class="section" class="pt-[34px]">
+        <PhotoAlbums :albums="relevantAlbums.slice(0, 4)" :today="today" :query="posterQuery" />
+      </div>
+
+      <div id="vypravnik" :class="section" class="pt-10">
         <EventCalendar
           :events="events"
           :children="children"
@@ -134,10 +138,6 @@ const section = 'mx-auto max-w-[960px] px-4 sm:px-6'
           :album-of="albumOf"
           :query="posterQuery"
         />
-      </div>
-
-      <div :class="section" class="pt-10">
-        <PhotoAlbums :albums="relevantAlbums.slice(0, 4)" :today="today" :query="posterQuery" />
       </div>
 
       <div :class="section" class="pt-[42px]">
