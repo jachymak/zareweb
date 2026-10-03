@@ -4,6 +4,7 @@ import { useAuthStore } from '@/stores/auth'
 import { AUDIENCES } from '@/constants/troops'
 import { formatToday } from '@/components/parent/parentText'
 import { ADMIN_TOOL, TOOLS } from './leaderText'
+import { nicknameOf } from '@shared/names'
 
 // „Ahoj, {přezdívka}!“, role and troop, today's date and links to the tools.
 // The slot sits top right (troop switch).
@@ -16,7 +17,7 @@ const auth = useAuthStore()
 const isAdmin = computed(() => auth.role === 'admin')
 
 const name = computed(
-  () => props.person?.nickname || auth.profile?.displayName?.split(' ')[0] || null,
+  () => nicknameOf(props.person) || auth.profile?.displayName?.split(' ')[0] || null,
 )
 const role = computed(() => {
   const title = props.person?.roleTitle || (isAdmin.value ? 'správce' : 'vedoucí')

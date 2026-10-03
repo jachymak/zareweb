@@ -61,3 +61,6 @@ e2e/screenshots/
 
 # Overpass data for scripts/clubhouse-map.js
 .clubhouse-map-osm.json
+
+# One-off import of the old waiting list (personal data, service account key)
+/import/

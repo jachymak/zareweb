@@ -10,6 +10,7 @@ import {
   previewSignUpText,
   SAVE_ERROR,
 } from './parentText'
+import { nicknameOf } from '@shared/names'
 
 // One event open for sign-up: a toggle per eligible child (none for a parent
 // without children — then just the event, its poster and deadline). After the deadline
@@ -30,7 +31,7 @@ const ended = computed(() => props.state === 'ended')
 const notice = ref('')
 
 function click({ member, signedUp }) {
-  const nickname = member.nickname || member.firstName
+  const nickname = nicknameOf(member)
   if (ended.value) {
     notice.value = lateSignUpText(nickname, props.organizers[0])
   } else if (props.preview) {
@@ -95,7 +96,7 @@ function click({ member, signedUp }) {
           @click="click(child)"
         >
           <span v-if="child.signedUp" aria-hidden="true">✓</span>
-          {{ child.member.nickname || child.member.firstName }}
+          {{ nicknameOf(child.member) }}
         </button>
         <span class="text-[14.5px] text-[#8a7b5e] sm:ml-auto" data-testid="deadline">
           {{

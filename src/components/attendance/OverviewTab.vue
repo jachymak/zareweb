@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { meetingsOk, meetsCampRequirement, tripsOk } from '@shared/attendance'
 import { campRequirementText, formatDay } from '@/components/parent/parentText'
 import { DOT_STATES, WEEKDAY_NAMES } from './attendanceText'
+import { nicknameOf } from '@shared/names'
 
 // Overview: each child's meeting % and trips (red below the camp requirement)
 // and a dot per meeting date of their day this school year.
@@ -32,14 +33,14 @@ const DOT_CLASSES = {
     <article
       v-for="row in attendance.overview"
       :key="row.member.id"
-      :aria-label="row.member.nickname || row.member.firstName"
+      :aria-label="nicknameOf(row.member)"
       class="mb-[9px] rounded-[3px] border-[1.5px] border-[#e2d9c2] bg-paper px-4 py-[13px] sm:px-[18px]"
       :data-camp="meetsCampRequirement(row, requirement) ? 'ok' : 'short'"
     >
       <div class="flex flex-wrap items-baseline gap-x-4 gap-y-1.5">
         <span class="flex min-w-0 flex-[1_1_200px] flex-wrap items-baseline gap-x-[9px] gap-y-0.5">
           <b class="font-hand text-[22px] font-bold text-ink">
-            {{ row.member.nickname || row.member.firstName }}
+            {{ nicknameOf(row.member) }}
           </b>
           <span class="text-[14.5px] text-[#8a7b5e]">
             {{ row.member.firstName }} {{ row.member.lastName }}

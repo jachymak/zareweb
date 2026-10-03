@@ -5,9 +5,9 @@ import { listMembers } from '@/services/members'
 import { listPackingTemplates } from '@/services/packingTemplates'
 import { listLeaders } from '@/services/skautisPeople'
 import { useLeaderTroopStore } from '@/stores/leaderTroop'
+import { nicknameOf } from '@shared/names'
 
-const byNickname = (a, b) =>
-  (a.nickname || a.firstName).localeCompare(b.nickname || b.firstName, 'cs')
+const byNickname = (a, b) => nicknameOf(a).localeCompare(nicknameOf(b), 'cs')
 
 // Data of the events & posters page (SPEC §4.3): the school year's events
 // (followed live, so leaders see each other's changes), leaders to pick as
@@ -56,7 +56,7 @@ export function useEventsPage() {
           )
         }),
       ])
-      leaders.value = people.sort((a, b) => a.nickname.localeCompare(b.nickname, 'cs'))
+      leaders.value = people.sort(byNickname)
       members.value = memberList.sort(byNickname)
       templates.value = templateList.sort((a, b) => a.name.localeCompare(b.name, 'cs'))
       loading.value = false

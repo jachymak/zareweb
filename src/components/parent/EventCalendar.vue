@@ -6,6 +6,7 @@ import AudienceTag from './AudienceTag.vue'
 import PillSwitch from './PillSwitch.vue'
 import SectionHeading from './SectionHeading.vue'
 import { formatMonth, formatRange, organizerNames } from './parentText'
+import { nicknameOf } from '@shared/names'
 
 // „Výpravník“ — events of the school year by month: upcoming or past, only
 // the children's troops or both, first two months or the whole year.
@@ -140,7 +141,7 @@ function attendance(event) {
               "
               :title="attended ? 'byl(a) na akci' : 'nebyl(a) na akci'"
             >
-              {{ attended ? '✓' : '✗' }} {{ member.nickname || member.firstName }}
+              {{ attended ? '✓' : '✗' }} {{ nicknameOf(member) }}
             </span>
           </span>
         </li>

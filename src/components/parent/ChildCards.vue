@@ -4,6 +4,7 @@ import { troopByCode } from '@/constants/troops'
 import HandDrawnBox from '@/components/HandDrawnBox.vue'
 import AudienceTag from './AudienceTag.vue'
 import { MEETING_DAYS, campRequirementText } from './parentText'
+import { nicknameOf } from '@shared/names'
 
 // One card per child: meeting day, attendance and trips this school year.
 const props = defineProps({
@@ -30,10 +31,10 @@ const requirementLines = computed(() => {
         stroke="#b9a97f"
         class="px-[18px] pt-[15px] pb-4"
       >
-        <article :aria-label="member.nickname || member.firstName">
+        <article :aria-label="nicknameOf(member)">
           <div class="flex flex-wrap items-baseline gap-x-[9px] gap-y-[3px]">
             <span class="font-hand text-[26px] leading-none font-bold text-ink">
-              {{ member.nickname || member.firstName }}
+              {{ nicknameOf(member) }}
             </span>
             <AudienceTag :audience="member.troop" />
           </div>

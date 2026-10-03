@@ -4,6 +4,7 @@ import { canJoin } from '@shared/events'
 import { setSignedUp, subscribeParticipants } from '@/services/events'
 import AudienceTag from '@/components/parent/AudienceTag.vue'
 import { LOAD_ERROR, SAVE_ERROR } from '@/components/parent/parentText'
+import { nicknameOf } from '@shared/names'
 
 // Who is signed up: every child who can join, with a toggle. Leaders can sign
 // children up or off at any time, also after the deadline (SPEC §4.3).
@@ -74,7 +75,7 @@ async function toggle(member) {
         :key="m.id"
         type="button"
         :aria-pressed="isSignedUp(m)"
-        :aria-label="m.nickname || m.firstName"
+        :aria-label="nicknameOf(m)"
         :title="`${m.firstName} ${m.lastName}`"
         class="inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-full border-[1.5px] px-3.5 py-1.5 text-[15px]"
         :class="
@@ -85,7 +86,7 @@ async function toggle(member) {
         @click="toggle(m)"
       >
         <span v-if="isSignedUp(m)" aria-hidden="true">✓</span>
-        {{ m.nickname || m.firstName }}
+        {{ nicknameOf(m) }}
         <AudienceTag
           v-if="event.audience === 'all'"
           :audience="m.troop"

@@ -3,6 +3,7 @@ import { meetingsOk, meetsCampRequirement, tripsOk } from '@shared/attendance'
 import SectionHeading from '@/components/parent/SectionHeading.vue'
 import { campRequirementText } from '@/components/parent/parentText'
 import { TROOP_GENITIVE } from './leaderText'
+import { nicknameOf } from '@shared/names'
 
 // Meeting % and trips of each child of the troop; children not meeting the
 // camp requirement yet in red (SPEC §4.1).
@@ -36,7 +37,7 @@ defineProps({
       <li
         v-for="row in stats"
         :key="row.member.id"
-        :aria-label="row.member.nickname || row.member.firstName"
+        :aria-label="nicknameOf(row.member)"
         class="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-t border-[#e4d9be] py-2"
         :data-camp="meetsCampRequirement(row, requirement) ? 'ok' : 'short'"
       >
@@ -45,7 +46,7 @@ defineProps({
             class="font-hand text-[20px] font-bold"
             :class="meetsCampRequirement(row, requirement) ? 'text-ink' : 'text-red'"
           >
-            {{ row.member.nickname || row.member.firstName }}
+            {{ nicknameOf(row.member) }}
           </b>
           <span class="text-[14px] text-[#8a7b5e]">
             {{ row.member.firstName }} {{ row.member.lastName }}

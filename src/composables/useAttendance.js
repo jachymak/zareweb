@@ -15,9 +15,9 @@ import { listMembers } from '@/services/members'
 import { getAppSettings } from '@/services/settings'
 import { useLeaderTroopStore } from '@/stores/leaderTroop'
 import { useMeetingScheduleStore } from '@/stores/meetingSchedule'
+import { nicknameOf } from '@shared/names'
 
-const byNickname = (a, b) =>
-  (a.nickname || a.firstName).localeCompare(b.nickname || b.firstName, 'cs')
+const byNickname = (a, b) => nicknameOf(a).localeCompare(nicknameOf(b), 'cs')
 
 // Data and autosaving writes of the attendance page (SPEC §4.2) for the troop
 // chosen on the page. Meetings and trip sign-ups are followed live, so leaders

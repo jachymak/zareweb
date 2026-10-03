@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { CONTACT_GROUP_NAMES } from '@/constants/troops'
 import PillSwitch from './PillSwitch.vue'
 import SectionHeading from './SectionHeading.vue'
+import { nicknameOf } from '@shared/names'
 
 // „Vedoucí“ — contact cards by group (contactCard in @shared/contacts). A
 // missing phone or e-mail is simply not shown.
@@ -18,7 +19,8 @@ const group = ref(props.initialGroup)
 const visible = computed(() => props.contacts.filter((c) => c.group === group.value))
 
 // „Theodor Mikolajek · vedoucí oddílu“ (the name only when the heading is the nickname)
-const subtitle = (c) => [c.nickname && c.name, c.roleTitle].filter(Boolean).join(' · ')
+const subtitle = (c) =>
+  [nicknameOf(c) !== c.name && c.name, c.roleTitle].filter(Boolean).join(' · ')
 
 const telHref = (phone) => `tel:${phone.replace(/\s+/g, '')}`
 </script>
@@ -48,7 +50,7 @@ const telHref = (phone) => `tel:${phone.replace(/\s+/g, '')}`
         </div>
         <div class="min-w-0">
           <h3 class="m-0 font-hand text-[23px] leading-[1.15] font-bold text-ink">
-            {{ contact.nickname || contact.name }}
+            {{ nicknameOf(contact) }}
           </h3>
           <p class="m-0 mb-[5px] text-[14.5px] text-muted">{{ subtitle(contact) }}</p>
           <p v-if="contact.phone" class="m-0 text-[15px]">

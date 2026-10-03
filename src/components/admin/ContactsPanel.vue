@@ -14,6 +14,7 @@ import { listLeaders } from '@/services/skautisPeople'
 import PillSwitch from '@/components/parent/PillSwitch.vue'
 import ContactRow from './ContactRow.vue'
 import SaveBar from './SaveBar.vue'
+import { nicknameOf } from '@shared/names'
 
 // „Kontakty“ — SPEC §4.8 Contacts: the leader cards parents see in „Vedoucí“.
 // Group by group (the switch), in order; name, phone and e-mail come from
@@ -99,7 +100,7 @@ function setGroup(contact, value) {
 
 // ---- adding ----
 
-const byNickname = (a, b) => (a.nickname || a.name).localeCompare(b.nickname || b.name, 'cs')
+const byNickname = (a, b) => nicknameOf(a).localeCompare(nicknameOf(b), 'cs')
 // Active leaders not yet in the shown group.
 const available = computed(() =>
   Object.values(people.value)

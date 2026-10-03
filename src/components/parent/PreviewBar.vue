@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { TROOPS } from '@/constants/troops'
+import { nicknameOf } from '@shared/names'
 
 // Bar above the parent pages in the leaders' preview (SPEC §4.7): which child's
 // parent the page is shown as, and the way back to the leader area.
@@ -10,7 +11,7 @@ const props = defineProps({
 })
 const model = defineModel({ type: String, default: '' })
 
-const byName = (a, b) => (a.nickname || a.firstName).localeCompare(b.nickname || b.firstName, 'cs')
+const byName = (a, b) => nicknameOf(a).localeCompare(nicknameOf(b), 'cs')
 const groups = computed(() =>
   TROOPS.map((t) => ({
     label: t.name,
@@ -18,11 +19,11 @@ const groups = computed(() =>
   })).filter((g) => g.members.length),
 )
 
-const label = (m) => `${m.nickname || m.firstName} (${m.firstName} ${m.lastName})`
+const label = (m) => `${nicknameOf(m)} (${m.firstName} ${m.lastName})`
 const siblings = computed(() =>
   props.shown
     .filter((m) => m.id !== model.value)
-    .map((m) => m.nickname || m.firstName)
+    .map(nicknameOf)
     .join(', '),
 )
 </script>

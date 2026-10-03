@@ -1,4 +1,5 @@
 <script setup>
+import { nicknameOf } from '@shared/names'
 // Organizers from the leaders (skautisPeople): click to add or remove; the
 // first one is the main organizer (contact on the poster).
 const model = defineModel({ type: Array, required: true }) // skautisPeople ids, in order
@@ -45,13 +46,13 @@ function toggle(id) {
         >
           {{ model.indexOf(leader.id) + 1 }}
         </span>
-        {{ leader.nickname }}
+        {{ nicknameOf(leader) }}
       </button>
     </div>
     <p class="m-0 mt-1.5 text-[13.5px] text-[#8a7b5e]">
       <template v-if="model.length">
         hlavní organizátor:
-        <b class="font-medium text-ink">{{ leaders.find((l) => l.id === model[0])?.nickname }}</b>
+        <b class="font-medium text-ink">{{ nicknameOf(leaders.find((l) => l.id === model[0])) }}</b>
         — jeho kontakt bude na plakátku
       </template>
       <template v-else>první vybraný je hlavní organizátor</template>

@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, ref, useTemplateRef } from 'vue'
 import { personName, searchLeaders, searchMembers, troopTag } from './accounts'
+import { nicknameOf } from '@shared/names'
 
 // Search among imported children (or leaders) and pick one to pair.
 const props = defineProps({
@@ -41,7 +42,7 @@ onMounted(() => input.value?.focus())
           :disabled="disabled"
           @click="$emit('pick', p)"
         >
-          <b class="font-hand text-[19px] font-bold">{{ p.nickname || p.firstName || p.name }}</b>
+          <b class="font-hand text-[19px] font-bold">{{ nicknameOf(p) }}</b>
           <span class="min-w-0 flex-1">{{ personName(p) }}</span>
           <span class="text-[14px] text-brown">{{ troopTag(p.troop) }}</span>
         </button>

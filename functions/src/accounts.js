@@ -7,6 +7,7 @@ import { APP_URL, sendEmails } from './mail.js'
 import { BASE_OPTIONS, MAIL_OPTIONS } from './options.js'
 import { emailTemplate, renderEmail } from './shared/emails.js'
 import { EMAIL_RE } from './shared/waitlistRules.js'
+import { nicknameOf } from './shared/names.js'
 
 // Account management by the admin — SPEC §4.8 „účty a párování“.
 
@@ -61,7 +62,7 @@ export const inviteParent = onCall(MAIL_OPTIONS, async (request) => {
     .filter((m, i) =>
       (contacts[i].get('parents') ?? []).some((p) => p.email?.trim().toLowerCase() === key),
     )
-    .map((m) => m.get('nickname') || m.get('firstName'))
+    .map((m) => nicknameOf(m.data()))
   if (!names.length) {
     throw new HttpsError('failed-precondition', 'No active child has this parent e-mail.')
   }

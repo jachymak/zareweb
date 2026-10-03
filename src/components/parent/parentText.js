@@ -1,3 +1,4 @@
+import { nicknameOf } from '@shared/names'
 // Czech texts and date formats of the parent area (SPEC §3.1).
 // Dates are `YYYY-MM-DD` strings in Europe/Prague.
 
@@ -89,13 +90,13 @@ export function campRequirementText({ trips, meetingPct }) {
 }
 
 // Nickname of a leader, or of each organizer joined by commas.
-export const organizerNames = (organizers) => organizers.map((o) => o.nickname).join(', ')
+export const organizerNames = (organizers) => organizers.map(nicknameOf).join(', ')
 
 // Shown when a parent clicks a child after the sign-up deadline (SPEC §3.1).
 export function lateSignUpText(nickname, organizer) {
   const reach = [organizer?.phone, organizer?.email].filter(Boolean).join(', ')
   const whom = organizer
-    ? `organizátorovi akce — ${organizer.nickname}${reach ? ` (${reach})` : ''}`
+    ? `organizátorovi akce — ${nicknameOf(organizer)}${reach ? ` (${reach})` : ''}`
     : 'organizátorovi akce'
   return (
     `Přihlašování už skončilo, takže tady ${nickname} přihlásit ani odhlásit nejde. ` +

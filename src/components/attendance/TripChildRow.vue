@@ -1,6 +1,7 @@
 <script setup>
 import { ref, watch } from 'vue'
 import AudienceTag from '@/components/parent/AudienceTag.vue'
+import { nicknameOf } from '@shared/names'
 
 // One child on a trip: came or not, paid or not, and the amount (defaults to
 // the event's price). Signed-up children can be marked „nepřijel“ too.
@@ -13,7 +14,7 @@ const props = defineProps({
 })
 const emit = defineEmits(['update']) // fields to save
 
-const nick = props.member.nickname || props.member.firstName
+const nick = nicknameOf(props.member)
 const amount = ref('')
 watch(
   () => props.participant?.amountPaid,

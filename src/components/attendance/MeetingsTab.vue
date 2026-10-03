@@ -5,6 +5,7 @@ import HandDrawnBox from '@/components/HandDrawnBox.vue'
 import AudienceTag from '@/components/parent/AudienceTag.vue'
 import { formatDay, plural } from '@/components/parent/parentText'
 import { WEEKDAY_NAMES } from './attendanceText'
+import { nicknameOf } from '@shared/names'
 
 // Meetings: pick the weekday and a past date, then tick who came. Every click
 // saves at once; „schůzka nebyla“ takes the meeting out of the statistics.
@@ -176,7 +177,7 @@ const small =
                 :key="m.id"
                 type="button"
                 :aria-pressed="a.isPresent(date, m.id)"
-                :aria-label="m.nickname || m.firstName"
+                :aria-label="nicknameOf(m)"
                 class="flex min-w-0 cursor-pointer items-center gap-2.5 rounded-[3px] border-[1.5px] px-3 py-2.5 text-left"
                 :class="
                   a.isPresent(date, m.id)
@@ -194,7 +195,7 @@ const small =
                 </span>
                 <span class="min-w-0">
                   <span class="block font-hand text-[20px] leading-[1.1] font-bold text-ink">
-                    {{ m.nickname || m.firstName }}
+                    {{ nicknameOf(m) }}
                   </span>
                   <span class="block truncate text-[12.5px] text-[#8a7b5e]">
                     {{ m.firstName }} {{ m.lastName }}
@@ -210,8 +211,8 @@ const small =
     <p v-if="a.withoutMeetingDay.length" class="m-0 mt-3 text-[14.5px] text-[#8a7b5e]">
       {{ a.withoutMeetingDay.length }}
       {{ plural(a.withoutMeetingDay.length, 'dítě nemá', 'děti nemají', 'dětí nemá') }}
-      den schůzek ({{ a.withoutMeetingDay.map((m) => m.nickname || m.firstName).join(', ') }}),
-      takže v docházce nejsou — den nastaví správce v Administraci.
+      den schůzek ({{ a.withoutMeetingDay.map(nicknameOf).join(', ') }}), takže v docházce nejsou —
+      den nastaví správce v Administraci.
     </p>
   </div>
 </template>

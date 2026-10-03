@@ -4,6 +4,7 @@ import { db } from './admin.js'
 import { APP_URL, sendEmails } from './mail.js'
 import { MAIL_OPTIONS } from './options.js'
 import { emailTemplate, renderEmail } from './shared/emails.js'
+import { nicknameOf } from './shared/names.js'
 
 // E-mails about accounts — SPEC §2.4, §7:
 // - to the admins when a pending account has its note (right at registration,
@@ -48,7 +49,7 @@ async function notifyApproved(uid, user) {
     ).docs
       .map((d) => d.data())
       .filter((m) => m.active !== false)
-      .map((m) => `${m.nickname || m.firstName} (${TROOP_NAMES[m.troop] ?? m.troop})`)
+      .map((m) => `${nicknameOf(m)} (${TROOP_NAMES[m.troop] ?? m.troop})`)
     if (children.length) deti = `Přiřadili jsme k němu: ${joinNames(children)}.`
   }
   const odkaz = `${APP_URL}${user.role === 'parent' ? '/clenove' : '/vedouci'}`

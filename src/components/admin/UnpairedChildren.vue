@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import AudienceTag from '@/components/parent/AudienceTag.vue'
 import { childName, formatDate } from './accounts'
+import { nicknameOf } from '@shared/names'
 
 // „Děti bez účtu“ — active children no parent account is paired with, with
 // their parents' contacts from skautIS, so the admin knows whom to ask to
@@ -48,7 +49,7 @@ const sorted = computed(() =>
         data-testid="unpaired-child"
       >
         <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-          <b class="font-hand text-[20px] font-bold text-ink">{{ m.nickname || m.firstName }}</b>
+          <b class="font-hand text-[20px] font-bold text-ink">{{ nicknameOf(m) }}</b>
           <span class="text-[15px] text-[#8a7b5e]">{{ childName(m) }}</span>
           <AudienceTag :audience="m.troop" />
         </div>

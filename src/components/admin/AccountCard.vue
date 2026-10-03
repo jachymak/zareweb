@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue'
 import PersonChip from './PersonChip.vue'
 import PersonPicker from './PersonPicker.vue'
 import { ROLE_LABELS, formatDate, personName, troopTag } from './accounts'
+import { nicknameOf } from '@shared/names'
 
 // One account in „účty a párování“ — SPEC §4.8. Emits the admin's actions;
 // the parent component writes them. Children (or a skautIS leader) picked for
@@ -179,7 +180,7 @@ const BADGE = {
           class="flex flex-wrap items-center gap-x-3 gap-y-1 text-[15px]"
         >
           <span class="min-w-0">
-            <b class="mr-1 font-hand text-[19px] font-bold text-ink">{{ person.nickname }}</b>
+            <b class="mr-1 font-hand text-[19px] font-bold text-ink">{{ nicknameOf(person) }}</b>
             {{ personName(person) }}
             <template v-if="person.troop"> · {{ troopTag(person.troop) }}</template>
             <span class="text-[14px] text-brown">— {{ reasons.join(', ') }}</span>

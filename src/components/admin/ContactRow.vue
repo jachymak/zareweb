@@ -2,6 +2,7 @@
 import { computed, onUnmounted, ref, useId, watch } from 'vue'
 import { CONTACT_GROUP_NAMES } from '@/constants/troops'
 import { contactPhotoBlob } from './contactPhoto'
+import { nicknameOf } from '@shared/names'
 
 // One contact in Administration → kontakty. A skautIS contact shows the
 // leader's details read-only (with warnings for what is missing in skautIS);
@@ -21,9 +22,7 @@ defineEmits(['up', 'down', 'remove', 'group'])
 const id = useId()
 const manual = computed(() => !props.contact.personId)
 const heading = computed(() =>
-  manual.value
-    ? props.contact.nickname || props.contact.name || 'Nový kontakt'
-    : props.person?.nickname || props.person?.name || '?',
+  manual.value ? nicknameOf(props.contact) || 'Nový kontakt' : nicknameOf(props.person) || '?',
 )
 const skautisRole = computed(() => props.person?.roleTitle ?? '')
 

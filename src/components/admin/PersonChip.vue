@@ -1,5 +1,6 @@
 <script setup>
 import { personName, troopTag } from './accounts'
+import { nicknameOf } from '@shared/names'
 
 // A child or a leader paired with an account: nickname + troop, × to unpair.
 const props = defineProps({
@@ -15,7 +16,7 @@ defineEmits(['remove'])
     :title="personName(person)"
   >
     <b class="font-hand text-[19px] leading-none font-bold text-ink">
-      {{ person.nickname || person.firstName || person.name }}
+      {{ nicknameOf(person) }}
     </b>
     {{ troopTag(person.troop) }}
     <span v-if="!person.active" class="text-[13px] text-brown">· neaktivní</span>

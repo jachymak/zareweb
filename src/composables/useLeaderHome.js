@@ -10,6 +10,7 @@ import { listLeaders } from '@/services/skautisPeople'
 import { getAppSettings } from '@/services/settings'
 import { useLeaderTroopStore } from '@/stores/leaderTroop'
 import { useMeetingScheduleStore } from '@/stores/meetingSchedule'
+import { nicknameOf } from '@shared/names'
 
 // Data of the leader home (SPEC §4.1). The troop-dependent parts (today card,
 // attendance summary) follow the troop picked on the page (shared with attendance).
@@ -104,12 +105,7 @@ export function useLeaderHome() {
         percent: meetingStats(member, meetings.value).percent,
         trips: tripCount(member, pastTrips, participantOf),
       }))
-      .sort((a, b) =>
-        (a.member.nickname || a.member.firstName).localeCompare(
-          b.member.nickname || b.member.firstName,
-          'cs',
-        ),
-      )
+      .sort((a, b) => nicknameOf(a.member).localeCompare(nicknameOf(b.member), 'cs'))
   })
 
   return {

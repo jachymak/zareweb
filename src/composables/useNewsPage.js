@@ -2,6 +2,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { subscribeNews } from '@/services/news'
 import { useAuthStore } from '@/stores/auth'
 import { useLeaderTroopStore } from '@/stores/leaderTroop'
+import { nicknameOf } from '@shared/names'
 
 // Data of the leaders' news page (SPEC §4.4): all news incl. withdrawn, followed
 // live (leaders see each other's changes), and the name to sign new news with —
@@ -53,7 +54,7 @@ export function useNewsPage() {
 
   const authorName = computed(
     () =>
-      leaderTroop.person?.nickname ||
+      nicknameOf(leaderTroop.person) ||
       auth.profile?.displayName ||
       auth.user?.email?.split('@')[0] ||
       '',

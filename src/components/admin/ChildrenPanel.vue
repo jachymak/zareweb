@@ -8,6 +8,7 @@ import { useMeetingScheduleStore } from '@/stores/meetingSchedule'
 import TroopSwitch from '@/components/leader/TroopSwitch.vue'
 import { plural } from '@/components/parent/parentText'
 import { childName } from './accounts'
+import { nicknameOf } from '@shared/names'
 
 // „Děti“ — SPEC §4.8 Children: the imported children of the troop chosen in
 // the switch (shared with the other leader pages); a click on one
@@ -47,8 +48,7 @@ const missing = computed(() => missingIn(troop.value))
 const missingOther = computed(() => missingIn(otherTroop.value))
 const onlyMissing = ref(false)
 
-const byNickname = (a, b) =>
-  (a.nickname || a.firstName).localeCompare(b.nickname || b.firstName, 'cs')
+const byNickname = (a, b) => nicknameOf(a).localeCompare(nicknameOf(b), 'cs')
 
 const days = computed(() => schedule.value[troop.value].days)
 const counts = computed(() =>
@@ -157,7 +157,7 @@ async function pick(member, day) {
           >
             <span class="min-w-0 flex-[1_1_180px]">
               <b class="mr-1.5 font-hand text-[20px] font-bold text-ink">
-                {{ m.nickname || m.firstName }}
+                {{ nicknameOf(m) }}
               </b>
               <span class="text-[14.5px] text-[#8a7b5e]">{{ childName(m) }}</span>
               <span

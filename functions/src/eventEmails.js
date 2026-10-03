@@ -6,6 +6,7 @@ import { MAIL_OPTIONS } from './options.js'
 import { emailTemplate, renderEmail } from './shared/emails.js'
 import { canJoin, formatEventDates, registrationState } from './shared/events.js'
 import { pragueToday } from './shared/schoolYear.js'
+import { nicknameOf } from './shared/names.js'
 
 // E-mails to parents about an event — SPEC §6.5, §7: when leaders start the
 // registration (registrationOpened) or publish the poster (posterPublished,
@@ -39,7 +40,7 @@ async function recipients(event) {
     ? await db.getAll(...members.map((m) => db.doc(`members/${m.id}/private/contacts`)))
     : []
   members.forEach((m, i) => {
-    const name = m.nickname || m.firstName
+    const name = nicknameOf(m)
     for (const uid of m.parentUids ?? []) add(accountEmail[uid], name)
     for (const parent of contacts[i].get('parents') ?? []) add(parent.email, name)
   })

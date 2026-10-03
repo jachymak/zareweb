@@ -12,6 +12,7 @@ import PreviewBar from '@/components/parent/PreviewBar.vue'
 import PackingChecklist from '@/components/poster/PackingChecklist.vue'
 import PosterDetails from '@/components/poster/PosterDetails.vue'
 import { LOAD_ERROR } from '@/components/parent/parentText'
+import { nicknameOf } from '@shared/names'
 
 // Event poster — SPEC §3.2. Parents see published posters only; leaders see
 // every poster, unpublished ones marked as a preview. Opened from the leaders'
@@ -135,7 +136,7 @@ const section = 'mx-auto max-w-[1040px] px-4 sm:px-6'
 
       <div :class="section" class="flex flex-wrap items-center gap-x-6 gap-y-3.5 pt-[26px]">
         <p v-if="organizer" class="m-0 text-[15.5px] text-muted">
-          Něco není jasné? Ozvěte se organizátorovi — {{ organizer.nickname || organizer.name }}
+          Něco není jasné? Ozvěte se organizátorovi — {{ nicknameOf(organizer) }}
           <template v-if="organizer.phone || organizer.email">
             (<a v-if="organizer.phone" :href="`tel:${organizer.phone.replace(/\s+/g, '')}`">{{
               organizer.phone

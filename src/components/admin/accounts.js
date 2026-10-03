@@ -1,5 +1,6 @@
 // Accounts & pairing (SPEC §4.8): labels, filters and pairing suggestions.
 import { troopByCode } from '@/constants/troops'
+import { nicknameOf } from '@shared/names'
 
 export const ROLE_LABELS = {
   pending: 'čeká na schválení',
@@ -97,7 +98,7 @@ export function searchLeaders(people, text) {
   return people
     .filter((p) => p.active)
     .filter((p) => !q || normalizeText(`${p.name} ${p.nickname}`).includes(q))
-    .sort((a, b) => (a.nickname || a.name).localeCompare(b.nickname || b.name, 'cs'))
+    .sort((a, b) => nicknameOf(a).localeCompare(nicknameOf(b), 'cs'))
 }
 
 export function formatDate(ts) {
