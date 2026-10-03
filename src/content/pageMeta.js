@@ -3,7 +3,7 @@
 
 export const SITE_URL = 'https://zare.skauting.cz'
 
-export const DEFAULT_TITLE = 'Skautský oddíl Záře — Dejvice'
+export const DEFAULT_TITLE = 'Skautský oddíl Záře'
 
 export const PAGE_META = {
   '/': {
