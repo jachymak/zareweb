@@ -290,7 +290,7 @@ export default async function login({ browser, check }) {
     await popup.locator('#display-name-input').fill('Petr Googlový')
     await popup.locator('#sign-in').click()
 
-    await cardTitle(page, 'Čekáme na schválení').waitFor({ timeout: 15000 })
+    await cardTitle(page, 'Ještě jeden krok').waitFor({ timeout: 15000 })
     check(
       'google: first login → waiting screen asking for the note',
       (await page.getByLabel('Koho u nás máš?').isVisible()) &&
@@ -321,7 +321,8 @@ export default async function login({ browser, check }) {
     check('google: note saved', fieldValue(f.note) === 'Kuba Googlový, skauti')
     check(
       'google: the „one more step“ hint is gone',
-      !(await page.getByTestId('note-needed').count()),
+      !(await page.getByTestId('note-needed').count()) &&
+        (await cardTitle(page, 'Čekáme na schválení').isVisible()),
     )
     let notified = false
     for (let i = 0; i < 50 && !notified; i++) {

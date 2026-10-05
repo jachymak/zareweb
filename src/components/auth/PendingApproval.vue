@@ -8,6 +8,8 @@ import NoteField from './NoteField.vue'
 
 // Signed in, waiting for the admin's approval — SPEC §2.4 state 4.
 // The profile is live, so the page moves on by itself once approved.
+// Without a note (Google sign-up) the note form comes first: until it is saved
+// the admin isn't told about the account.
 defineEmits(['sign-out'])
 
 const auth = useAuthStore()
@@ -21,7 +23,10 @@ const showForm = computed(() => editing.value || !savedNote.value)
 
 const steps = computed(() => [
   { text: 'Účet vytvořený', done: true },
-  { text: 'Napsáno, koho u nás máš', done: !!savedNote.value },
+  {
+    text: savedNote.value ? 'Napsáno, koho u nás máš' : 'Napsat, koho u nás máš — chybí',
+    done: !!savedNote.value,
+  },
   { text: 'Schválení správcem — čeká se', done: false },
 ])
 
@@ -56,14 +61,43 @@ async function submit() {
 
 <template>
   <div>
-    <CardTitle>Čekáme na schválení</CardTitle>
-    <p class="m-0 mb-4 text-base leading-relaxed text-muted">
-      Správce účet ověří a propojí s tvými dětmi. Pak ti přijde e-mail na
-      <strong class="font-medium break-words text-ink">{{ auth.user?.email }}</strong>
-      a uvidíš docházku, akce i fotky.
-    </p>
+    <template v-if="!savedNote">
+      <CardTitle>Ještě jeden krok</CardTitle>
+      <p class="m-0 mb-4 text-base leading-relaxed text-ink" data-testid="note-needed">
+        Účet je založený, ale <strong class="font-medium">správce se o něm zatím nedozví</strong>.
+        Napiš, koho u nás máš — teprve pak ti ho může schválit.
+      </p>
+    </template>
+    <template v-else>
+      <CardTitle>Čekáme na schválení</CardTitle>
+      <p class="m-0 mb-4 text-base leading-relaxed text-muted">
+        Správce účet ověří a propojí s tvými dětmi. Pak ti přijde e-mail na
+        <strong class="font-medium break-words text-ink">{{ auth.user?.email }}</strong>
+        a uvidíš docházku, akce i fotky.
+      </p>
+    </template>
 
-    <div class="mb-5 rounded-lg bg-[#f6efdc] px-4 py-3.5">
+    <form
+      v-if="showForm"
+      ref="formEl"
+      class="mb-5 flex flex-col gap-4"
+      :class="!savedNote && 'rounded-lg bg-red-light/60 p-4'"
+      novalidate
+      @submit.prevent="submit"
+    >
+      <NoteField v-model="note" :error="errors.note" />
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <button type="submit" class="btn-primary" :disabled="saving">
+          {{ saving ? 'Ukládám…' : 'Uložit →' }}
+        </button>
+        <button v-if="editing" type="button" class="btn-link" @click="editing = false">
+          zrušit
+        </button>
+      </div>
+      <FormMessage :error="failure" />
+    </form>
+
+    <div class="rounded-lg bg-[#f6efdc] px-4 py-3.5">
       <p class="m-0 mb-2 text-[12.5px] tracking-widest text-[#8a7b5e] uppercase">Stav účtu</p>
       <ul class="m-0 flex list-none flex-col gap-2 p-0">
         <li v-for="step in steps" :key="step.text" class="flex items-baseline gap-2.5">
@@ -81,34 +115,7 @@ async function submit() {
       </ul>
     </div>
 
-    <form
-      v-if="showForm"
-      ref="formEl"
-      class="flex flex-col gap-4"
-      novalidate
-      @submit.prevent="submit"
-    >
-      <p
-        v-if="!savedNote"
-        class="m-0 text-[15.5px] leading-normal text-ink"
-        data-testid="note-needed"
-      >
-        <strong class="font-medium">Ještě jeden krok:</strong> dokud nenapíšeš, koho u nás máš,
-        správce se o tvém účtu nedozví a nemůže ho schválit.
-      </p>
-      <NoteField v-model="note" :error="errors.note" />
-      <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <button type="submit" class="btn-primary" :disabled="saving">
-          {{ saving ? 'Ukládám…' : 'Uložit →' }}
-        </button>
-        <button v-if="editing" type="button" class="btn-link" @click="editing = false">
-          zrušit
-        </button>
-      </div>
-      <FormMessage :error="failure" />
-    </form>
-
-    <div v-else>
+    <div v-if="savedNote && !editing" class="mt-5">
       <p class="m-0 text-[14.5px] text-brown">Tvoje poznámka pro správce:</p>
       <p
         class="m-0 mt-1 text-[15.5px] leading-normal break-words whitespace-pre-line text-ink"

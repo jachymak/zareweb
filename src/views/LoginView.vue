@@ -25,7 +25,8 @@ const form = ref('login') // login | forgot | register — while signed out
 // Account status of a signed-in user whose role has no area (yet).
 const status = computed(() => {
   if (!auth.user || auth.busy || !auth.profileLoaded || auth.homeRoute) return null
-  return auth.role === 'none' ? 'none' : 'pending'
+  if (auth.role === 'none') return 'none'
+  return auth.profile?.note ? 'pending' : 'note'
 })
 const screen = computed(() => status.value ?? form.value)
 const intro = computed(() => INTRO[screen.value])
@@ -90,7 +91,7 @@ async function signOut() {
 
         <HandDrawnBox stroke="var(--color-red)" shape="tall" class="min-w-0 flex-[1_1_360px]">
           <div class="px-5 pt-7 pb-6 sm:px-8 sm:pt-8 sm:pb-7">
-            <PendingApproval v-if="screen === 'pending'" @sign-out="signOut" />
+            <PendingApproval v-if="screen === 'pending' || screen === 'note'" @sign-out="signOut" />
             <NoAccess v-else-if="screen === 'none'" @sign-out="signOut" />
             <ForgotPasswordForm v-else-if="screen === 'forgot'" @back="form = 'login'" />
             <RegisterForm v-else-if="screen === 'register'" @back="form = 'login'" />

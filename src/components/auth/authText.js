@@ -22,6 +22,12 @@ export const INTRO = {
     'Účet čeká na schválení',
     'Bez schválení je účet prázdný — je to tak schválně, aby se dovnitř nedostal nikdo cizí.',
   ],
+  // Pending without the note (Google sign-up): the note form comes first.
+  note: [
+    'chybí poslední krok',
+    'Dokonči založení účtu',
+    'Bez schválení je účet prázdný — je to tak schválně, aby se dovnitř nedostal nikdo cizí.',
+  ],
   none: ['bez přístupu', 'Účet nemá přístup', 'Stránky pro rodiče vidí jen schválené účty.'],
 }
 

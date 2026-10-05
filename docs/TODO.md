@@ -29,6 +29,7 @@
 - ke stažení - např zpěvník
 - potravinove intolerance
 - seznamy veci sladit
+- datepicker v terminech, kdy nejsou schuzky, zacit druhy na datu predchozi hodnoty
 
 ## Mimo ##
 - logo - udelat pro vedouci do design slozky
@@ -38,6 +39,8 @@
 
 ## Udelat ted ##
 - tabory dopsat
-  
-- namluvene pro vedouci
+- vic vyrazne zadani poznamky ke google uctu
+- omluvenky se nezobrazuji v nahledu
+  automaticky mail vedoucim, kteri jsou v administraci prirazeni ke schuzce (resp dochazku v tento den zapisuji)
+  jmeno toho, kdo dochazku zapsal
 
