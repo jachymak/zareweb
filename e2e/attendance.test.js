@@ -203,6 +203,12 @@ export default async function attendance({ browser, check }) {
         !!fieldValue(doc.updatedBy) &&
         fieldValue(doc.cancelled) === false,
     )
+    check(
+      'meetings: „zapsal(a) Ondys“ shown in small print',
+      await until(
+        async () => (await page.getByTestId('recorded-by').innerText()) === 'zapsal(a) Ondys',
+      ),
+    )
     await sojka.click()
     check(
       'meetings: unticking removes the child',
@@ -382,6 +388,13 @@ export default async function attendance({ browser, check }) {
     check(
       'trips: „zaplaceno“ saved',
       await until(async () => fieldValue((await getDoc(path))?.paid) === true),
+    )
+    check(
+      'trips: recordedBy saved and „zapsal(a) Ondys“ shown',
+      !!fieldValue((await getDoc(path))?.recordedBy) &&
+        (await until(
+          async () => (await page.getByTestId('recorded-by').innerText()) === 'zapsal(a) Ondys',
+        )),
     )
     await sojka.getByLabel('Částka — Sojka').fill('250')
     await sojka.getByLabel('Částka — Sojka').press('Enter')

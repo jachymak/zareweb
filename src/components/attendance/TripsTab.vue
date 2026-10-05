@@ -180,6 +180,13 @@ const cameAnyway = (memberId) => a.setTripFields(trip.value, memberId, { attende
               :show-troop="showTroop"
               @pick="(id) => signUp(id, true)"
             />
+            <p
+              v-if="a.tripRecorders(trip).length"
+              class="m-0 mt-4 text-right text-[12px] text-[#a39781]"
+              data-testid="recorded-by"
+            >
+              zapsal(a) {{ a.tripRecorders(trip).join(', ') }}
+            </p>
           </template>
         </section>
       </HandDrawnBox>

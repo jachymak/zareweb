@@ -140,7 +140,11 @@ export function setSignedUp(eventId, memberId, signedUp) {
   )
 }
 
-// Leaders only: { attended, paid, amountPaid }.
+// Leaders only: { attended, paid, amountPaid }; `recordedBy` = the leader's uid.
 export function setAttendance(eventId, memberId, fields) {
-  return setDoc(participantRef(eventId, memberId), fields, { merge: true })
+  return setDoc(
+    participantRef(eventId, memberId),
+    { ...fields, recordedBy: auth.currentUser.uid },
+    { merge: true },
+  )
 }

@@ -253,6 +253,13 @@ const small =
               :children="children"
             />
           </template>
+          <p
+            v-if="state !== 'unrecorded' && a.meetingRecorder(date)"
+            class="m-0 mt-4 text-right text-[12px] text-[#a39781]"
+            data-testid="recorded-by"
+          >
+            zapsal(a) {{ a.meetingRecorder(date) }}
+          </p>
         </section>
       </HandDrawnBox>
     </template>

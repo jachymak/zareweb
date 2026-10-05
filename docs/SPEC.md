@@ -267,6 +267,7 @@ Troop switch (top right, §4 intro; on a phone only the troop tag next to the he
 - „Vrátit na nezapsáno“ (on a recorded or cancelled meeting) deletes the record, e.g. after a child was ticked by mistake on a meeting that should stay unrecorded; asks first when more than one child is ticked.
 - **Autosave** („ukládá se samo“). A meeting is **recorded** once its attendance is saved (or it is marked „schůzka nebyla“). Clicking a child changes only that child (`arrayUnion` / `arrayRemove`), and the page follows the meetings live, so two leaders can record the same meeting at once.
 - Past meeting dates that have not been recorded are flagged („nezapsáno“) so the leader can catch up; they don't count towards attendance until recorded.
+- Bottom right of a recorded or cancelled meeting, in small print, „zapsal(a) {přezdívka}“ — the leader who last changed it (`updatedBy` → `users.personId` → `skautisPeople` nickname, else the account name).
 
 **Trips (výpravy)**
 
@@ -277,6 +278,7 @@ Troop switch (top right, §4 intro; on a phone only the troop tag next to the he
 - **Přehled** (at home — who goes, settling the money): summary „přihlášeno N · přijelo X · zaplaceno Y · máš mít u sebe Z Kč“ — the cash is the sum of amounts of children marked paid (the entered amount, else the event price). A row per child: „přijel“ toggle, „zaplaceno“ / „nezaplaceno“ toggle, amount (placeholder = the event price; saved when the field is left; empty = the price), „odhlásit“ (or „přihlásit“ for a child who came without signing up). Below, „+ přihlásit dítě“ (a select) — leaders sign children up at any time, also after the deadline (the same as „Kdo je přihlášený“ in the event detail, §4.3).
 - **Na srazu** (at the meeting point, on a phone): the page shows only the trip — no title, troop switch, tabs, trip strip or mode switch, just „← přehled“, the trip title and tag; big „přijelo X z Y · máš u sebe Z Kč“ and a card per child — tapping the card toggles „přijel“, the amount button on it („250 Kč“, or „zaplatil“ without a price) toggles paid and marks „přijel“ too (who brings money has come). Below, „+ přišel někdo nepřihlášený“ (a select) marks a child as came.
 - There is no „nepřijel“: a child not marked „přijel“ did not come.
+- Bottom right of „přehled“, in small print, „zapsal(a) {přezdívky}“ — the leaders who recorded came / paid of the trip (`participants.recordedBy`, nicknames as in meetings).
 - Autosave, followed live.
 
 **Camp requirement summary** (bottom of the page, hidden at the meeting point) — for the chosen troop: each child with meeting % and trips count; children not meeting the camp requirement highlighted red. Folded behind a summary („55 dětí · 12 nesplňuje podmínku na tábor“, „zobrazit ↓“). Clicking a child shows a dot per meeting date of their day this school year — filled = present, empty = absent, yellow = excused (absent, or not recorded yet, with an excuse), hatched = meeting cancelled, dashed = not recorded yet; tooltip with date and state (for an excuse who excused and why); a child without a meeting day gets a note instead. Follows the recording live.
@@ -545,6 +547,7 @@ Poster content in a separate doc so parents can read it **only when `posterStatu
 | `attended`   | boolean \| null | leader                              |
 | `paid`       | boolean         | leader                              |
 | `amountPaid` | number?         | leader                              |
+| `recordedBy` | string uid      | leader — last to change `attended`, `paid` or `amountPaid` |
 
 ### `news/{newsId}`
 

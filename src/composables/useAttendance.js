@@ -1,4 +1,4 @@
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { pragueToday, schoolYearRange } from '@shared/schoolYear'
 import { campRequirements, isTrip, meetingDots, meetingStats, tripCount } from '@shared/attendance'
 import { canJoin } from '@shared/events'
@@ -15,6 +15,8 @@ import {
 import { cancelExcuse, excuse, subscribeExcuses } from '@/services/excuses'
 import { listMembers } from '@/services/members'
 import { getAppSettings } from '@/services/settings'
+import { getPerson } from '@/services/skautisPeople'
+import { getUser } from '@/services/users'
 import { useLeaderTroopStore } from '@/stores/leaderTroop'
 import { useMeetingScheduleStore } from '@/stores/meetingSchedule'
 import { nicknameOf } from '@shared/names'
@@ -231,6 +233,44 @@ export function useAttendance() {
   const setTripSignedUp = (event, memberId, signedUp) =>
     save(() => setSignedUp(event.id, memberId, signedUp))
 
+  // ---- who recorded ----
+
+  // Nickname of each leader who recorded the shown meetings and trips
+  // (users/{uid} → skautisPeople, else the account name), loaded once per uid.
+  const recorders = ref({})
+  const requested = new Set()
+  async function loadRecorder(uid) {
+    requested.add(uid)
+    try {
+      const user = await getUser(uid)
+      const person = user?.personId ? await getPerson(user.personId) : null
+      recorders.value = { ...recorders.value, [uid]: nicknameOf(person) || user?.displayName || '' }
+    } catch (e) {
+      console.error('Loading who recorded failed', e)
+    }
+  }
+  watch(
+    () => [
+      ...meetings.value.map((m) => m.updatedBy),
+      ...trips.value.flatMap((e) =>
+        Object.values(participants.value[e.id] ?? {}).map((p) => p.recordedBy),
+      ),
+    ],
+    (uids) => uids.filter((uid) => uid && !requested.has(uid)).forEach(loadRecorder),
+    { immediate: true },
+  )
+
+  // The leader who last changed the meeting's record.
+  const meetingRecorder = (date) => recorders.value[meetingOn(date)?.updatedBy] ?? ''
+  // Everyone who recorded attendance or payments of the trip.
+  const tripRecorders = (event) => [
+    ...new Set(
+      Object.values(participants.value[event.id] ?? {})
+        .map((p) => recorders.value[p.recordedBy])
+        .filter(Boolean),
+    ),
+  ]
+
   // ---- camp requirement (SPEC §4.2) ----
 
   // Children of the troop with their meeting % and trips, and a dot per
@@ -276,6 +316,7 @@ export function useAttendance() {
     excuseOf,
     excuseChild,
     unexcuseChild,
+    meetingRecorder,
     // trips
     trips,
     defaultTrip,
@@ -284,6 +325,7 @@ export function useAttendance() {
     tripSummary,
     setTripFields,
     setTripSignedUp,
+    tripRecorders,
     // camp requirement
     troopStats,
     requirement,
