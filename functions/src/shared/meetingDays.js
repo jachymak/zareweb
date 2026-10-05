@@ -94,3 +94,21 @@ export function troopDay(troop, date, events, schedule = DEFAULT_MEETING_SCHEDUL
   const otherMeets = ['vlc', 'ss'].some((code) => code !== troop && meetsOn(schedule, code, date))
   return { kind: otherMeets ? 'otherTroop' : 'free' }
 }
+
+// Stored `settings/recorders` (possibly missing) → { vlc: { weekday: [personId] }, ss: … }:
+// the leaders (`skautisPeople` ids) who record attendance on each meeting day of the troop
+// (SPEC §4.8 Meetings); they get the reminder when it isn't recorded in time.
+export const meetingRecorders = (stored) => ({
+  vlc: { ...stored?.vlc },
+  ss: { ...stored?.ss },
+})
+
+// The reminder about unrecorded attendance is sent this long after the meeting ends.
+export const REMINDER_DELAY_MINUTES = 60
+
+// `19:00` + 60 → `20:00`; null past midnight (no reminder that day).
+export function timeAfter(time, minutes) {
+  const total = Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5)) + minutes
+  if (total >= 24 * 60) return null
+  return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`
+}

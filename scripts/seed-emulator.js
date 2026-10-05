@@ -1,6 +1,6 @@
 // Seeds the Firestore emulator with the settings documents the app expects.
 // Usage: npm run seed (emulators must be running). Writes bypass security rules.
-// settings/meetings and settings/emails are removed, so their defaults apply
+// settings/meetings, settings/emails and settings/recorders are removed, so their defaults apply
 // (DEFAULT_MEETING_SCHEDULE, DEFAULT_RENEWAL_EMAIL).
 
 const PROJECT = process.env.VITE_FIREBASE_PROJECT_ID ?? 'demo-zareweb'
@@ -12,7 +12,7 @@ const docs = {
     campRequirements: { vlc: { trips: 4, meetingPct: 60 }, ss: { trips: 4, meetingPct: 60 } },
   },
 }
-const removed = ['settings/meetings', 'settings/emails']
+const removed = ['settings/meetings', 'settings/emails', 'settings/recorders']
 
 // Plain JS values → Firestore REST `fields`.
 function toValue(v) {

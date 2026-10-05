@@ -118,6 +118,25 @@ export const EMAILS = {
       ),
     },
   },
+  attendanceReminder: {
+    placeholders: {
+      jmeno: 'přezdívka vedoucího',
+      oddil: 'oddíl (vlčušky / skauti a skautky)',
+      den: 'den schůzky',
+      odkaz: 'odkaz na docházku té schůzky',
+    },
+    required: ['odkaz'],
+    switchable: true,
+    default: {
+      subject: 'Docházka - {den}',
+      body: paragraphs(
+        'Tě péro, {jmeno}!',
+        'Nezapomněl/a jsi na 11. bod Skautského zákona? Který zní „Skautský vedoucí svědomitě zapisuje docházku po každé své schůzce.“',
+        'Tak šup šup, ať na tebe nemusím poslat Svojsíka, odkaz máš zde: {odkaz}',
+        'ZBot 🤖',
+      ),
+    },
+  },
 }
 
 // Stored template (possibly missing or partial) → { subject, body, enabled }.

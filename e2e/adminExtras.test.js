@@ -42,7 +42,10 @@ const PASSWORD = 'heslo1234'
 const ADMIN_URL = '/vedouci/administrace'
 const today = pragueToday()
 const { from: yearStart } = schoolYearRange(today)
-const latestMon = meetingDates('mon', yearStart, today).at(-1) // unrecorded in the seed
+// the latest Monday before today (a range on it is over); unrecorded in the seed
+const latestMon = meetingDates('mon', yearStart, today)
+  .filter((d) => d < today)
+  .at(-1)
 const formatDay = (iso) => `${Number(iso.slice(8))}. ${Number(iso.slice(5, 7))}.`
 
 async function until(fn, timeout = 10000) {
@@ -309,6 +312,23 @@ export default async function adminExtras({ browser, check: report }) {
     )
     await vlc.getByRole('button', { name: 'pátek', exact: true }).click()
 
+    // who records attendance: Ondys on vlc Mondays, Hobit on ss Tuesdays (dropped below)
+    const vlcMon = page.getByTestId('recorders-vlc-mon')
+    check('meetings: nobody records attendance yet', (await vlcMon.innerText()).includes('nikdo'))
+    await vlcMon.getByRole('button', { name: '+ přidat vedoucího' }).click()
+    await vlcMon.getByLabel('Hledat vedoucího').fill('ondys')
+    await vlcMon.getByRole('button', { name: /Ondys/ }).click()
+    const ssTue = page.getByTestId('recorders-ss-tue')
+    await ssTue.getByRole('button', { name: '+ přidat vedoucího' }).click()
+    await ssTue.getByLabel('Hledat vedoucího').fill('hobit')
+    await ssTue.getByRole('button', { name: /Hobit/ }).click()
+    check(
+      'meetings: picked recorders shown as chips',
+      (await vlcMon.innerText()).includes('Ondys') &&
+        !(await vlcMon.innerText()).includes('nikdo') &&
+        (await ssTue.innerText()).includes('Hobit'),
+    )
+
     // vlc time 16:30–18:00, ss meets Wed + Thu
     await page.getByLabel('Začátek schůzky — Vlčušky').fill('16:30')
     await page.getByLabel('Konec schůzky — Vlčušky').fill('18:00')
@@ -366,6 +386,12 @@ export default async function adminExtras({ browser, check: report }) {
         ) &&
         saved.noMeetings.some((r) => r.troop === 'all' && r.to.endsWith('-02-06')),
       JSON.stringify(saved),
+    )
+    const recorders = (await getDoc('settings/recorders')).data
+    check(
+      'meetings: recorders saved to settings/recorders, only for the troop’s current days',
+      JSON.stringify(recorders) === JSON.stringify({ vlc: { mon: ['800001'] }, ss: {} }),
+      JSON.stringify(recorders),
     )
 
     // filled in but not added with „+ přidat“ → „uložit“ adds it too

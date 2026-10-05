@@ -279,7 +279,7 @@ service cloud.firestore {
 
     match /settings/{docId} {
       // meetings — the schedule is shown on the public home page too.
-      allow read: if docId == 'meetings' || (docId in ['emails', 'skautis'] && isLeader());
+      allow read: if docId == 'meetings' || (docId in ['emails', 'skautis', 'recorders'] && isLeader());
       allow write: if isAdmin();
     }
   }

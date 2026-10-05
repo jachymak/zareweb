@@ -5,7 +5,8 @@ import EmailTemplateForm from './EmailTemplateForm.vue'
 
 // „E-maily“ — SPEC §4.8: texts of the automated e-mails about events (sent
 // once per event by onEventUpdated to parents of the children who can join)
-// and about accounts (onUserWritten, when the admin approves an account).
+// about accounts (onUserWritten, when the admin approves an account) and the
+// leaders' reminder about unrecorded attendance (remindAttendance).
 // Only logged until SMTP exists. Waiting-list e-mails are in „čekací listina“.
 defineEmits(['open-tab'])
 
@@ -21,6 +22,12 @@ const ACCOUNT_SAMPLES = {
   deti: 'Přiřadili jsme k němu: Sojka (vlčušky) a Bobr (skauti a skautky).',
   dite: 'Sojka a Bobr',
   odkaz: 'odkaz na web',
+}
+const ATTENDANCE_SAMPLES = {
+  jmeno: 'Ondys',
+  oddil: 'vlčušky',
+  den: 'pondělí 5. 10.',
+  odkaz: 'odkaz na docházku',
 }
 
 const loading = ref(true)
@@ -91,6 +98,31 @@ onMounted(async () => {
             title="Pozvánka pro rodiče"
             description="Přijde rodiči, kterého pozveš z „děti bez účtu“ v záložce účty a párování. {dite} jsou jeho děti podle skautISu; odkaz vede na přihlášení na webu, kde si účet založí."
             :samples="ACCOUNT_SAMPLES"
+          />
+        </div>
+      </section>
+
+      <section aria-labelledby="attendance-emails-title">
+        <h2 id="attendance-emails-title" class="m-0 mb-1 text-[19px] font-semibold text-ink">
+          K docházce
+        </h2>
+        <p class="m-0 mb-4 max-w-[70ch] text-[15.5px] leading-normal text-muted">
+          Komu chodí, se nastavuje u každého dne schůzek („kdo zapisuje docházku“).
+          <button
+            type="button"
+            class="btn-link py-0 text-[15.5px]"
+            @click="$emit('open-tab', 'schuzky')"
+          >
+            nastavit v záložce schůzky
+          </button>
+        </p>
+        <div class="flex flex-col gap-3.5">
+          <EmailTemplateForm
+            email-key="attendanceReminder"
+            :stored="stored.attendanceReminder"
+            title="Nezapsaná docházka"
+            description="Přijde vedoucím, kteří ten den zapisují docházku, když hodinu po konci schůzky ještě není zapsaná (ani označená „schůzka nebyla“). Ke každé schůzce nejvýš jednou; odkaz otevře docházku té schůzky."
+            :samples="ATTENDANCE_SAMPLES"
           />
         </div>
       </section>

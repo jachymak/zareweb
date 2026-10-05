@@ -2,20 +2,34 @@
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { pragueToday, schoolYearRange } from '@shared/schoolYear'
-import { meetingTimeLong, MEETING_WEEKDAYS, sortWeekdays } from '@shared/meetingDays'
+import {
+  meetingRecorders,
+  meetingTimeLong,
+  MEETING_WEEKDAYS,
+  sortWeekdays,
+} from '@shared/meetingDays'
 import { AUDIENCES, TROOPS, WEEKDAY_NAMES } from '@/constants/troops'
 import { useSaveState } from '@/composables/useSaveState'
 import { subscribeMembers } from '@/services/members'
-import { updateMeetingSettings } from '@/services/settings'
+import { subscribeLeaders } from '@/services/skautisPeople'
+import {
+  getRecorderSettings,
+  updateMeetingAndRecorderSettings,
+  updateMeetingSettings,
+} from '@/services/settings'
 import { useMeetingScheduleStore } from '@/stores/meetingSchedule'
 import AudienceTag from '@/components/parent/AudienceTag.vue'
 import { formatRange, plural } from '@/components/parent/parentText'
 import CollapsibleSection from './CollapsibleSection.vue'
+import PersonChip from './PersonChip.vue'
+import PersonPicker from './PersonPicker.vue'
 import SaveBar from './SaveBar.vue'
 import DateInput from '@/components/form/DateInput.vue'
 
 // „Schůzky“ — SPEC §4.8 Meetings: each troop's two meeting days and time,
-// and date ranges without meetings (holidays). Saved together with one button;
+// who records attendance on each of them (gets the reminder e-mail when it
+// isn't recorded an hour after the meeting — remindAttendance) and date ranges
+// without meetings (holidays). Saved together with one button;
 // single cancelled meetings are marked by leaders in attendance instead.
 // Ranges that are over are hidden; attendance still needs them until the end of
 // the school year, so only ranges of earlier school years are deleted (when the
@@ -30,17 +44,34 @@ const members = ref([])
 
 const copy = (s) => JSON.parse(JSON.stringify(s))
 const draft = ref(null)
-const dirty = computed(() => JSON.stringify(draft.value) !== JSON.stringify(schedule.value))
+const leaders = ref([])
+const savedRecorders = ref(meetingRecorders(null))
+const recorders = ref(meetingRecorders(null))
+const dirty = computed(
+  () =>
+    JSON.stringify(draft.value) !== JSON.stringify(schedule.value) ||
+    JSON.stringify(recordersToSave()) !== JSON.stringify(savedRecorders.value),
+)
 
 let unsubscribe = null
+let unsubscribeLeaders = null
 onMounted(async () => {
   unsubscribe = subscribeMembers(
     (list) => (members.value = list.filter((m) => m.active)),
     (e) => console.error('Loading members failed', e),
   )
-  await scheduleStore.load()
+  unsubscribeLeaders = subscribeLeaders(
+    (list) => (leaders.value = list),
+    (e) => console.error('Loading leaders failed', e),
+  )
+  const [stored] = await Promise.all([
+    getRecorderSettings().catch((e) => console.error('Loading recorders failed', e)),
+    scheduleStore.load(),
+  ])
+  recorders.value = meetingRecorders(stored)
   await pruneOldRanges()
   draft.value = copy(schedule.value)
+  savedRecorders.value = recordersToSave()
   loading.value = false
 })
 
@@ -68,7 +99,10 @@ function until(condition) {
     })
   })
 }
-onUnmounted(() => unsubscribe?.())
+onUnmounted(() => {
+  unsubscribe?.()
+  unsubscribeLeaders?.()
+})
 
 // Another admin's save shows up here unless there are local changes.
 watch(schedule, (s, old) => {
@@ -90,6 +124,39 @@ const invalidDays = computed(
     ).length,
 )
 const withoutDay = computed(() => members.value.filter((m) => !m.meetingDay).length)
+
+// ---- who records attendance ----
+
+// Open person picker: `${troop}-${weekday}`.
+const picking = ref(null)
+const leaderById = computed(() => Object.fromEntries(leaders.value.map((p) => [p.id, p])))
+const recordersOn = (code, day) =>
+  (recorders.value[code][day] ?? []).map((id) => leaderById.value[id]).filter(Boolean)
+// Active leaders not recording that day yet.
+const candidates = (code, day) =>
+  leaders.value.filter((p) => p.active && !(recorders.value[code][day] ?? []).includes(p.id))
+
+function addRecorder(code, day, person) {
+  recorders.value[code][day] = [...(recorders.value[code][day] ?? []), person.id]
+  picking.value = null
+}
+const removeRecorder = (code, day, person) =>
+  (recorders.value[code][day] = recorders.value[code][day].filter((id) => id !== person.id))
+
+// Only the troop's current days (in the draft) are kept; empty days are left out.
+function recordersToSave() {
+  if (!draft.value) return savedRecorders.value
+  return Object.fromEntries(
+    TROOPS.map(({ code }) => [
+      code,
+      Object.fromEntries(
+        draft.value[code].days
+          .filter((day) => recorders.value[code][day]?.length)
+          .map((day) => [day, recorders.value[code][day]]),
+      ),
+    ]),
+  )
+}
 
 // ---- dates without meetings ----
 
@@ -175,7 +242,11 @@ async function submit() {
   // A range filled in but not added with „+ přidat“ is saved too, not dropped.
   if (rangeStarted() && !addRange()) return (opened.ranges = true)
   if (!validate()) return
-  if (await save(() => updateMeetingSettings(copy(draft.value)))) added.value = []
+  const toSave = recordersToSave()
+  if (await save(() => updateMeetingAndRecorderSettings(copy(draft.value), toSave))) {
+    added.value = []
+    savedRecorders.value = toSave
+  }
 }
 </script>
 
@@ -252,6 +323,52 @@ async function submit() {
           <p v-if="errors[`${troop.code}Time`]" class="m-0 mt-1.5 text-sm text-red">
             {{ errors[`${troop.code}Time`] }}
           </p>
+
+          <p class="m-0 mt-5 mb-0.5 text-[15px] font-medium text-ink">Kdo zapisuje docházku</p>
+          <p class="m-0 mb-1.5 max-w-[70ch] text-[14px] text-muted">
+            Když hodinu po konci schůzky docházka ještě není zapsaná, přijde jim e-mail s odkazem na
+            ni.
+          </p>
+          <div class="divide-y divide-[#ece4d0]">
+            <div
+              v-for="day in draft[troop.code].days"
+              :key="day"
+              class="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 py-2"
+              :data-testid="`recorders-${troop.code}-${day}`"
+            >
+              <span class="w-[4.5rem] text-[15px] text-text">{{ WEEKDAY_NAMES[day] }}</span>
+              <PersonChip
+                v-for="p in recordersOn(troop.code, day)"
+                :key="p.id"
+                :person="p"
+                @remove="removeRecorder(troop.code, day, p)"
+              />
+              <span
+                v-if="!recordersOn(troop.code, day).length"
+                class="text-[14.5px] text-muted-2 italic"
+              >
+                nikdo
+              </span>
+              <button
+                type="button"
+                class="btn-link py-1 text-[14.5px]"
+                :aria-expanded="picking === `${troop.code}-${day}`"
+                @click="
+                  picking = picking === `${troop.code}-${day}` ? null : `${troop.code}-${day}`
+                "
+              >
+                + přidat vedoucího
+              </button>
+              <div v-if="picking === `${troop.code}-${day}`" class="basis-full">
+                <PersonPicker
+                  leaders
+                  :people="candidates(troop.code, day)"
+                  @pick="(p) => addRecorder(troop.code, day, p)"
+                  @close="picking = null"
+                />
+              </div>
+            </div>
+          </div>
         </CollapsibleSection>
       </div>
 
