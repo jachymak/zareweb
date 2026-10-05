@@ -6,13 +6,15 @@ import { nicknameOf } from '@shared/names'
 // Excuse from today's meeting on a child card (SPEC §3.1): a button, an optional
 // reason, then „omluveno“ with „zrušit“ until the day ends. The child still
 // counts as absent; the leaders just see it was excused. In the leaders'
-// preview a click only explains.
+// preview a click only explains; there on another day (`sampleDay`) it is a
+// sample with a note that parents get it only on the meeting day.
 const props = defineProps({
   member: { type: Object, required: true },
   excuse: { type: Object, default: null }, // excuses doc, null = not excused
   saving: { type: Boolean, default: false },
   error: { type: Boolean, default: false },
   preview: { type: Boolean, default: false },
+  sampleDay: { type: String, default: '' }, // „ve čtvrtek“ — preview on another day
 })
 const emit = defineEmits(['excuse', 'cancel'])
 
@@ -93,6 +95,9 @@ const button =
       {{ saving ? 'ukládá se…' : 'omluvit z dnešní schůzky' }}
     </button>
 
+    <p v-if="sampleDay" class="m-0 mt-1.5 text-[13.5px] text-muted-2" data-testid="excuse-sample">
+      ukázka — rodiče ho mají jen v den schůzky ({{ sampleDay }}), když se koná
+    </p>
     <p aria-live="polite" class="m-0 empty:hidden">
       <span v-if="notice" class="note-warm mt-2.5 block">{{ notice }}</span>
     </p>

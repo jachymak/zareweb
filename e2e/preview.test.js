@@ -153,6 +153,20 @@ export default async function preview({ browser, check }) {
       notice.includes('Sojka omluví z dnešní schůzky') && res.status === 404,
       notice,
     )
+    check(
+      'excuse: no sample note on the meeting day',
+      !(await card.getByTestId('excuse-sample').isVisible()),
+    )
+
+    // Another day: still shown, as a sample with the note.
+    await patchDoc('members/900102', { meetingDay: { stringValue: days[1] } })
+    await page.reload({ waitUntil: 'load' })
+    await card.getByRole('button', { name: 'omluvit z dnešní schůzky' }).click()
+    check(
+      'excuse: sample on another day, click explains',
+      (await card.getByTestId('excuse-sample').isVisible()) &&
+        (await card.getByText('Tohle je jen náhled').isVisible()),
+    )
     await deleteDoc('settings/meetings')
     runScript('seed-members.js')
     await page.reload({ waitUntil: 'load' })

@@ -8,7 +8,8 @@ import { MEETING_DAYS, campRequirementText } from './parentText'
 import { nicknameOf } from '@shared/names'
 
 // One card per child: meeting day, attendance and trips this school year; on
-// the child's meeting day the excuse from it.
+// the child's meeting day the excuse from it. The leaders' preview shows the
+// excuse on other days too (for a child with a meeting day), as a sample.
 const props = defineProps({
   stats: { type: Array, required: true }, // [{ member, percent, trips, excuse }]
   settings: { type: Object, required: true }, // camp requirement per troop
@@ -66,9 +67,10 @@ const requirementLines = computed(() => {
             </span>
           </p>
           <ExcuseToday
-            v-if="excuse !== undefined"
+            v-if="excuse !== undefined || (preview && member.meetingDay)"
             :member="member"
-            :excuse="excuse"
+            :excuse="excuse ?? null"
+            :sample-day="excuse === undefined ? MEETING_DAYS[member.meetingDay] : ''"
             :saving="excusing.has(member.id)"
             :error="!!excuseErrors[member.id]"
             :preview="preview"
