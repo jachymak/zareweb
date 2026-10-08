@@ -34,9 +34,10 @@ let directory = null
 
 async function loadDirectory() {
   if (directory && Date.now() - directory.at < DIRECTORY_TTL) return directory.entries
-  const [members, leaders] = await Promise.all([
+  const [members, leaders, others] = await Promise.all([
     db.collection('members').where('active', '==', true).get(),
     db.collection('skautisPeople').where('active', '==', true).get(),
+    db.collection('sharedContacts').get(),
   ])
   const privateOf = async (docs, id) =>
     docs.length ? db.getAll(...docs.map((d) => d.ref.collection('private').doc(id))) : []
@@ -49,6 +50,7 @@ async function loadDirectory() {
   const entries = directoryEntries({
     members: members.docs.map((d) => ({ id: d.id, ...d.data() })),
     leaders: leaders.docs.map((d) => ({ id: d.id, ...d.data() })),
+    others: others.docs.map((d) => ({ id: d.id, ...d.data() })),
     contacts: byParent(contactDocs),
     details: byParent(detailDocs),
   })

@@ -6,24 +6,20 @@ import AreaFooter from '@/components/AreaFooter.vue'
 import LeaderHeader from '@/components/leader/LeaderHeader.vue'
 import DirectoryRow from '@/components/directory/DirectoryRow.vue'
 import PhoneSetup from '@/components/directory/PhoneSetup.vue'
-import {
-  FILTERS,
-  hasContacts,
-  matchesFilter,
-  saveToPhone,
-} from '@/components/directory/directoryText'
+import SharedContactForm from '@/components/directory/SharedContactForm.vue'
+import { FILTERS, matchesFilter, saveToPhone } from '@/components/directory/directoryText'
 import { LOAD_ERROR } from '@/components/parent/parentText'
 import { foldText } from '@shared/skautisExport'
 
 // Contacts — SPEC §4.10: the leaders' directory of children (with parents) and
 // leaders to search and call / write from. „Přidat do telefonu“ offers saving
-// chosen ones (the list gets checkboxes) or the phone address book (CardDAV).
+// them one by one („uložit“ by each) or the phone address book (CardDAV).
 const auth = useAuthStore()
 
 const entries = ref([])
 const loading = ref(true)
 const loadError = ref(false)
-onMounted(async () => {
+async function load() {
   try {
     entries.value = await loadDirectory()
   } catch (e) {
@@ -32,7 +28,16 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
-})
+}
+onMounted(load)
+
+// The form of a shared contact („ostatní“): null, 'new' or the entry edited.
+const editing = ref(null)
+async function sharedSaved() {
+  editing.value = null
+  filter.value = 'others'
+  await load()
+}
 
 const search = ref('')
 const filter = ref('all')
@@ -50,41 +55,16 @@ const shown = computed(() => {
 })
 
 const key = (e) => `${e.kind}-${e.id}`
-const selected = ref(new Set())
-const selectedEntries = computed(() => entries.value.filter((e) => selected.value.has(key(e))))
-function setSelected(entry, on) {
-  const next = new Set(selected.value)
-  if (on) next.add(key(entry))
-  else next.delete(key(entry))
-  selected.value = next
-}
-const selectable = computed(() => shown.value.filter(hasContacts))
-const allShownSelected = computed(
-  () => selectable.value.length && selectable.value.every((e) => selected.value.has(key(e))),
-)
-function toggleAllShown() {
-  const next = new Set(selected.value)
-  for (const e of selectable.value) {
-    if (allShownSelected.value) next.delete(key(e))
-    else next.add(key(e))
-  }
-  selected.value = next
-}
-function saveSelected() {
-  saveToPhone(selectedEntries.value)
-}
-
-// null (just the directory) | 'menu' (the two ways) | 'pick' (checkboxes) | 'sync' (CardDAV)
+// null (just the directory) | 'menu' (the two ways) | 'pick' („uložit“ by each) | 'sync' (CardDAV)
 const mode = ref(null)
 function close() {
   mode.value = null
-  selected.value = new Set()
 }
 const WAYS = [
   {
     mode: 'pick',
     title: 'Uložit jednotlivě',
-    text: 'Vybereš, koho chceš, a uložíš si je jako své vlastní kontakty.',
+    text: 'U koho chceš, dáš „uložit“ a máš ho v telefonu jako svůj vlastní kontakt.',
   },
   {
     mode: 'sync',
@@ -97,7 +77,7 @@ const section = 'mx-auto max-w-[1000px] px-4 sm:px-6'
 
 <template>
   <LeaderHeader />
-  <main class="pb-24">
+  <main>
     <div :class="section" class="pt-6">
       <p class="m-0 mb-2 text-[15px]">
         <RouterLink to="/vedouci" class="inline-block py-1"
@@ -143,8 +123,15 @@ const section = 'mx-auto max-w-[1000px] px-4 sm:px-6'
         <PhoneSetup />
       </div>
       <div v-else-if="mode === 'pick'" class="note-warm mb-5" data-testid="pick-note">
-        Zaškrtni, koho chceš mít v telefonu, a dej „uložit vybrané“. Uloží se jako tvoje vlastní
-        kontakty („[uloženo] ⚜️ …“) — můžeš je upravit a zůstanou ti, jen se nebudou aktualizovat.
+        <p class="m-0">
+          U kontaktu, který chceš mít v telefonu, dej „uložit“. Uloží se jako tvůj vlastní kontakt
+          bez ⚜️ před jménem. Můžeš ho upravit a zůstane ti, jen se nebude aktualizovat.
+        </p>
+        <p class="m-0 mt-1">
+          <b class="font-semibold">Na iPhonu</b> se kontakt otevře jako náhled — sjeď dolů a ťukni
+          na „Vytvořit nový kontakt“.
+        </p>
+        <button type="button" class="btn-link mt-1" @click="close">hotovo</button>
       </div>
     </div>
 
@@ -173,17 +160,24 @@ const section = 'mx-auto max-w-[1000px] px-4 sm:px-6'
         </button>
       </div>
       <div class="flex flex-wrap items-center gap-x-4 text-[15px]">
+        <span class="text-muted-2">{{ shown.length }} z {{ entries.length }}</span>
         <button
-          v-if="mode === 'pick' && selectable.length"
+          v-if="!editing"
           type="button"
           class="btn-link"
-          data-testid="select-all"
-          @click="toggleAllShown"
+          data-testid="add-shared-contact"
+          @click="editing = 'new'"
         >
-          {{ allShownSelected ? 'zrušit výběr zobrazených' : 'vybrat všechny zobrazené' }}
+          + přidat kontakt (ostatní)
         </button>
-        <span class="text-muted-2">{{ shown.length }} z {{ entries.length }}</span>
       </div>
+      <SharedContactForm
+        v-if="editing"
+        :key="editing === 'new' ? 'new' : editing.id"
+        :contact="editing === 'new' ? null : editing"
+        @saved="sharedSaved"
+        @cancel="editing = null"
+      />
       <p v-if="!shown.length" class="m-0 text-[16px] text-muted">Nikdo takový tu není.</p>
       <ul class="m-0 flex list-none flex-col gap-2 p-0">
         <DirectoryRow
@@ -191,29 +185,11 @@ const section = 'mx-auto max-w-[1000px] px-4 sm:px-6'
           :key="key(entry)"
           :entry="entry"
           :can-import="auth.role === 'admin'"
-          :selecting="mode === 'pick'"
-          :selected="selected.has(key(entry))"
-          @update:selected="setSelected(entry, $event)"
+          :saving="mode === 'pick'"
+          @save="saveToPhone([entry])"
+          @edit="editing = entry"
         />
       </ul>
-    </div>
-
-    <div
-      v-if="mode === 'pick'"
-      class="fixed inset-x-0 bottom-0 z-20 border-t border-line-soft bg-cream/95 backdrop-blur-sm"
-    >
-      <div :class="section" class="flex flex-wrap items-center gap-x-5 gap-y-1 py-3">
-        <button
-          type="button"
-          class="btn-primary px-5 py-2.5 text-[16px]"
-          :disabled="!selectedEntries.length"
-          data-testid="save-selected"
-          @click="saveSelected"
-        >
-          uložit vybrané ({{ selectedEntries.length }})
-        </button>
-        <button type="button" class="btn-link" @click="close">hotovo</button>
-      </div>
     </div>
   </main>
   <AreaFooter />

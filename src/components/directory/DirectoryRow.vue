@@ -5,27 +5,30 @@ import { formatDate } from '@/components/waitlist/waitlistText'
 import { displayPhone } from '@shared/contacts'
 import { hasContacts, telHref } from './directoryText'
 
-// One child (with its parents) or leader in the directory — SPEC §4.10. On a
+// One child (with its parents), leader or shared contact („ostatní“, with
+// „upravit“) in the directory — SPEC §4.10. On a
 // phone folded to the name (a tap opens it), on wider screens always open.
-// While picking contacts to save, a checkbox selects it.
+// While saving contacts one by one, it has „uložit“.
 const props = defineProps({
   entry: { type: Object, required: true },
   canImport: { type: Boolean, default: false }, // admin: a link to the export import
-  selecting: { type: Boolean, default: false },
+  saving: { type: Boolean, default: false },
 })
-const selected = defineModel('selected', { type: Boolean, default: false })
+defineEmits(['save', 'edit'])
 
 const open = ref(false)
-const fullName = computed(() =>
-  props.entry.kind === 'child'
-    ? `${props.entry.firstName} ${props.entry.lastName}`
-    : props.entry.name,
-)
+// Under the name: full name and troop, „vedoucí“, or who a shared contact is.
+const subtitle = computed(() => {
+  const e = props.entry
+  if (e.kind === 'child') return `${e.firstName} ${e.lastName} · ${troopTag(e.troop)}`
+  if (e.kind === 'leader') return `${e.name} · vedoucí`
+  return [e.description, 'ostatní'].filter(Boolean).join(' · ')
+})
 // Contact lines with something in them: [{ label, name, phones, emails }]
 const lines = computed(() => {
   const e = props.entry
   const all =
-    e.kind === 'leader'
+    e.kind !== 'child'
       ? [
           {
             label: null,
@@ -50,18 +53,9 @@ const empty = computed(() => !hasContacts(props.entry))
 
 <template>
   <li
-    class="flex gap-3 rounded-[3px] border-[1.5px] bg-paper px-3.5 py-2.5 sm:px-[18px] sm:py-3"
-    :class="selecting && selected ? 'border-green' : 'border-[#e2d9c2]'"
+    class="flex gap-3 rounded-[3px] border-[1.5px] border-[#e2d9c2] bg-paper px-3.5 py-2.5 sm:px-[18px] sm:py-3"
     data-testid="directory-row"
   >
-    <input
-      v-if="selecting"
-      v-model="selected"
-      type="checkbox"
-      class="mt-1.5 size-5 flex-none accent-green"
-      :disabled="empty"
-      :aria-label="`vybrat ${entry.display}`"
-    />
     <div class="min-w-0 flex-1">
       <h3 class="m-0 text-[14.5px] font-normal">
         <button
@@ -75,7 +69,7 @@ const empty = computed(() => !hasContacts(props.entry))
               {{ entry.display }}
             </span>
             <span class="text-[#8a7b5e]">
-              {{ fullName }} · {{ entry.kind === 'leader' ? 'vedoucí' : troopTag(entry.troop) }}
+              {{ subtitle }}
             </span>
           </span>
           <span class="flex-none text-green sm:hidden" aria-hidden="true">
@@ -126,7 +120,31 @@ const empty = computed(() => !hasContacts(props.entry))
         <p v-if="entry.birthDate" class="m-0 mt-2 text-[14px] text-muted-2">
           narozeniny {{ formatDate(entry.birthDate) }}
         </p>
+        <p
+          v-if="entry.kind === 'other'"
+          class="m-0 mt-2 flex flex-wrap items-baseline gap-x-3 text-[14px] text-muted-2"
+        >
+          <span v-if="entry.createdByName">přidal(a) {{ entry.createdByName }}</span>
+          <button
+            v-if="!saving"
+            type="button"
+            class="btn-link py-0 text-[14px]"
+            :aria-label="`upravit ${entry.display}`"
+            @click="$emit('edit')"
+          >
+            upravit
+          </button>
+        </p>
       </div>
     </div>
+    <button
+      v-if="saving && !empty"
+      type="button"
+      class="btn-outline flex-none self-start px-3.5 py-1.5 text-[14.5px]"
+      :aria-label="`uložit ${entry.display} do telefonu`"
+      @click="$emit('save')"
+    >
+      uložit
+    </button>
   </li>
 </template>

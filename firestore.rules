@@ -115,7 +115,28 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(['groups', 'passwordSetAt'])
         && (resource == null || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['groups']))
         && (resource != null || !('passwordSetAt' in request.resource.data))
-        && request.resource.data.groups is list && request.resource.data.groups.size() <= 5;
+        && request.resource.data.groups is list && request.resource.data.groups.size() <= 6;
+    }
+
+    // Contacts outside the troop shared by all leaders („ostatní“, e.g. the mayor near the camp).
+    match /sharedContacts/{contactId} {
+      function validShared(d) {
+        return d.keys().hasOnly(['name', 'description', 'phone', 'email', 'createdBy', 'createdByName', 'createdAt', 'updatedBy', 'updatedAt'])
+          && d.name is string && d.name.size() > 0 && d.name.size() <= 100
+          && d.description is string && d.description.size() <= 200
+          && (d.phone == null || (d.phone is string && d.phone.size() <= 40))
+          && (d.email == null || (d.email is string && d.email.size() <= 100))
+          && (d.phone != null || d.email != null);
+      }
+      allow read, delete: if isLeader();
+      allow create: if isLeader() && validShared(request.resource.data)
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.updatedBy == request.auth.uid;
+      allow update: if isLeader() && validShared(request.resource.data)
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.createdByName == resource.data.createdByName
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.updatedBy == request.auth.uid;
     }
 
     // Hashes of the phone passwords (functions only).

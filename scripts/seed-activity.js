@@ -453,7 +453,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     .filter((m) => m.active)
 
   await clear('skautisPeople', ['private'])
-  for (const c of ['contacts', 'news', 'meetings', 'excuses', 'packingTemplates']) await clear(c)
+  for (const c of ['contacts', 'sharedContacts', 'news', 'meetings', 'excuses', 'packingTemplates'])
+    await clear(c)
   await clear('events', ['participants', 'poster'])
 
   const now = new Date()
@@ -475,6 +476,18 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     })
   }
   await put('contacts/seed-manual', { ...MANUAL_CONTACT, order: LEADERS.length })
+  // A shared contact of the leaders' directory („ostatní“, SPEC §4.10).
+  await put('sharedContacts/seed-starosta', {
+    name: 'Jaroslav Novotný',
+    description: 'starosta, Nová Ves u tábora',
+    phone: '+420 381 222 333',
+    email: null,
+    createdBy: 'seed',
+    createdByName: 'Hobit',
+    createdAt: now,
+    updatedBy: 'seed',
+    updatedAt: now,
+  })
   console.log(`${LEADERS.length} leaders and ${LEADERS.length + 1} contacts`)
 
   for (const d of await list('users')) {

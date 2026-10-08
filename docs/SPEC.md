@@ -435,28 +435,32 @@ Every leader manages all albums (like events).
 
 ### 4.10 Contacts (`/vedouci/kontakty`)
 
-The leaders' directory of children (with their parents) and leaders — to find someone and call or write right from the web, to save chosen contacts into the phone, or to have them all in the phone kept up to date (CardDAV). Replaces the shared Google account with contacts. Everything comes from skautIS: children and leaders from the sync, parents' and children's own contacts and leaders' birthdays from the export (§4.8 skautIS); inactive people are left out. Parents don't get this page (they have the leaders' contact cards, §3.1).
+The leaders' directory of children (with their parents), leaders and other people the leaders need (the mayor near the camp, …) — to find someone and call or write right from the web, to save chosen contacts into the phone, or to have them all in the phone kept up to date (CardDAV). Replaces the shared Google account with contacts. Children and leaders come from skautIS: from the sync, parents' and children's own contacts and leaders' birthdays from the export (§4.8 skautIS); inactive people are left out. **„ostatní“** are contacts the leaders add themselves (`sharedContacts`): always shared by all leaders, any leader may change or delete them. Parents don't get this page (they have the leaders' contact cards, §3.1).
 
-**List** — first of all a directory: a search field (nickname, first or last name of the child, leader or parent, ignoring case and diacritics) and a group filter „všichni“ / „vlčušky“ / „skauti a skautky“ / „vedoucí“ (with counts). Rows sorted by nickname (or first name), each with the nickname, full name and troop tag (or „vedoucí“); on a phone a row is folded to that line and a tap opens it, wider screens show all rows open:
+**List** — first of all a directory: a search field (nickname, first or last name of the child, leader or parent, ignoring case and diacritics) and a group filter „všichni“ / „vlčušky“ / „skauti a skautky“ / „vedoucí“ / „ostatní“ (with counts). Rows sorted by nickname (or first name), each with the nickname, full name and troop tag (or „vedoucí“); on a phone a row is folded to that line and a tap opens it, wider screens show all rows open:
 - **child**: each parent with its label and name („otec · Jan Novák“), phone as `tel:` (split into threes) and e-mail as `mailto:`; the child's own phone / e-mail labelled „dítě“; birthday. No contacts → „kontakty chybí“ (for the admin with „nahraj export ze skautISu“ → Administration).
 - **leader**: phone, e-mail, birthday.
+- **ostatní**: name, who it is („starosta, Nová Ves u tábora“), phone, e-mail, „přidal(a) {nickname}“ and „upravit“.
+
+**„+ přidat kontakt (ostatní)“** (by the count) and „upravit“ open a form above the list: name (required), „kdo to je“, phone, e-mail (one of them required, `sharedContactErrors`), a note that all leaders see it and may change it, „uložit“ / „zrušit“, and when editing „smazat kontakt“ confirmed in place („Smazat {name} pro všechny?“). After saving the list shows „ostatní“.
 
 **„Přidat do telefonu“** (button by the heading; „zavřít“ closes whatever it opened) offers two ways:
-1. **„Uložit jednotlivě“** — the list gets checkboxes, a note explains the saved copies, „vybrat všechny zobrazené“ selects the rows the search and filter show, and a bar at the bottom has „uložit vybrané (N)“ and „hotovo“. Saving downloads one `zare-kontakty.vcf` with all of them (the iPhone offers to add them, Android imports them). A downloaded card is the CardDAV card (below) with the name starting „[uloženo] ⚜️ …“ and the note ending „staženo z webu Záře {D. M. RRRR}“ — an own copy the user may edit, which stays in the phone when the child leaves (and comes back with their own iCloud / Google account after losing the phone).
+1. **„Uložit jednotlivě“** — every row gets „uložit“, which downloads that one contact as a `.vcf` named by its nickname (the iPhone opens it as a preview — the note says to scroll down and tap „Vytvořit nový kontakt“; Android imports it); a note explains it and has „hotovo“. A downloaded card is the CardDAV card (below) **without ⚜️** (that marks the synced contacts), its note ending „staženo z webu Záře {D. M. RRRR}“ — an own copy the user may edit, which stays in the phone when the child leaves (and comes back with their own iCloud / Google account after losing the phone).
 2. **„Mít všechny a pořád aktuální“** — an address book the phone keeps in sync (CardDAV, read-only); „← zpět na výběr“:
-   - **What to have** — groups as checkboxes, saved at once (`phoneContacts/{uid}.groups`): „rodiče vlčušek“, „rodiče skautů a skautek“, „vlčušky (jejich vlastní čísla)“, „skauti a skautky (jejich vlastní čísla)“, „vedoucí“. Nothing ticked = an empty address book. A note says the choice can change any time and the phone picks it up at its next sync (no new password needed), „✓ uloženo“ after each change. Once a password exists the groups fold to „V telefonu máš: …“ with „upravit výběr“ (and „hotovo“ folds them again).
+   - **What to have** — groups as checkboxes, saved at once (`phoneContacts/{uid}.groups`): „rodiče vlčušek“, „rodiče skautů a skautek“, „vlčušky (jejich vlastní čísla)“, „skauti a skautky (jejich vlastní čísla)“, „vedoucí“, „ostatní (starosta u tábora a tak)“. Nothing ticked = an empty address book. A note says the choice can change any time and the phone picks it up at its next sync (no new password needed), „✓ uloženo“ after each change. Once a password exists the groups fold to „V telefonu máš: …“ with „upravit výběr“ (and „hotovo“ folds them again).
    - **Password for the phone** — „vytvořit heslo pro telefon“ (`createPhonePassword`) shows the generated password once (with „zkopírovat“); later „vytvořit nové heslo“ (confirmed; the old one stops working, so phones set up with it stop syncing). Shows when the password was created.
    - **„Nastav telefon“** — folded, opens by itself after a password is created: the server address and the user name (the account e-mail), and steps with a switch iPhone / Android: iPhone — Nastavení → Aplikace → Kontakty → Účty kontaktů → Přidat účet → Jiný → Přidat účet CardDAV; server, user name, password, popis „Záře“. Android — first install DAVx⁵, two ways as numbered steps: free from the project's GitHub releases (link; scroll to „Assets“ of the newest version, download the file ending „-ose-release.apk“, open it and install, allowing installs from the browser), or from Google Play (paid once); then give it access to contacts only, allow syncing regardless of battery saving, „+“ → „Přihlásit se pomocí URL a uživatelského jména“ (the address, user name, password), contact group method „Skupiny jsou kategorie u jednotlivých kontaktů“, tick the address book „Záře“.
    - A note: the contacts in the phone can't be changed — an edit or a deleted contact comes back at the next sync, and a child who leaves disappears; to keep someone, use „Uložit jednotlivě“.
 
-**Cards** (`functions/src/shared/directory.js`, vCard 3.0 by `vcard.js`; the same for CardDAV and the download):
+**Cards** (`functions/src/shared/directory.js`, vCard 3.0 by `vcard.js`; the same for CardDAV and the download, which only leaves out ⚜️):
 - **child** — first name „⚜️ {nickname, else first name}“, last name „({last name} {first name})“, company „Záře · vlčušky“ / „Záře · skauti“, birthday, category the troop name, note „otec: Jan Novák, matka: Eva Nováková“. Phones and e-mails of the parents labelled by their label when a parents' group of the child's troop is chosen, and the child's own ones labelled „dítě“ when its children's group is chosen — one card per child either way; a child with nothing to show is left out.
 - **leader** — first name „⚜️ {nickname, else first name}“, company „Záře · vedoucí“, phone and e-mail (no labels), birthday, category „vedoucí“, note the full name.
+- **ostatní** — first name „⚜️ {name}“, company „Záře · ostatní“, phone and e-mail, category „ostatní“, note who it is.
 - The company is required: an iPhone shows „Unknown“ above the name of a CardDAV contact without a company or nickname. It doesn't show notes of CardDAV contacts, but finds contacts by them.
 
 **CardDAV server** — the HTTP function `carddav` (`https://europe-west3-{project}.cloudfunctions.net/carddav`), read-only: Basic authentication with the account e-mail (any case) and the phone password, valid only while the account is a leader or admin (contacts already in a phone stay until the account is removed there). One address book „Záře“ with the user's groups: discovery (`PROPFIND` of the root, principal, home), the address book with `getctag` / `getetag` (hashes of the content) and the privilege `read` only, cards by `GET`, `REPORT` `addressbook-multiget` and `addressbook-query`; `sync-collection` is not offered; any write → 403. The data are cached in the function instance for 5 minutes (not in the emulator) and a successful sign-in for a minute, so a removed role or a new password takes up to a minute to apply.
 
-**Reads:** `members` + `private/contacts`, `skautisPeople` + `private/details`, own `phoneContacts/{uid}`. **Writes:** own `phoneContacts/{uid}.groups`; the password via `createPhonePassword`.
+**Reads:** `members` + `private/contacts`, `skautisPeople` + `private/details`, `sharedContacts`, own `phoneContacts/{uid}`. **Writes:** `sharedContacts`, own `phoneContacts/{uid}.groups`; the password via `createPhonePassword`.
 
 ---
 
@@ -535,8 +539,19 @@ Sync overwrites only the skautIS fields (name, nickname, phone, e-mail, `active`
 
 | Field           | Type       | Notes |
 | --------------- | ---------- | ----- |
-| `groups`        | string[]   | written by the owner: `vlcParents`, `ssParents`, `vlcChildren`, `ssChildren`, `leaders` |
+| `groups`        | string[]   | written by the owner: `vlcParents`, `ssParents`, `vlcChildren`, `ssChildren`, `leaders`, `others` |
 | `passwordSetAt` | Timestamp? | written by `createPhonePassword` |
+
+### `sharedContacts/{contactId}` — „ostatní“ in the directory, §4.10
+
+| Field            | Type      | Notes |
+| ---------------- | --------- | ----- |
+| `name`           | string    | required |
+| `description`    | string    | who it is, e.g. „starosta, Nová Ves u tábora“ (may be empty) |
+| `phone`, `email` | string?   | at least one |
+| `createdBy`, `createdByName` | string | uid and nickname of the leader who added it (kept on edits) |
+| `createdAt`, `updatedAt` | Timestamp | |
+| `updatedBy`      | string    | uid of the last editor |
 
 ### `phonePasswords/{uid}` (functions only) — §4.10
 
@@ -730,6 +745,7 @@ Mock only in v1 — no collections yet. Later: clubhouse rules (settings) and th
 | `settings/skautis`          | —                          | —                | —                                                        | read              | rw    |
 | `phoneContacts/{uid}`       | —                          | —                | —                                                        | own: read, write `groups` | same |
 | `phonePasswords`            | —                          | —                | —                                                        | —                 | — (functions only) |
+| `sharedContacts`            | —                          | —                | —                                                        | rw                | rw    |
 | `settings/recorders`        | —                          | —                | —                                                        | read              | rw    |
 | `invitations`               | —                          | —                | —                                                        | —                 | read (writes: `inviteParent`) |
 | `skautisSync`               | —                          | —                | —                                                        | —                 | — (functions only) |

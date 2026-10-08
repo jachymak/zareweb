@@ -10,6 +10,7 @@ import { crc32, deflateRawSync } from 'node:zlib'
 import { readFile } from 'node:fs/promises'
 import {
   FIRESTORE,
+  listDocs,
   FUNCTIONS,
   SCREENSHOTS,
   clearAuthAccounts,
@@ -173,12 +174,6 @@ async function dav(method, path, auth, body, depth = '1') {
   return { status: res.status, text: await res.text() }
 }
 
-async function download(page, click) {
-  const [file] = await Promise.all([page.waitForEvent('download'), click()])
-  // Unfolded (long vCard lines continue on the next line after a space).
-  return (await readFile(await file.path(), 'utf8')).replace(/\r\n /g, '')
-}
-
 const rows = (page) => page.getByTestId('directory-row')
 const rowOf = (page, name) =>
   rows(page).filter({ has: page.locator('h3 .font-hand').getByText(name, { exact: true }) })
@@ -291,7 +286,7 @@ export default async function directorySuite({ browser, check }) {
     await page.waitForURL(/\/vedouci\/kontakty$/)
     await rows(page).first().waitFor()
     const count = await rows(page).count()
-    check('list: active children and leaders', count === 6 + 8, String(count))
+    check('list: active children, leaders and ostatní', count === 6 + 8 + 1, String(count))
     const vydra = (await rowOf(page, 'Vydra').innerText()).toLowerCase()
     check(
       'list: child with parents, own contacts and birthday',
@@ -329,38 +324,39 @@ export default async function directorySuite({ browser, check }) {
     check('filter: vlčušky', (await rows(page).count()) === 4, String(await rows(page).count()))
 
     check(
-      'list: a plain directory first (no checkboxes)',
-      (await page.getByRole('checkbox').count()) === 0,
+      'list: a plain directory first (no save buttons)',
+      (await page.getByRole('button', { name: /^uložit .* do telefonu$/ }).count()) === 0,
     )
     await page.getByTestId('phone-setup-toggle').click()
     await page.getByRole('button', { name: /^Uložit jednotlivě/ }).click()
-    await page.getByTestId('pick-note').waitFor()
-    await rowOf(page, 'Sojka').getByRole('checkbox').check()
-    const one = await download(page, () => page.getByTestId('save-selected').click())
     check(
-      'download: one saved card',
-      one.includes('N:(Krejčí Klára);[uloženo] ⚜️ Sojka;;;') &&
+      'pick: iPhone note',
+      (await page.getByTestId('pick-note').innerText()).includes('Vytvořit nový kontakt'),
+    )
+    const saveSojka = rowOf(page, 'Sojka').getByRole('button', { name: /^uložit .* do telefonu$/ })
+    const [file] = await Promise.all([page.waitForEvent('download'), saveSojka.click()])
+    // Unfolded (long vCard lines continue on the next line after a space).
+    const one = (await readFile(await file.path(), 'utf8')).replace(/\r\n /g, '')
+    check(
+      'download: one card, without ⚜️, named by the nickname',
+      file.suggestedFilename() === 'Sojka.vcf' &&
+        (one.match(/BEGIN:VCARD/g) ?? []).length === 1 &&
+        one.includes('N:(Krejčí Klára);Sojka;;;') &&
+        !one.includes('⚜️') &&
+        !one.includes('uloženo') &&
         one.includes('ORG:Záře · vlčušky') &&
         one.includes('X-ABLabel:matka') &&
         one.includes('BDAY:2016-11-02') &&
         /NOTE:otec: Rodič Testovací\\, matka: Marie Krejčí\\nstaženo z webu Záře /.test(one),
       one,
     )
-    await page.getByTestId('select-all').click()
-    check(
-      'pick: all shown selected',
-      (await page.getByTestId('save-selected').innerText()).includes('(4)'),
-    )
-    const all = await download(page, () => page.getByTestId('save-selected').click())
-    check(
-      'download: chosen ones in one file',
-      (all.match(/BEGIN:VCARD/g) ?? []).length === 4,
-      String((all.match(/BEGIN:VCARD/g) ?? []).length),
-    )
     await page.getByRole('button', { name: /^všichni \d+$/ }).click()
     await page.screenshot({ path: `${SCREENSHOTS}directory-desktop.png`, fullPage: true })
-    await page.getByRole('button', { name: 'hotovo' }).click()
-    check('pick: done hides the checkboxes', (await page.getByRole('checkbox').count()) === 0)
+    await page.getByTestId('pick-note').getByRole('button', { name: 'hotovo' }).click()
+    check(
+      'pick: done hides the save buttons',
+      (await page.getByRole('button', { name: /^uložit .* do telefonu$/ }).count()) === 0,
+    )
   }
 
   // ---- the phone ----
@@ -472,6 +468,94 @@ export default async function directorySuite({ browser, check }) {
     )
   }
 
+  // ---- ostatní (shared contacts) ----
+  {
+    await page.getByRole('button', { name: /^všichni \d+$/ }).click()
+    await page.getByTestId('add-shared-contact').click()
+    const form = page.getByTestId('shared-contact-form')
+    await form.getByRole('button', { name: 'uložit' }).click()
+    check(
+      'ostatní: validated',
+      (await form.getByText('Vyplň jméno.').isVisible()) &&
+        (await form.getByText('Vyplň telefon nebo e-mail.').isVisible()),
+    )
+    await form.getByLabel('Jméno').fill('Marie Kovářová')
+    await form.getByLabel('Kdo to je').fill('správkyně tábořiště')
+    await form.getByLabel('Telefon').fill('777 123 456')
+    await form.getByRole('button', { name: 'uložit' }).click()
+    await form.waitFor({ state: 'detached' })
+    const marie = rowOf(page, 'Marie Kovářová')
+    await marie.waitFor()
+    const text = await marie.innerText()
+    check(
+      'ostatní: added, the list shows ostatní',
+      text.includes('správkyně tábořiště · ostatní') &&
+        text.includes('777 123 456') &&
+        text.includes('přidal(a) Ondys') &&
+        (await page.getByRole('button', { name: /^ostatní 2$/ }).getAttribute('aria-pressed')) ===
+          'true',
+      text,
+    )
+    await marie.getByRole('button', { name: 'upravit Marie Kovářová' }).click()
+    await form.getByLabel('E-mail').fill('kovarova@example.cz')
+    await form.getByRole('button', { name: 'uložit' }).click()
+    await form.waitFor({ state: 'detached' })
+    const stored = (await listDocs('sharedContacts'))
+      .map((d) => Object.fromEntries(Object.entries(d.fields).map(([k, v]) => [k, fieldValue(v)])))
+      .find((c) => c.name === 'Marie Kovářová')
+    check(
+      'ostatní: stored with author, edited',
+      stored?.email === 'kovarova@example.cz' &&
+        stored.phone === '777 123 456' &&
+        stored.createdByName === 'Ondys' &&
+        Boolean(stored.createdAt),
+      JSON.stringify(stored),
+    )
+
+    // The phone panel is still open from above.
+    await page.getByRole('button', { name: 'upravit výběr' }).click()
+    await page
+      .getByTestId('phone-groups')
+      .getByLabel('ostatní (starosta u tábora a tak)')
+      .check()
+    await page.getByTestId('groups-saved').waitFor()
+    const book = await dav(
+      'PROPFIND',
+      '/addressbooks/zare/',
+      basic('vedouci@zare.test', password),
+      '<d:propfind xmlns:d="DAV:"><d:prop><d:getetag/></d:prop></d:propfind>',
+    )
+    const others = [...book.text.matchAll(/other-([A-Za-z0-9-]+)\.vcf/g)].map((m) => m[1])
+    const card = await dav(
+      'GET',
+      `/addressbooks/zare/other-${others.find((id) => id !== 'seed-starosta')}.vcf`,
+      basic('vedouci@zare.test', password),
+    )
+    check(
+      'ostatní: in the phone with the group',
+      others.length === 2 &&
+        card.text.includes('N:;⚜️ Marie Kovářová;;;') &&
+        card.text.includes('ORG:Záře · ostatní') &&
+        card.text.includes('NOTE:správkyně tábořiště'),
+      card.text,
+    )
+    await page.getByTestId('phone-setup-toggle').click()
+
+    await marie.getByRole('button', { name: 'upravit Marie Kovářová' }).click()
+    await form.getByRole('button', { name: 'smazat kontakt' }).click()
+    await form.getByRole('button', { name: 'ano, smazat' }).click()
+    await form.waitFor({ state: 'detached' })
+    await marie.waitFor({ state: 'detached', timeout: 10000 }).catch(() => {})
+    check(
+      'ostatní: deleted for everyone',
+      (await marie.count()) === 0 &&
+        !(await listDocs('sharedContacts')).some(
+          (d) => fieldValue(d.fields.name) === 'Marie Kovářová',
+        ),
+    )
+    check('ostatní: no console errors', errors.length === 0, errors.join(' | '))
+  }
+
   // ---- security rules ----
   {
     const leaderToken = (await signInRest('vedouci@zare.test', PASSWORD)).idToken
@@ -486,6 +570,22 @@ export default async function directorySuite({ browser, check }) {
         (await patchDocAs(leaderToken, `phoneContacts/${leaderUid}`, {
           passwordSetAt: { timestampValue: new Date().toISOString() },
         })) === 403,
+    )
+    const sharedFields = {
+      name: { stringValue: 'X' },
+      description: { stringValue: '' },
+      phone: { stringValue: '1' },
+      email: { nullValue: null },
+      createdBy: { stringValue: 'someone-else' },
+      createdByName: { stringValue: 'X' },
+      updatedBy: { stringValue: leaderUid },
+    }
+    check(
+      "rules: ostatní — parents can't read, a leader can't add as someone else",
+      (await fetch(`${FIRESTORE}/sharedContacts/seed-starosta`, {
+        headers: { Authorization: `Bearer ${parent.idToken}` },
+      }).then((r) => r.status)) === 403 &&
+        (await patchDocAs(leaderToken, 'sharedContacts/fake', sharedFields)) === 403,
     )
     check(
       "rules: a parent can't have phone contacts",

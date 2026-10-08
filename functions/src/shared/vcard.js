@@ -3,9 +3,8 @@
 
 import { normalizePhone } from './waitlistRules.js'
 
-// Marks the troop's contacts in the phone; a downloaded copy is prefixed with SAVED_MARK.
+// Marks the troop's synced contacts in the phone (CardDAV); downloaded copies go without it.
 export const CARD_MARK = '⚜️'
-export const SAVED_MARK = '[uloženo]'
 
 const escape = (value) =>
   String(value)

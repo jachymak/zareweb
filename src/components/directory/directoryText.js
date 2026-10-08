@@ -7,17 +7,20 @@ export const FILTERS = [
   { value: 'vlc', label: 'vlčušky' },
   { value: 'ss', label: 'skauti a skautky' },
   { value: 'leaders', label: 'vedoucí' },
+  { value: 'others', label: 'ostatní' },
 ]
 
 export const matchesFilter = (entry, filter) =>
   filter === 'all' ||
   (filter === 'leaders'
     ? entry.kind === 'leader'
-    : entry.kind === 'child' && entry.troop === filter)
+    : filter === 'others'
+      ? entry.kind === 'other'
+      : entry.kind === 'child' && entry.troop === filter)
 
 // Whether an entry has any phone or e-mail.
 export const hasContacts = (e) =>
-  e.kind === 'leader'
+  e.kind !== 'child'
     ? Boolean(e.phone || e.email)
     : e.parents.some((p) => p.phone || p.email) ||
       e.own.phones.length > 0 ||
@@ -29,9 +32,9 @@ const isIos = () =>
   /iPad|iPhone|iPod/.test(navigator.userAgent) ||
   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
 
-// Downloads the entries as one .vcf — own copies „[uloženo] ⚜️ …“ with all
-// their contacts. The iPhone opens a vCard shown in the browser as contacts to
-// add, other systems get the file.
+// Downloads the entries as a .vcf — own copies (without ⚜️) with all their
+// contacts. The iPhone shows it as a preview with „Vytvořit nový kontakt“,
+// other systems get the file.
 export function saveToPhone(entries) {
   const savedOn = pragueToday()
   const text = entries
@@ -42,7 +45,8 @@ export function saveToPhone(entries) {
   const url = URL.createObjectURL(new Blob([text], { type: 'text/vcard;charset=utf-8' }))
   const link = document.createElement('a')
   link.href = url
-  if (!isIos()) link.download = 'zare-kontakty.vcf'
+  if (!isIos())
+    link.download = entries.length === 1 ? `${entries[0].display}.vcf` : 'zare-kontakty.vcf'
   document.body.append(link)
   link.click()
   link.remove()

@@ -1,10 +1,13 @@
 import {
+  addDoc,
   collection,
+  deleteDoc,
   doc,
   onSnapshot,
   query,
   serverTimestamp,
   setDoc,
+  updateDoc,
   where,
   writeBatch,
 } from 'firebase/firestore'
@@ -17,6 +20,7 @@ import { fromQuery } from './utils'
 
 const members = collection(db, 'members')
 const people = collection(db, 'skautisPeople')
+const shared = collection(db, 'sharedContacts')
 
 // { parentId: data } of the `private/{name}` docs under the given records.
 async function privateDocs(parent, ids, name) {
@@ -26,12 +30,13 @@ async function privateDocs(parent, ids, name) {
   )
 }
 
-// Active members and leaders with their private contacts / details — what the
-// directory and the export import work with.
+// Active members and leaders with their private contacts / details, and the
+// shared contacts of „ostatní“ — what the directory and the export import work with.
 export async function loadDirectoryData() {
-  const [memberList, leaderList] = await Promise.all([
+  const [memberList, leaderList, others] = await Promise.all([
     getDocs(query(members, where('active', '==', true))).then(fromQuery),
     getDocs(query(people, where('active', '==', true))).then(fromQuery),
+    getDocs(shared).then(fromQuery),
   ])
   const [contacts, details] = await Promise.all([
     privateDocs(
@@ -45,13 +50,44 @@ export async function loadDirectoryData() {
       'details',
     ),
   ])
-  return { members: memberList, leaders: leaderList, contacts, details }
+  return { members: memberList, leaders: leaderList, others, contacts, details }
 }
 
 // Directory entries of active children and leaders (shared/directory.js).
 export async function loadDirectory() {
   return directoryEntries(await loadDirectoryData())
 }
+
+// --- shared contacts („ostatní“) ---------------------------------------------------
+
+const sharedFields = ({ name, description, phone, email }) => ({
+  name: name.trim(),
+  description: description.trim(),
+  phone: phone.trim() || null,
+  email: email.trim() || null,
+})
+
+// fields: { name, description, phone, email }; by: { uid, name } of the leader.
+export function addSharedContact(fields, by) {
+  return addDoc(shared, {
+    ...sharedFields(fields),
+    createdBy: by.uid,
+    createdByName: by.name,
+    createdAt: serverTimestamp(),
+    updatedBy: by.uid,
+    updatedAt: serverTimestamp(),
+  })
+}
+
+export function updateSharedContact(id, fields, by) {
+  return updateDoc(doc(shared, id), {
+    ...sharedFields(fields),
+    updatedBy: by.uid,
+    updatedAt: serverTimestamp(),
+  })
+}
+
+export const deleteSharedContact = (id) => deleteDoc(doc(shared, id))
 
 // Writes a planned export import (planContactsImport): children's contacts and
 // leaders' birthdays, plus the date of the import.
