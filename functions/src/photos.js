@@ -6,7 +6,7 @@ import { HttpsError, onCall } from 'firebase-functions/https'
 import { onObjectFinalized } from 'firebase-functions/storage'
 import exifReader from 'exif-reader'
 import sharp from 'sharp'
-import { db } from './admin.js'
+import { db, requireLeader } from './admin.js'
 import { BASE_OPTIONS } from './options.js'
 
 // gRPC status codes of Firestore errors.
@@ -231,15 +231,6 @@ async function retry(fn, attempts = 3) {
       await new Promise((r) => setTimeout(r, 500 * i))
     }
   }
-}
-
-async function requireLeader(request) {
-  const uid = request.auth?.uid
-  if (!uid) throw new HttpsError('unauthenticated', 'Sign in first.')
-  const role = (await db.doc(`users/${uid}`).get()).get('role')
-  if (!['leader', 'admin'].includes(role))
-    throw new HttpsError('permission-denied', 'Leaders only.')
-  return uid
 }
 
 const validId = (id) => typeof id === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(id)

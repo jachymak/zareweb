@@ -88,8 +88,8 @@ export default async function leader({ browser, check }) {
     check('greeting: role title and troop', role.startsWith('rádce Bobrů · vlčušky'), role)
     const tools = page.getByRole('navigation', { name: 'Nástroje' })
     check(
-      'tools: five links, Klubovna greyed out, no Administrace for a leader',
-      (await tools.getByRole('link').count()) === 5 &&
+      'tools: six links, Klubovna greyed out, no Administrace for a leader',
+      (await tools.getByRole('link').count()) === 6 &&
         (await tools.getByRole('link', { name: 'Klubovna' }).count()) === 0 &&
         (await tools.getByText('Klubovna').count()) === 1 &&
         (await tools.getByRole('link', { name: 'Administrace' }).count()) === 0,
@@ -173,15 +173,13 @@ export default async function leader({ browser, check }) {
       (await page.getByRole('heading', { name: 'Fotky' }).isVisible()) &&
         (await page.getByRole('link', { name: 'všechna alba →' }).isVisible()),
     )
-    const contacts = page.getByRole('region', { name: 'Kontakty na vedoucí' })
-    const contactsFolded = (await contacts.getByRole('listitem').count()) === 0
-    await contacts.getByRole('button', { name: 'zobrazit ↓' }).click()
     check(
-      'sections: contacts folded, open on the home troop',
-      contactsFolded &&
-        (await contacts.getByRole('listitem').count()) > 0 &&
-        (await contacts.getByRole('button', { name: 'vlčušky' }).getAttribute('aria-pressed')) ===
-          'true',
+      'sections: no contacts (they have their own page)',
+      (await page.getByRole('region', { name: 'Kontakty na vedoucí' }).count()) === 0 &&
+        (await page
+          .getByRole('navigation', { name: 'Nástroje' })
+          .getByRole('link', { name: 'Kontakty' })
+          .isVisible()),
     )
     check(
       'sections: no camp requirement (it is in attendance)',
@@ -228,7 +226,11 @@ export default async function leader({ browser, check }) {
       if (plan.kind === 'meeting') {
         const line = card.getByTestId('today-excuses')
         const got = (await line.count()) ? await line.innerText() : ''
-        check('today: excused children of the meeting listed', got === 'omluveno: Liška, Sojka (nemoc)', got)
+        check(
+          'today: excused children of the meeting listed',
+          got === 'omluveno: Liška, Sojka (nemoc)',
+          got,
+        )
       }
       check(`today: ${weekdayOf(date)} ${date} is „${plan.kind}“`, ok, text)
     }

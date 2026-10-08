@@ -1,5 +1,5 @@
 // Seeds the Firestore emulator with children (as the skautIS sync will import
-// them) and their parents' contacts. Pairs `rodic@zare.test` with two children
+// them) and their contacts (as the skautIS export import writes them). Pairs `rodic@zare.test` with two children
 // (one per troop) and sets some meeting days (normally set in Administration).
 // Run after `seed-users.js`. Usage: npm run seed:members. Writes bypass security rules.
 
@@ -18,7 +18,14 @@ export const MEMBERS = [
     nickname: 'Žabka',
     troop: 'vlc',
     birthDate: '2017-05-14',
-    parents: [{ name: 'Jana Nováková', email: 'cekajici@zare.test', phone: '+420 731 111 222' }],
+    parents: [
+      {
+        name: 'Jana Nováková',
+        email: 'cekajici@zare.test',
+        phone: '+420 731 111 222',
+        label: 'matka',
+      },
+    ],
   },
   {
     id: '900102',
@@ -28,7 +35,14 @@ export const MEMBERS = [
     troop: 'vlc',
     birthDate: '2016-11-02',
     meetingDay: 'thu',
-    parents: [{ name: 'Rodič Testovací', email: 'rodic@zare.test', phone: '+420 602 333 444' }],
+    parents: [
+      {
+        name: 'Rodič Testovací',
+        email: 'rodic@zare.test',
+        phone: '+420 602 333 444',
+        label: 'otec',
+      },
+    ],
     pairedWith: ['rodic@zare.test'],
   },
   {
@@ -40,8 +54,13 @@ export const MEMBERS = [
     birthDate: '2018-02-20',
     meetingDay: 'mon',
     parents: [
-      { name: 'Tomáš Dub', email: 'dub.tomas@example.cz', phone: '+420 777 555 666' },
-      { name: 'Petra Dubová', email: 'petra.dubova@example.cz', phone: null },
+      {
+        name: 'Tomáš Dub',
+        email: 'dub.tomas@example.cz',
+        phone: '+420 777 555 666',
+        label: 'otec',
+      },
+      { name: 'Petra Dubová', email: 'petra.dubova@example.cz', phone: null, label: 'matka' },
     ],
   },
   {
@@ -51,7 +70,9 @@ export const MEMBERS = [
     nickname: 'Kulíšek',
     troop: 'vlc',
     birthDate: '2017-09-30',
-    parents: [{ name: 'Jana Registrovaná', email: 'jana.jina@example.cz', phone: null }],
+    parents: [
+      { name: 'Jana Registrovaná', email: 'jana.jina@example.cz', phone: null, label: 'matka' },
+    ],
   },
   {
     id: '900201',
@@ -62,8 +83,18 @@ export const MEMBERS = [
     birthDate: '2013-04-08',
     meetingDay: 'tue',
     parents: [
-      { name: 'Tomáš Dub', email: 'dub.tomas@example.cz', phone: '+420 777 555 666' },
-      { name: 'Rodič Testovací', email: 'rodic@zare.test', phone: '+420 602 333 444' },
+      {
+        name: 'Tomáš Dub',
+        email: 'dub.tomas@example.cz',
+        phone: '+420 777 555 666',
+        label: 'otec',
+      },
+      {
+        name: 'Rodič Testovací',
+        email: 'rodic@zare.test',
+        phone: '+420 602 333 444',
+        label: 'otec',
+      },
     ],
     pairedWith: ['rodic@zare.test'],
   },
@@ -75,7 +106,15 @@ export const MEMBERS = [
     troop: 'ss',
     birthDate: '2012-12-12',
     meetingDay: 'tue',
-    parents: [{ name: 'Jiří Pokorný', email: 'pokorny.j@example.cz', phone: '+420 608 777 888' }],
+    parents: [
+      {
+        name: 'Jiří Pokorný',
+        email: 'pokorny.j@example.cz',
+        phone: '+420 608 777 888',
+        label: 'otec',
+      },
+    ],
+    own: { phones: ['+420 605 101 202'], emails: ['vydra@example.cz'] }, // from the skautIS export
   },
   {
     id: '900203',
@@ -84,7 +123,7 @@ export const MEMBERS = [
     nickname: 'Ježek',
     troop: 'ss',
     birthDate: '2011-07-01',
-    parents: [{ name: 'Eva Horáková', email: 'horakova@example.cz', phone: null }],
+    parents: [{ name: 'Eva Horáková', email: 'horakova@example.cz', phone: null, label: 'matka' }],
     active: false, // left the group — no longer in skautIS
   },
 ]
@@ -123,6 +162,7 @@ const now = new Date()
 for (const {
   id,
   parents,
+  own = { phones: [], emails: [] },
   pairedWith = [],
   active = true,
   meetingDay = null,
@@ -137,7 +177,7 @@ for (const {
     active,
     syncedAt: now,
   })
-  await put(`members/${id}/private/contacts`, { parents })
+  await put(`members/${id}/private/contacts`, { parents, own })
   console.log(
     `${child.troop.padEnd(3)} ${child.nickname.padEnd(8)} ${child.firstName} ${child.lastName}`,
   )

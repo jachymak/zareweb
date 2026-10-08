@@ -30,6 +30,7 @@ export const LEADERS = [
   {
     id: '800001',
     nickname: 'Ondys',
+    birthDate: '1999-12-24', // private/details, from the skautIS export
     name: 'Ondřej Sýkora',
     roleTitle: 'rádce Bobrů',
     group: 'vlc',
@@ -39,6 +40,7 @@ export const LEADERS = [
   {
     id: '800002',
     nickname: 'Nina',
+    birthDate: '2001-03-05', // private/details, from the skautIS export
     name: 'Nina Bártová',
     roleTitle: 'zástupkyně vedoucího',
     group: 'vlc',
@@ -57,6 +59,7 @@ export const LEADERS = [
   {
     id: '800011',
     nickname: 'Hobit',
+    birthDate: '1996-07-19', // private/details, from the skautIS export
     name: 'Theodor Mikolajek',
     roleTitle: 'vedoucí oddílu',
     group: 'ss',
@@ -449,18 +452,19 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     }))
     .filter((m) => m.active)
 
-  for (const c of ['skautisPeople', 'contacts', 'news', 'meetings', 'excuses', 'packingTemplates'])
-    await clear(c)
+  await clear('skautisPeople', ['private'])
+  for (const c of ['contacts', 'news', 'meetings', 'excuses', 'packingTemplates']) await clear(c)
   await clear('events', ['participants', 'poster'])
 
   const now = new Date()
-  for (const [order, { id, group, ...person }] of LEADERS.entries()) {
+  for (const [order, { id, group, birthDate, ...person }] of LEADERS.entries()) {
     await put(`skautisPeople/${id}`, {
       ...person,
       troop: group === 'other' ? null : group,
       active: true,
       syncedAt: now,
     })
+    if (birthDate) await put(`skautisPeople/${id}/private/details`, { birthDate })
     await put(`contacts/seed-${id}`, {
       personId: id,
       group,

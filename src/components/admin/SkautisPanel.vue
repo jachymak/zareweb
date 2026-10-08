@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue'
 import { TROOPS } from '@/constants/troops'
 import { getSkautisSettings } from '@/services/settings'
 import { applySkautisSync, previewSkautisSync, skautisLogin } from '@/services/skautis'
+import ContactsImport from './ContactsImport.vue'
 import SkautisChanges from './SkautisChanges.vue'
 import { appliedText, formatDateTime, skippedText, syncErrorText } from './skautisText'
 
@@ -185,5 +186,7 @@ const unitText = (units) =>
         vedoucí/admin každého z nich nebo střediska.
       </p>
     </div>
+
+    <ContactsImport />
   </section>
 </template>

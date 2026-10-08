@@ -109,6 +109,12 @@ const router = createRouter({
       meta: { auth: true, roles: LEADERS },
     },
     {
+      path: '/vedouci/kontakty',
+      name: 'leader-contacts',
+      component: () => import('@/views/ContactsView.vue'),
+      meta: { auth: true, roles: LEADERS },
+    },
+    {
       path: '/vedouci/nahled',
       name: 'leader-preview',
       component: () => import('@/views/LeaderPreviewView.vue'),

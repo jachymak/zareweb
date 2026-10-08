@@ -7,7 +7,6 @@ import TroopSwitch from '@/components/leader/TroopSwitch.vue'
 import TodayCard from '@/components/leader/TodayCard.vue'
 import UpcomingEvents from '@/components/leader/UpcomingEvents.vue'
 import EventCalendar from '@/components/parent/EventCalendar.vue'
-import LeaderContacts from '@/components/parent/LeaderContacts.vue'
 import NewsSection from '@/components/parent/NewsSection.vue'
 import PhotoAlbums from '@/components/parent/PhotoAlbums.vue'
 import { LOAD_ERROR } from '@/components/parent/parentText'
@@ -27,7 +26,6 @@ const {
   news,
   albums,
   albumOf,
-  leaderContacts,
   organizersOf,
   participantOf,
 } = useLeaderHome()
@@ -71,7 +69,7 @@ const section = 'mx-auto max-w-[1000px] px-4 sm:px-6'
         <PhotoAlbums :albums="albums" :today="today" />
       </div>
 
-      <!-- Folded sections, one row each between lines. -->
+      <!-- Folded section, one row between lines. -->
       <div :class="section" class="pt-[42px]">
         <div class="border-b-[1.5px] border-line-soft">
           <EventCalendar
@@ -82,12 +80,6 @@ const section = 'mx-auto max-w-[1000px] px-4 sm:px-6'
             :organizers-of="organizersOf"
             :participant-of="participantOf"
             :album-of="albumOf"
-            folded
-            class="has-[[aria-expanded=true]]:pb-8"
-          />
-          <LeaderContacts
-            :contacts="leaderContacts"
-            :initial-group="person?.troop === 'ss' ? 'ss' : 'vlc'"
             folded
             class="has-[[aria-expanded=true]]:pb-8"
           />

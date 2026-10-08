@@ -1,14 +1,12 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { pragueToday, schoolYearRange } from '@shared/schoolYear'
 import { canJoin, isOpenForSignUp } from '@shared/events'
-import { contactCard } from '@shared/contacts'
 import { meetingTimeShort, troopDay } from '@shared/meetingDays'
 import { listEvents, listParticipants } from '@/services/events'
 import { subscribeExcuses } from '@/services/excuses'
 import { listMembers } from '@/services/members'
 import { listNews } from '@/services/news'
 import { listAlbums } from '@/services/photos'
-import { listContacts } from '@/services/contacts'
 import { listLeaders } from '@/services/skautisPeople'
 import { pinnedFirst } from '@/composables/useParentArea'
 import { useLeaderTroopStore } from '@/stores/leaderTroop'
@@ -16,8 +14,8 @@ import { useMeetingScheduleStore } from '@/stores/meetingSchedule'
 import { nicknameOf } from '@shared/names'
 
 // Data of the leader home (SPEC §4.1). The today card follows the troop picked
-// on the page (shared with attendance); news, the calendar, photos and contacts
-// are of both troops, as the parents get them.
+// on the page (shared with attendance); news, the calendar and photos are of
+// both troops, as the parents get them.
 export function useLeaderHome() {
   const today = pragueToday()
   const schoolYear = schoolYearRange(today)
@@ -34,7 +32,6 @@ export function useLeaderHome() {
   const events = ref([])
   const news = ref([])
   const albums = ref([]) // published, newest first
-  const contacts = ref([])
   const leaders = ref({}) // skautisPeople by id
   const participants = ref({}) // { eventId: { memberId: doc } }
   const excuses = ref({ vlc: [], ss: [] }) // today's, followed live
@@ -48,22 +45,19 @@ export function useLeaderHome() {
 
   onMounted(async () => {
     try {
-      const [, , memberList, eventList, newsList, albumList, contactList, people] =
-        await Promise.all([
-          leaderTroop.init(),
-          scheduleStore.load(),
-          listMembers(),
-          listEvents({ fromDate: schoolYear.from }),
-          listNews(),
-          listAlbums({ publishedOnly: true }),
-          listContacts(),
-          listLeaders({ activeOnly: false }),
-        ])
+      const [, , memberList, eventList, newsList, albumList, people] = await Promise.all([
+        leaderTroop.init(),
+        scheduleStore.load(),
+        listMembers(),
+        listEvents({ fromDate: schoolYear.from }),
+        listNews(),
+        listAlbums({ publishedOnly: true }),
+        listLeaders({ activeOnly: false }),
+      ])
       members.value = memberList
       events.value = eventList
       news.value = newsList
       albums.value = albumList
-      contacts.value = contactList
       leaders.value = Object.fromEntries(people.map((p) => [p.id, p]))
       participants.value = await loadParticipants(eventList)
       for (const code of ['vlc', 'ss']) {
@@ -134,11 +128,6 @@ export function useLeaderHome() {
   // Album of an event, for the „fotky“ link of past events in the calendar.
   const albumOf = (event) => albums.value.find((a) => a.eventId === event.id) ?? null
 
-  // Contact cards with their leader's details, in the admin's order.
-  const leaderContacts = computed(() =>
-    contacts.value.map((c) => contactCard(c, leaders.value[c.personId])).filter(Boolean),
-  )
-
   return {
     today,
     loading,
@@ -153,7 +142,6 @@ export function useLeaderHome() {
     news: computed(() => pinnedFirst(news.value)),
     albums: computed(() => albums.value.slice(0, 4)),
     albumOf,
-    leaderContacts,
     organizersOf,
     participantOf,
   }

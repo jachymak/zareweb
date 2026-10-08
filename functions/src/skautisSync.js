@@ -35,7 +35,12 @@ async function loadCurrent() {
     members: membersSnap.docs.map((d, i) => ({
       id: d.id,
       ...d.data(),
-      parents: contacts[i].get('parents') ?? [],
+      // Compared as skautIS gives them: the export's labels (otec / matka) aren't a change.
+      parents: (contacts[i].get('parents') ?? []).map(({ name, email, phone }) => ({
+        name,
+        email,
+        phone,
+      })),
     })),
     people: peopleSnap.docs.map((d) => ({ id: d.id, ...d.data() })),
   }
@@ -137,14 +142,18 @@ export const applySkautisSync = onCall(BASE_OPTIONS, async (request) => {
       }),
     )
     if (withParents) {
-      ops.push((b) => b.set(ref.collection('private').doc('contacts'), { parents: m.parents }))
+      ops.push((b) =>
+        b.set(ref.collection('private').doc('contacts'), { parents: m.parents }, { merge: true }),
+      )
     }
   }
   for (const m of plan.members.changed) {
     const ref = db.doc(`members/${m.id}`)
     ops.push((b) => b.update(ref, { ...pick(m, memberFields), active: true, syncedAt: now }))
     if (m.fields.some((f) => f.field === 'parents')) {
-      ops.push((b) => b.set(ref.collection('private').doc('contacts'), { parents: m.parents }))
+      ops.push((b) =>
+        b.set(ref.collection('private').doc('contacts'), { parents: m.parents }, { merge: true }),
+      )
     }
   }
   for (const m of plan.members.removed) {

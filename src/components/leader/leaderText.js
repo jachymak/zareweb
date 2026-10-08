@@ -7,6 +7,7 @@ export const TOOLS = [
   { to: '/vedouci/akce', label: 'Akce a plakátky' },
   { to: '/vedouci/aktuality', label: 'Aktuality' },
   { to: '/vedouci/fotky', label: 'Fotky' },
+  { to: '/vedouci/kontakty', label: 'Kontakty' },
   { to: '/vedouci/klubovna', label: 'Klubovna', disabled: true },
   { to: '/vedouci/cekaci-listina', label: 'Čekací listina' },
 ]

@@ -98,6 +98,29 @@ service cloud.firestore {
     match /skautisPeople/{personId} {
       allow read: if isApproved();
       allow write: if isAdmin();
+
+      // Birthdays from the skautIS export (directory, SPEC §4.10) — not for parents.
+      match /private/{docId} {
+        allow read: if isLeader();
+        allow write: if isAdmin();
+      }
+    }
+
+    // ---- the leaders' directory in the phone (CardDAV, SPEC §4.10) ----
+
+    // Chosen groups; passwordSetAt is written by createPhonePassword.
+    match /phoneContacts/{uid} {
+      allow read: if isLeader() && request.auth.uid == uid;
+      allow create, update: if isLeader() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['groups', 'passwordSetAt'])
+        && (resource == null || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['groups']))
+        && (resource != null || !('passwordSetAt' in request.resource.data))
+        && request.resource.data.groups is list && request.resource.data.groups.size() <= 5;
+    }
+
+    // Hashes of the phone passwords (functions only).
+    match /phonePasswords/{uid} {
+      allow read, write: if false;
     }
 
     // ---- attendance ----

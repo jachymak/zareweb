@@ -63,6 +63,7 @@ Routes are in Czech (they are user-visible).
 | 17 | Photos (management)         | `/vedouci/fotky`                    | leader  | — (cards from page 5)             |
 | 18 | Album (management)          | `/vedouci/fotky/:albumId`           | leader  | — (as page 16 + tools)            |
 | 19 | Troop history               | `/historie`                         | public  | — (header as page 2)              |
+| 20 | Contacts (directory)        | `/vedouci/kontakty`                 | leader  | — (visual language of the leader pages) |
 
 Not in scope: `Zare - cesta responzivne` — design study of the hand-drawn trail on mobile; visual reference for page 1 only.
 Password reset uses Firebase's default hosted page.
@@ -234,8 +235,8 @@ Common header (as in the design, no menu): „Skautský oddíl Záře“ (→ le
 ### 4.1 Leader home (`/vedouci`)
 
 1. **Greeting** — „Ahoj, {nickname}!“, role title + troop, today's date.
-2. **Tools** — links to Docházka, Akce a plakátky, Aktuality, Fotky, Klubovna, Čekací listina; **Administrace** only for admin.
-The today card follows the troop switch; news, the calendar, photos and contacts are of both troops (what the parents get). The greeting uses the linked person's nickname and role title, otherwise the account's first name and „vedoucí“ / „správce“. Today's date next to it is left out on a phone.
+2. **Tools** — links to Docházka, Akce a plakátky, Aktuality, Fotky, Kontakty, Klubovna, Čekací listina; **Administrace** only for admin.
+The today card follows the troop switch; news, the calendar and photos are of both troops (what the parents get). The greeting uses the linked person's nickname and role title, otherwise the account's first name and „vedoucí“ / „správce“. Today's date next to it is left out on a phone.
 
 3. **Today card** (based on the chosen troop and today's date):
    - today is a meeting day of the troop → „schůzka v klubovně, 17–19 h“ + „zapsat docházku →“ (opens that meeting: `/vedouci/dochazka?oddil={troop}&schuzka={date}`); below, children of the troop excused from it, followed live: „omluveno: Liška, Sojka (nemoc)“;
@@ -247,11 +248,11 @@ The today card follows the troop switch; news, the calendar, photos and contacts
 4. **Nearest events** — upcoming events of both troops with registration started (as in §3.1, incl. those past the deadline): date, tag, title, organizer, **signed up / eligible** count (active children who can join, §6.4); below, the deadline chip with the time left as on the parent home (§3.1) and „přihlášení:“ with the nicknames of the signed-up children (first 6, then „+ N dalších“; „zatím nikdo“), poster link („plakátek“ → poster page, or „vyplnit plakátek“ → editor `/vedouci/akce?akce={eventId}`), link „jmenný seznam a platby →“ (attendance → trips tab). Link „přidat akci nebo plakátek →“.
 5. **Aktuality** — all news of both troops, as on the parent home (§3.1).
 6. **Fotky** — the 4 latest published albums of both troops, as on the parent home.
-7. **Výpravník** and **Kontakty na vedoucí** — the parent home's calendar of both troops and the contact cards (§3.1), each folded into one row between lines (heading + „zobrazit ↓“, the whole row opens it); the contacts' group switch starts on the leader's home troop.
+7. **Výpravník** — the parent home's calendar of both troops (§3.1), folded into one row between lines (heading + „zobrazit ↓“, the whole row opens it). Contacts are on their own page (§4.10).
 
 The camp requirement summary is only in attendance (§4.2).
 
-**Reads:** own `users/{uid}`, `members`, `events` + `participants`, `news`, `albums`, `contacts`, `skautisPeople`.
+**Reads:** own `users/{uid}`, `members`, `events` + `participants`, `news`, `albums`, `skautisPeople`.
 
 ### 4.2 Attendance (`/vedouci/dochazka`)
 
@@ -399,6 +400,11 @@ Tabs (only implemented ones are shown, in the order skautIS · děti · účty a
    - **Who is imported** (shown on the tab as a note): each troop is one oddíl in skautIS (vlčušky 116.22.220, skauti a skautky 116.22.222), a person's troop is their oddíl. Members are split by **membership category**: vlče, světluška, skaut, skautka → **children** (`members`: first name, last name, nickname, troop, date of birth, **parents' contacts** — name, e-mail, phone); rover, ranger → **leaders** (`skautisPeople`: name, nickname, phone, e-mail; whatever their age, no child record). Other categories (dospělý, benjamínek, ostatní — former or inactive people) are left out as if they weren't there, only counted in the preview. Functions in skautIS are not used: the meeting day, a leader's home troop and role title are set by hand in Administration (děti, kontakty) and the sync never overwrites them. People of the středisko are not imported.
    - **Flow:** the tab shows the date of the last sync and „Synchronizovat ze skautISu“ (a link to the skautIS login with the app id). skautIS posts the login token to the app's registered URL `https://zare.skauting.cz/skautis/prihlaseni.php` (`public/skautis/prihlaseni.php` — the web is static on the skauting.cz hosting, so this PHP relay stores nothing and redirects to `/vedouci/administrace#skautis=<token>&role=…&unit=…`; the URL fragment never reaches a server; for development, `prihlaseni.php?vyvoj=1` sets a cookie in that browser so its logins go to `http://localhost:5173` instead, `?vyvoj=0` turns it off). Administration takes the token from the hash, drops it from the URL, opens this tab and calls `previewSkautisSync`: for each oddíl the login switches (`LoginUpdate`) to a role of the admin that can see it (a role on the oddíl, vedoucí/admin first, else on a unit above it, e.g. the středisko), loads the members, their details, children's parents and leaders' contacts, then logs the token out. The tab shows „Co se změní“: the oddíly used, then children and leaders, each with **noví**, **změnění** (with the changed fields, „přezdívka: Vydra → Vydrák“; a returning person „znovu v oddíle“), **odešlí** and the number unchanged, and the left-out categories. „použít změny“ writes it (`applySkautisSync`) and shows „Hotovo. Děti: 1 nový, 3 změnění, 1 odešlý. Vedoucí: …“; „zrušit“ goes back. Errors are explained: no role that can see an oddíl, oddíl not found, login expired, a skautIS error, loaded data too old (1 hour) or already used. **Without parents' contacts:** when skautIS refuses `PersonParentAll` (not in the basic package of functions an app gets — the production app starts with it), the sync still runs: children are loaded without parents, the preview says „Kontakty na rodiče skautIS nepovolil, zůstávají ty dřív uložené.“, stored parents' contacts are neither compared nor overwritten and new children get none. Parent accounts then work as usual; only the e-mail-based suggestions in „účty a párování“ and the parent e-mails (and „pozvat“) in „děti bez účtu“ are missing.
    - **Writes:** new children get `meetingDay: null`, `parentUids: []`; changed ones get only the skautIS fields (+ `private/contacts` when the parents changed) and `active: true`; gone ones `active: false` (history, pairings and the meeting day stay). New leaders get `troop` = their oddíl as a first guess and `roleTitle: null`; changed ones only name, nickname, phone, e-mail and `active: true`; gone ones `active: false`. `settings/skautis.lastSyncAt` / `lastSyncBy`.
+   - **Contacts from the skautIS export** („Kontakty z exportu“, a block on the tab): skautIS doesn't give the app parents' contacts (`PersonParentAll`), so parents' contacts, children's own contacts and leaders' birthdays (for the directory, §4.10) come from a **person export** the admin makes in skautIS by hand and uploads here. The tab describes the export template: units 116.22.220 and 116.22.222 without subunits; categories Vlče, Světluška, Skaut, Skautka, Rover, Ranger; columns Jméno, Příjmení, Přezdívka, Datum narození, Kategorie, E-mail (hlavní), E-mail (další), Mobil / telefon (hlavní), Mobil (další), Telefon (další), and for Otec, Matka, Ostatní: jméno, příjmení, mail, telefon (Ostatní also typ). „nahrát export (XLSX)“ reads the file **in the browser** as skautIS gives it (the header row is found by „Jméno“; rows above it are skipped) and shows a preview — nothing is written yet:
+     - **children**: with changed contacts (parents and own contacts, before → after), the number unchanged; **leaders**: new or changed birthdays;
+     - **not on the web**: rows that match no active child / leader („nejdřív synchronizuj ze skautISu“); **not in the export**: active children / leaders without a row (their stored contacts stay);
+     - **differences against the synced data** (both come from skautIS, so a difference means one of them is outdated — „synchronizuj znovu, případně stáhni nový export“): nickname, birth date, a leader's phone or e-mail.
+     When nothing would change (e.g. nobody from the export is on the web yet), „použít“ is replaced by „Není co uložit…“ with advice to sync from skautIS first. „použít“ writes the contacts (`members/{id}/private/contacts`: `parents`, `own`, `importedAt`) and birthdays (`skautisPeople/{id}/private/details`) in one batch and sets `settings/skautis.lastContactsImportAt` / `lastContactsImportBy`; the block shows the date of the last import. **Matching**: children by first name + last name + birth date, leaders (Rover, Ranger) by first + last name, ignoring case and diacritics; a name matching two people counts as not found. **Parents**: Otec → label „otec“, Matka → „matka“, Ostatní → its typ (or „jiný kontakt“); placeholders like „(jméno otce)“ and empty parents are dropped; a cell with several values („a, b“) gives the first. **Own contacts** of a child: all values of the phone and e-mail columns, normalised, deduplicated, without those of its parents (children often have a parent's e-mail in skautIS). Parents of leaders and the leaders' own contacts from the export are not stored — phone and e-mail of leaders come from the sync. The web account e-mails are never used for contacts. A later sync with parents from skautIS (once `PersonParentAll` is allowed) compares parents without their labels and overwrites `parents` of a changed child as before (label null), keeping `own`.
 2. **Children (děti)** — active children of the troop chosen in the troop switch (top right, shared with the leader pages; §4 intro) (nickname, name), with the number of children per meeting day and a link to the other troop when it has children without a day; the admin **clicks the meeting day** for each child (one of the troop's two days), saved at once and followed live; clicking the chosen day again clears it. Children without a valid meeting day (none, or a day the troop no longer meets on) are highlighted in red with a count on top and a filter „jen bez dne“ (they don't appear in any meeting's attendance).
 3. **Accounts & pairing (účty a párování)** — accounts: e-mail, status („potvrzený“ / „čeká na potvrzení“ / „bez přístupu“), the note from registration, **suggested children** (active children whose parent e-mail in skautIS matches the account e-mail, or whom the note names — first + last name or nickname, ignoring case and diacritics), assigned children as chips (nickname + troop, × to unassign), „+ přiřadit dítě“ (pick from imported `members`). **A parent can have several children, and a child can belong to several parent accounts** (e.g. mother and father separately); any of them can sign the child up. Unassigned children are not visible to parents. Pending accounts: „schválit“ and „zamítnout“ (role `none`), with a note below that approving e-mails the account („Po schválení přijde na {e-mail} e-mail, že může na web.“) — or that it already got the e-mail once (`approvalNotifiedAt`) and won't again; `none` accounts: „znovu aktivovat“ (back to pending) or „smazat“ (Auth account + profile). Accounts are filtered by status (čekající / rodiče / vedoucí / bez přístupu, with counts; opens on čekající) and update live. One more filter, **„děti bez účtu“** (with count), lists active children no parent account is paired with, with their parents' contacts from skautIS (name, e-mail as mailto, phone as tel) — whom to ask to create an account. Each parent e-mail has **„pozvat“**, confirmed in a second step („Poslat pozvánku na {e-mail} ({name})?“ — „Ano, poslat“ / „zrušit“) (`inviteParent`: the informative `parentInvitation` e-mail naming that parent's active children and asking them to create an account, with a plain link to `/prihlaseni` — not personalised, they may register with another address, e.g. Google; the account then starts as pending and is approved as usual); a sent invitation shows „pozváno {date}“ with „poslat znovu“; a parent e-mail that already has an account shows „má už účet“ instead. For a pending account, picked children (suggestion or „+ přiřadit dítě“) are only chosen — chips with ×, nothing saved — until „schválit jako rodiče“ pairs them all and approves the account as a parent in one write, so the approval e-mail lists them all; for a parent account, pairing is saved at once. **A parent account may have no children** (e.g. the child moved on to the leaders, but the parent still wants to see photos and events): a pending account can be approved with „schválit jako rodiče bez dětí“, and unpairing a parent's last child keeps the account a parent; „odebrat přístup“ / „zamítnout“ sets `none` and unpairs all children. **Leaders are paired the same way with their person from skautIS** (`skautisPeople`, `users.personId` — nickname, home troop and role title on the leader pages, the default organizer / author): suggested leaders (labelled „vedoucí“; e-mail in skautIS equals the account e-mail, or the account name or note names them — full name or nickname) and „+ přiřadit vedoucího“ (search among active leaders not linked to another account; one account per leader). For a pending account a picked leader is only chosen (choosing a leader drops chosen children and vice versa) until „schválit jako vedoucího“ sets role `leader` and links the person in one write; without a chosen leader „schválit jako vedoucího“ approves the account unlinked (e.g. a leader not imported from skautIS). On a leader / admin account the link is saved at once and can be removed (×) or changed; an unlinked one shows „Účet není propojený s vedoucím ze skautISu…“. „odebrat přístup“ also unlinks. Leader accounts can be switched between „vedoucí“ and „správce“ here too. The admin can't change their own role or access, but can link their own account to skautIS.
 4. **Contacts (kontakty)** — the list shown to parents in „Vedoucí“, stored as its own collection. Intro text as in the design; a group switch (vlčušky / skauti a skautky / ostatní, with counts) shows one group at a time in its order. A contact **linked to a person from skautIS** shows nickname, name, phone and e-mail read-only; a missing phone/e-mail shows „doplň telefon / e-mail ve skautISu“ in red (parents then just don't see it until skautIS is updated and synced); a leader no longer active in skautIS is flagged („rodiče ho nevidí“). The admin edits the **role** (pre-filled with the leader's `roleTitle` from skautIS, can be overwritten — „ve skautISu: … · vrátit“; the same text or an emptied field means no override), the **group** (moving a contact puts it at the end of the other group), the **photo** and the **order** (↑ výš / ↓ níž within the group); „odebrat kontakt“. „+ přidat kontakt“ picks an active skautIS leader not yet in the shown group (one person can be in several groups). In „ostatní“ also **„+ ruční kontakt“** — someone outside the import (e.g. people of the středisko): nickname, name, phone, e-mail (a name or nickname and a phone or e-mail required, `manualContactErrors`) and role, all editable. **Photo**: „nahrát / změnit fotku“ (JPEG / PNG / WebP, HEIC rejected as in §4.9) is cut from the middle to 3:4 and resized to 480×640 JPEG in the browser, shown at once; „odebrat fotku“. Everything, photos included, is saved with one „uložit kontakty“ („neuložené změny“ until then): new photos are uploaded to Storage `contacts/`, then all contacts are written in one batch (order = position in the list), then photos no contact uses any more are deleted.
@@ -426,6 +432,31 @@ Every leader manages all albums (like events).
 - **„smazat celé album“** (bottom) → „Smazat album včetně všech fotek? Nejde to vrátit.“ → deletes it with all files; „jak album vidí rodiče →“.
 
 **Reads:** `albums`, `albums/{id}/photos`, `events`. **Writes:** `albums` (not the count), Storage `originals/`; deleting via `deletePhotos` / `deleteAlbum`.
+
+### 4.10 Contacts (`/vedouci/kontakty`)
+
+The leaders' directory of children (with their parents) and leaders — to find someone and call or write right from the web, to save chosen contacts into the phone, or to have them all in the phone kept up to date (CardDAV). Replaces the shared Google account with contacts. Everything comes from skautIS: children and leaders from the sync, parents' and children's own contacts and leaders' birthdays from the export (§4.8 skautIS); inactive people are left out. Parents don't get this page (they have the leaders' contact cards, §3.1).
+
+**List** — first of all a directory: a search field (nickname, first or last name of the child, leader or parent, ignoring case and diacritics) and a group filter „všichni“ / „vlčušky“ / „skauti a skautky“ / „vedoucí“ (with counts). Rows sorted by nickname (or first name), each with the nickname, full name and troop tag (or „vedoucí“); on a phone a row is folded to that line and a tap opens it, wider screens show all rows open:
+- **child**: each parent with its label and name („otec · Jan Novák“), phone as `tel:` (split into threes) and e-mail as `mailto:`; the child's own phone / e-mail labelled „dítě“; birthday. No contacts → „kontakty chybí“ (for the admin with „nahraj export ze skautISu“ → Administration).
+- **leader**: phone, e-mail, birthday.
+
+**„Přidat do telefonu“** (button by the heading; „zavřít“ closes whatever it opened) offers two ways:
+1. **„Uložit jednotlivě“** — the list gets checkboxes, a note explains the saved copies, „vybrat všechny zobrazené“ selects the rows the search and filter show, and a bar at the bottom has „uložit vybrané (N)“ and „hotovo“. Saving downloads one `zare-kontakty.vcf` with all of them (the iPhone offers to add them, Android imports them). A downloaded card is the CardDAV card (below) with the name starting „[uloženo] ⚜️ …“ and the note ending „staženo z webu Záře {D. M. RRRR}“ — an own copy the user may edit, which stays in the phone when the child leaves (and comes back with their own iCloud / Google account after losing the phone).
+2. **„Mít všechny a pořád aktuální“** — an address book the phone keeps in sync (CardDAV, read-only); „← zpět na výběr“:
+   - **What to have** — groups as checkboxes, saved at once (`phoneContacts/{uid}.groups`): „rodiče vlčušek“, „rodiče skautů a skautek“, „vlčušky (jejich vlastní čísla)“, „skauti a skautky (jejich vlastní čísla)“, „vedoucí“. Nothing ticked = an empty address book. A note says the choice can change any time and the phone picks it up at its next sync (no new password needed), „✓ uloženo“ after each change. Once a password exists the groups fold to „V telefonu máš: …“ with „upravit výběr“ (and „hotovo“ folds them again).
+   - **Password for the phone** — „vytvořit heslo pro telefon“ (`createPhonePassword`) shows the generated password once (with „zkopírovat“); later „vytvořit nové heslo“ (confirmed; the old one stops working, so phones set up with it stop syncing). Shows when the password was created.
+   - **„Nastav telefon“** — folded, opens by itself after a password is created: the server address and the user name (the account e-mail), and steps with a switch iPhone / Android: iPhone — Nastavení → Aplikace → Kontakty → Účty kontaktů → Přidat účet → Jiný → Přidat účet CardDAV; server, user name, password, popis „Záře“. Android — first install DAVx⁵, two ways as numbered steps: free from the project's GitHub releases (link; scroll to „Assets“ of the newest version, download the file ending „-ose-release.apk“, open it and install, allowing installs from the browser), or from Google Play (paid once); then give it access to contacts only, allow syncing regardless of battery saving, „+“ → „Přihlásit se pomocí URL a uživatelského jména“ (the address, user name, password), contact group method „Skupiny jsou kategorie u jednotlivých kontaktů“, tick the address book „Záře“.
+   - A note: the contacts in the phone can't be changed — an edit or a deleted contact comes back at the next sync, and a child who leaves disappears; to keep someone, use „Uložit jednotlivě“.
+
+**Cards** (`functions/src/shared/directory.js`, vCard 3.0 by `vcard.js`; the same for CardDAV and the download):
+- **child** — first name „⚜️ {nickname, else first name}“, last name „({last name} {first name})“, company „Záře · vlčušky“ / „Záře · skauti“, birthday, category the troop name, note „otec: Jan Novák, matka: Eva Nováková“. Phones and e-mails of the parents labelled by their label when a parents' group of the child's troop is chosen, and the child's own ones labelled „dítě“ when its children's group is chosen — one card per child either way; a child with nothing to show is left out.
+- **leader** — first name „⚜️ {nickname, else first name}“, company „Záře · vedoucí“, phone and e-mail (no labels), birthday, category „vedoucí“, note the full name.
+- The company is required: an iPhone shows „Unknown“ above the name of a CardDAV contact without a company or nickname. It doesn't show notes of CardDAV contacts, but finds contacts by them.
+
+**CardDAV server** — the HTTP function `carddav` (`https://europe-west3-{project}.cloudfunctions.net/carddav`), read-only: Basic authentication with the account e-mail (any case) and the phone password, valid only while the account is a leader or admin (contacts already in a phone stay until the account is removed there). One address book „Záře“ with the user's groups: discovery (`PROPFIND` of the root, principal, home), the address book with `getctag` / `getetag` (hashes of the content) and the privilege `read` only, cards by `GET`, `REPORT` `addressbook-multiget` and `addressbook-query`; `sync-collection` is not offered; any write → 403. The data are cached in the function instance for 5 minutes (not in the emulator) and a successful sign-in for a minute, so a removed role or a new password takes up to a minute to apply.
+
+**Reads:** `members` + `private/contacts`, `skautisPeople` + `private/details`, own `phoneContacts/{uid}`. **Writes:** own `phoneContacts/{uid}.groups`; the password via `createPhonePassword`.
 
 ---
 
@@ -467,7 +498,13 @@ Document id = skautIS person id, so re-imports keep all references (attendance, 
 
 #### `members/{memberId}/private/contacts` (leaders only)
 
-`parents: { name, email, phone }[]` — parents' contacts from skautIS. Separate doc because Firestore can't hide individual fields from paired parents.
+Contacts from skautIS — separate doc because Firestore can't hide individual fields from paired parents.
+
+| Field        | Type                                   | Notes |
+| ------------ | -------------------------------------- | ----- |
+| `parents`    | `{ name, email, phone, label }[]`      | parents' contacts — from the export (§4.8 skautIS; `label` „otec“ / „matka“ / the typ of Ostatní) or from the sync (`label` null) |
+| `own`        | `{ phones: string[], emails: string[] }`? | the child's own contacts, from the export |
+| `importedAt` | Timestamp?                             | last export import that wrote it |
 
 ### `invitations/{email}` — parent invitations (§4.8 „děti bez účtu“)
 
@@ -489,6 +526,21 @@ Document id = skautIS person id. **The single identity of a leader**: the accoun
 | `syncedAt`  | Timestamp  |                                          |
 
 Sync overwrites only the skautIS fields (name, nickname, phone, e-mail, `active`, `syncedAt`).
+
+#### `skautisPeople/{personId}/private/details` (leaders only)
+
+`birthDate` (string `YYYY-MM-DD`) — from the export (§4.8 skautIS), for the directory (§4.10). Separate doc because parents can read `skautisPeople`.
+
+### `phoneContacts/{uid}` — §4.10
+
+| Field           | Type       | Notes |
+| --------------- | ---------- | ----- |
+| `groups`        | string[]   | written by the owner: `vlcParents`, `ssParents`, `vlcChildren`, `ssChildren`, `leaders` |
+| `passwordSetAt` | Timestamp? | written by `createPhonePassword` |
+
+### `phonePasswords/{uid}` (functions only) — §4.10
+
+`email` (lower-case account e-mail = the CardDAV user name), `hash` (SHA-256 of the generated password, hex), `createdAt`.
 
 ### `meetings/{troop_date}` (e.g. `vlc_2026-03-19`)
 
@@ -649,7 +701,7 @@ Document id = first 24 hex chars of SHA-256 of `firstname|lastname|birthDate` (l
 
 ### `settings/skautis` (admin only)
 
-`lastSyncAt`, `lastSyncBy` (uid), set by `applySkautisSync`.
+`lastSyncAt`, `lastSyncBy` (uid), set by `applySkautisSync`. `lastContactsImportAt`, `lastContactsImportBy` (uid), set by the export import (§4.8 skautIS).
 
 ### `skautisSync/pending` (functions only)
 
@@ -676,11 +728,13 @@ Mock only in v1 — no collections yet. Later: clubhouse rules (settings) and th
 | `settings/meetings`         | read                       | read             | read                                                     | read              | rw    |
 | `settings/emails`           | —                          | —                | —                                                        | read              | rw    |
 | `settings/skautis`          | —                          | —                | —                                                        | read              | rw    |
+| `phoneContacts/{uid}`       | —                          | —                | —                                                        | own: read, write `groups` | same |
+| `phonePasswords`            | —                          | —                | —                                                        | —                 | — (functions only) |
 | `settings/recorders`        | —                          | —                | —                                                        | read              | rw    |
 | `invitations`               | —                          | —                | —                                                        | —                 | read (writes: `inviteParent`) |
 | `skautisSync`               | —                          | —                | —                                                        | —                 | — (functions only) |
 | `skautisPeople`             | —                          | —                | read **[?]**                                             | read              | rw    |
-| `members/*/private/*`       | —                          | —                | —                                                        | read              | rw    |
+| `members/*/private/*`, `skautisPeople/*/private/*` | — | —                | —                                                        | read              | rw    |
 | `waitlist`                  | — (via `submitWaitlist`)   | —                | —                                                        | rw                | rw    |
 | `waitlistResets`            | —                          | —                | —                                                        | read              | read  |
 | `users/{uid}`               | —                          | own: create/read, update `note`/`displayName` | own: read                   | read all          | rw    |
@@ -754,6 +808,8 @@ Firebase Blaze plan with Cloud Functions (region `europe-west3`, code in `functi
 | `processPhoto`              | Storage object finalized (`originals/` only) | EXIF rotation, preview + thumbnail (sharp), size, dominant colour, `takenAt`; writes the photo doc, raises `photoCount`, first cover; failures → `status: error`. 1 GiB, 120 s, ≤ 10 instances |
 | `deletePhotos`              | callable (leader)               | delete photo docs + files, lower the count, move the cover |
 | `deleteAlbum`               | callable (leader)               | delete the album, its photos and all its files           |
+| `createPhonePassword`       | callable (leader)               | generate the CardDAV password of the caller (shown once), store its hash in `phonePasswords`, set `phoneContacts.passwordSetAt` (§4.10) |
+| `carddav`                   | HTTPS (public, Basic auth)      | read-only CardDAV address book of the caller's chosen groups (§4.10) |
 
 E-mails are sent via **SMTP of the skaut.cz Google Workspace** (Nodemailer, `smtp.gmail.com`) from a separate unit account (`MAIL_FROM`, e.g. `web.zare@skaut.cz`, sender name „Skautský oddíl Záře“), so they don't fill the Sent folder of `zare@skaut.cz`; `Reply-To` is `MAIL_REPLY_TO` (`zare@skaut.cz`). Both in `functions/.env.<project>`; the account's app password is the Functions secret `SMTP_PASSWORD`, never in the repo. A failed e-mail is logged and doesn't fail the function. The emulator only logs e-mails. Gmail limit (~2000 recipients/day) is sufficient.
 
@@ -773,5 +829,5 @@ E-mails are sent via **SMTP of the skaut.cz Google Workspace** (Nodemailer, `smt
 2. **Photos** — solved: albums in Firebase Storage (§3.3, §4.9). Before production: create the default bucket in `europe-west3` (same region as the functions; the Blaze plan is needed) and set a budget alert in Google Cloud Billing (e.g. 100 CZK). Later: HEIC conversion, downloading a whole album (ZIP), reordering photos of an uploaded album by hand (drag & drop; an own order would override the date / file name order).
 3. **Administration extras** — children & meeting days, meetings, packing templates, e-mail texts and settings have no design; built in the visual language of `Zare - sprava`, to be reviewed.
 4. **Registration texts** — proposed labels in §3.1 and §4.3 need review.
-5. **Parent contacts from skautIS** — may leaders (not only admins) see them, e.g. in attendance?
+5. **Parent contacts from skautIS** — solved: all leaders see them in the directory (§4.10), from the export (§4.8 skautIS) while the sync can't load them.
 6. **Contacts less tied to skautIS (TODO)** — now a contact is linked to a skautIS leader (name, phone, e-mail read-only; only the role title can be overwritten) and manual contacts are allowed only in „ostatní“ (§4.8 Contacts). Possibly loosen this later, e.g. overriding phone / e-mail / name per contact, or manual contacts in every group.
