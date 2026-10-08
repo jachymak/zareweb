@@ -514,10 +514,7 @@ export default async function directorySuite({ browser, check }) {
 
     // The phone panel is still open from above.
     await page.getByRole('button', { name: 'upravit výběr' }).click()
-    await page
-      .getByTestId('phone-groups')
-      .getByLabel('ostatní', { exact: true })
-      .check()
+    await page.getByTestId('phone-groups').getByLabel('ostatní', { exact: true }).check()
     await page.getByTestId('groups-saved').waitFor()
     const book = await dav(
       'PROPFIND',

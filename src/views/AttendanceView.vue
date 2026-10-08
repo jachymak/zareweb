@@ -1,79 +1,24 @@
 <script setup>
-import { computed, nextTick, reactive, ref, watch } from 'vue'
+import { reactive, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { weekdayOf } from '@shared/meetingDays'
 import { useAttendance } from '@/composables/useAttendance'
 import AreaFooter from '@/components/AreaFooter.vue'
-import MeetingsTab from '@/components/attendance/MeetingsTab.vue'
-import TripsTab from '@/components/attendance/TripsTab.vue'
-import { TABS } from '@/components/attendance/attendanceText'
 import LeaderHeader from '@/components/leader/LeaderHeader.vue'
+import LeaderPageTitle from '@/components/leader/LeaderPageTitle.vue'
 import TroopAttendance from '@/components/leader/TroopAttendance.vue'
-import TroopSwitch from '@/components/leader/TroopSwitch.vue'
-import AudienceTag from '@/components/parent/AudienceTag.vue'
-import PillSwitch from '@/components/parent/PillSwitch.vue'
-import { LOAD_ERROR, SAVE_ERROR } from '@/components/parent/parentText'
+import { LOAD_ERROR } from '@/components/parent/parentText'
 
-// Attendance — SPEC §4.2. The selection lives in the URL, so links from the
-// leader home open a meeting (?oddil=vlc&schuzka=2026-09-24) or a trip
-// (?oddil=vlc&vyprava=…), and a reload keeps the place.
+// Attendance overview — SPEC §4.2: meetings and trips of each child of the
+// troop against the camp requirement. The troop lives in the URL (?oddil=vlc).
 const route = useRoute()
 const router = useRouter()
 const a = reactive(useAttendance())
 
-const query = route.query
-if (['vlc', 'ss'].includes(query.oddil)) a.troop = query.oddil
-const tab = ref(query.vyprava ? 'trips' : 'meetings')
-const weekday = ref(null)
-const date = ref(null)
-const tripId = ref(null)
-const tripMode = ref('overview') // 'overview' | 'gather' — set by TripsTab per trip
-// At the meeting point only the trip is shown, nothing to switch by mistake.
-const gathering = computed(() => tab.value === 'trips' && tripMode.value === 'gather' && !a.loading)
-
-function selectDefaults({ meeting = null, trip = null } = {}) {
-  if (
-    meeting &&
-    a.weekdays.includes(weekdayOf(meeting)) &&
-    a.datesOf(weekdayOf(meeting)).includes(meeting)
-  ) {
-    weekday.value = weekdayOf(meeting)
-    date.value = meeting
-  } else {
-    ;({ weekday: weekday.value, date: date.value } = a.defaultMeeting())
-  }
-  tripId.value = a.trips.some((e) => e.id === trip) ? trip : (a.defaultTrip()?.id ?? null)
-}
-
-// Once loaded: the linked meeting / trip, else the defaults; again on a troop switch.
-const stopInit = watch(
-  () => a.loading,
-  (loading) => {
-    if (loading) return
-    selectDefaults({ meeting: query.schuzka, trip: query.vyprava })
-    stopInit()
-  },
-  { immediate: true },
-)
+if (['vlc', 'ss'].includes(route.query.oddil)) a.troop = route.query.oddil
 watch(
   () => a.troop,
-  () => !a.loading && selectDefaults(),
+  (troop) => router.replace({ query: { oddil: troop } }),
 )
-
-watch([tab, date, tripId, () => a.troop], () => {
-  if (a.loading) return
-  const selection = tab.value === 'trips' ? { vyprava: tripId.value } : { schuzka: date.value }
-  router.replace({ query: { oddil: a.troop, ...selection } })
-})
-
-// Camp requirement summary at the bottom, folded; the link next to the tabs
-// opens it and scrolls there.
-const campOpen = ref(false)
-async function showCamp() {
-  campOpen.value = true
-  await nextTick()
-  document.getElementById('tabor')?.scrollIntoView({ behavior: 'smooth' })
-}
 
 const section = 'mx-auto max-w-[1040px] px-4 sm:px-6'
 </script>
@@ -81,68 +26,16 @@ const section = 'mx-auto max-w-[1040px] px-4 sm:px-6'
 <template>
   <LeaderHeader />
   <main>
-    <div v-if="!gathering" :class="section" class="pt-[22px]">
-      <div class="flex flex-wrap items-start gap-x-5 gap-y-3">
-        <div class="mr-auto">
-          <p class="m-0 mb-2 text-[15px]">
-            <RouterLink to="/vedouci" class="inline-block py-1">
-              ← zpět na vedoucovskou stránku
-            </RouterLink>
-          </p>
-          <p class="kicker m-0 -mb-0.5">kdo byl a kdo ne</p>
-          <h1
-            class="m-0 flex items-center gap-2.5 text-[28px] font-medium tracking-[-0.04em] text-ink sm:text-[38px]"
-          >
-            Docházka
-            <!-- On a phone the troop comes from the leader home, just named here. -->
-            <AudienceTag :audience="a.troop" class="sm:hidden" />
-          </h1>
-        </div>
-        <TroopSwitch v-model="a.troop" class="hidden sm:block" />
-      </div>
-      <div class="mt-[18px] flex flex-wrap items-center gap-x-6 gap-y-2">
-        <PillSwitch v-model="tab" :options="TABS" label="Část docházky" />
-        <a
-          href="#tabor"
-          class="py-1 font-hand text-[20px] font-bold text-green no-underline hover:text-red sm:ml-auto"
-          @click.prevent="showCamp"
-        >
-          podmínka na tábor ↓
-        </a>
-      </div>
+    <div :class="section" class="pt-[22px]">
+      <LeaderPageTitle v-model:troop="a.troop" kicker="jak na tom jsou" title="Přehled docházky" />
     </div>
 
     <p v-if="a.loading" :class="section" class="pt-8 font-hand text-2xl text-muted">načítám…</p>
     <p v-else-if="a.loadError" role="alert" :class="section" class="pt-8 text-red">
       {{ LOAD_ERROR }}
     </p>
-    <div v-else :class="[section, gathering ? 'pt-3.5' : 'pt-5']">
-      <p v-if="a.saveError" role="alert" class="m-0 mb-3 text-[15px] text-red">{{ SAVE_ERROR }}</p>
-      <MeetingsTab
-        v-if="tab === 'meetings' && weekday"
-        v-model:weekday="weekday"
-        v-model:date="date"
-        :attendance="a"
-      />
-      <TripsTab
-        v-else-if="tab === 'trips'"
-        v-model:trip-id="tripId"
-        v-model:mode="tripMode"
-        :attendance="a"
-      />
-    </div>
-    <div
-      v-if="!a.loading && !a.loadError && !gathering"
-      id="tabor"
-      class="mt-10 scroll-mt-4 border-y-2 border-[#e0d3af] bg-[#f6efdc]"
-    >
-      <div :class="section" class="pt-7 pb-[34px]">
-        <TroopAttendance
-          v-model:open="campOpen"
-          :stats="a.troopStats"
-          :requirement="a.requirement"
-        />
-      </div>
+    <div v-else :class="section" class="pt-5">
+      <TroopAttendance :stats="a.troopStats" :requirement="a.requirement" />
     </div>
   </main>
   <AreaFooter />

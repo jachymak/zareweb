@@ -3,7 +3,12 @@ import { pragueToday, schoolYearRange } from '@shared/schoolYear'
 import { campRequirements, isTrip, meetingDots, meetingStats, tripCount } from '@shared/attendance'
 import { canJoin } from '@shared/events'
 import { meetingDates, meetingTimeShort, noMeetingOn, weekdayOf } from '@shared/meetingDays'
-import { listEvents, setAttendance, setSignedUp, subscribeParticipants } from '@/services/events'
+import {
+  setAttendance,
+  setSignedUp,
+  subscribeEvents,
+  subscribeParticipants,
+} from '@/services/events'
 import {
   clearMeeting,
   meetingId,
@@ -23,9 +28,10 @@ import { nicknameOf } from '@shared/names'
 
 const byNickname = (a, b) => nicknameOf(a).localeCompare(nicknameOf(b), 'cs')
 
-// Data and autosaving writes of the attendance page (SPEC §4.2) for the troop
-// chosen on the page. Meetings and trip sign-ups are followed live, so leaders
-// recording at the same time see each other's changes.
+// Data and autosaving writes of the meetings, attendance overview, trips and
+// meeting-point pages (SPEC §4.2) for the troop chosen on the page. Events,
+// meetings and trip sign-ups are followed live, so leaders recording at the
+// same time see each other's changes.
 export function useAttendance() {
   const leaderTroop = useLeaderTroopStore()
   const scheduleStore = useMeetingScheduleStore()
@@ -47,10 +53,12 @@ export function useAttendance() {
   const settings = ref(campRequirements(null)) // camp requirement per troop
 
   const unsubscribes = []
+  const participantUnsubscribes = new Map() // eventId → unsubscribe
   let left = false
   onUnmounted(() => {
     left = true
     unsubscribes.forEach((u) => u())
+    participantUnsubscribes.forEach((u) => u())
   })
 
   function failed(e) {
@@ -59,35 +67,62 @@ export function useAttendance() {
     loadError.value = true
   }
 
+  // Subscribes; resolves with the first snapshot, so the page shows once everything is in.
+  const follow = (subscribe, apply, keep = (u) => unsubscribes.push(u)) =>
+    new Promise((resolve, reject) => {
+      const unsubscribe = subscribe(
+        (data) => {
+          apply(data)
+          resolve()
+        },
+        (e) => {
+          failed(e)
+          reject(e)
+        },
+      )
+      if (left) unsubscribe()
+      else keep(unsubscribe)
+    })
+
+  // Sign-ups of every trip — also one whose registration was just started.
+  const followParticipants = (list) =>
+    Promise.all(
+      list
+        .filter((event) => isTrip(event) && !participantUnsubscribes.has(event.id))
+        .map((event) =>
+          follow(
+            (next, error) => subscribeParticipants(event.id, next, error),
+            (docs) =>
+              (participants.value = {
+                ...participants.value,
+                [event.id]: Object.fromEntries(docs.map((p) => [p.id, p])),
+              }),
+            (u) => participantUnsubscribes.set(event.id, u),
+          ),
+        ),
+    )
+
+  let firstParticipants = null
   onMounted(async () => {
     try {
-      const [, , memberList, eventList, appSettings] = await Promise.all([
+      const [, , memberList, appSettings] = await Promise.all([
         leaderTroop.init(),
         scheduleStore.load(),
         listMembers(),
-        listEvents({ fromDate: schoolYear.from }),
         getAppSettings(),
       ])
       members.value = memberList.sort(byNickname)
       settings.value = campRequirements(appSettings)
-      events.value = eventList
-      // Resolves with the first snapshot, so the page shows once everything is in.
-      const follow = (subscribe, apply) =>
-        new Promise((resolve, reject) => {
-          unsubscribes.push(
-            subscribe(
-              (data) => {
-                apply(data)
-                resolve()
-              },
-              (e) => {
-                failed(e)
-                reject(e)
-              },
-            ),
-          )
-        })
       await Promise.all([
+        follow(
+          (next, error) => subscribeEvents({ fromDate: schoolYear.from }, next, error),
+          (list) => {
+            events.value = list
+            const loaded = followParticipants(list)
+            loaded.catch(() => {}) // reported by failed()
+            firstParticipants ??= loaded
+          },
+        ),
         ...['vlc', 'ss'].map((code) =>
           follow(
             (next, error) =>
@@ -110,17 +145,9 @@ export function useAttendance() {
             (list) => (excusesByTroop.value = { ...excusesByTroop.value, [code]: list }),
           ),
         ),
-        ...eventList.filter(isTrip).map((event) =>
-          follow(
-            (next, error) => subscribeParticipants(event.id, next, error),
-            (list) =>
-              (participants.value = {
-                ...participants.value,
-                [event.id]: Object.fromEntries(list.map((p) => [p.id, p])),
-              }),
-          ),
-        ),
       ])
+      // The page shows once the sign-ups of the first snapshot's trips are in too.
+      await firstParticipants
     } catch (e) {
       failed(e)
     } finally {
@@ -199,16 +226,26 @@ export function useAttendance() {
 
   // ---- trips ----
 
+  const ofTroop = (e) => e.audience === 'all' || e.audience === troop.value
+  const newestFirst = (a, b) => b.startDate.localeCompare(a.startDate)
+
   // The troop's trips this school year (troop + all), newest first.
   const trips = computed(() =>
-    events.value
-      .filter((e) => isTrip(e) && (e.audience === 'all' || e.audience === troop.value))
-      .sort((a, b) => b.startDate.localeCompare(a.startDate)),
+    events.value.filter((e) => isTrip(e) && ofTroop(e)).sort(newestFirst),
+  )
+  // Events with a poster (they all get registration, SPEC §4.3), also before
+  // registration started and cancelled ones — the trips page edits their posters.
+  const posterEvents = computed(() =>
+    events.value.filter((e) => e.posterStatus !== 'none' && ofTroop(e)).sort(newestFirst),
   )
 
-  // The trip that started last, else the nearest upcoming one.
-  const defaultTrip = () =>
-    trips.value.find((e) => e.startDate <= today) ?? trips.value.at(-1) ?? null
+  // The one that started last, else the nearest upcoming one.
+  const latestOf = (list) => list.find((e) => e.startDate <= today) ?? list.at(-1) ?? null
+  const defaultTrip = () => latestOf(trips.value)
+  const defaultPosterEvent = () => latestOf(posterEvents.value)
+  // The troop's trip going on today, if any.
+  const runningTrip = () =>
+    trips.value.find((e) => e.startDate <= today && today <= e.endDate) ?? null
 
   // Everyone who can join: for trips of both troops (usually one leader records
   // them for everybody) the children of both troops.
@@ -318,8 +355,12 @@ export function useAttendance() {
     unexcuseChild,
     meetingRecorder,
     // trips
+    events,
     trips,
+    posterEvents,
     defaultTrip,
+    defaultPosterEvent,
+    runningTrip,
     tripChildren,
     participantOf,
     tripSummary,

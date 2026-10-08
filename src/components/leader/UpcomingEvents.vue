@@ -9,7 +9,7 @@ import {
   organizerNames,
   plural,
 } from '@/components/parent/parentText'
-import { eventEditorLink, tripLink } from './leaderText'
+import { tripLink } from './leaderText'
 
 // Upcoming events with registration: how many eligible children signed up and
 // who, the deadline, the poster, and the name list with payments (SPEC §4.1).
@@ -30,14 +30,15 @@ function namesText(names) {
   const rest = names.length - SHOWN_NAMES
   return rest > 0 ? `${shown} + ${rest} ${plural(rest, 'další', 'další', 'dalších')}` : shown
 }
+// The trip page in the event's troop (for trips of both troops the shown one).
+const tripOf = (event) =>
+  tripLink(event.audience === 'all' ? props.troop : event.audience, event.id)
 </script>
 
 <template>
   <section aria-labelledby="upcoming-title">
     <SectionHeading id="upcoming-title" kicker="kdo se přihlásil" title="Nejbližší akce">
-      <RouterLink to="/vedouci/akce" class="py-1 text-[15.5px]">
-        přidat akci nebo plakátek →
-      </RouterLink>
+      <RouterLink to="/vedouci/vypravnik" class="py-1 text-[15.5px]"> přidat akci → </RouterLink>
     </SectionHeading>
 
     <p v-if="!items.length" class="m-0 text-[16px] text-muted">
@@ -81,7 +82,7 @@ function namesText(names) {
         </RouterLink>
         <RouterLink
           v-else
-          :to="eventEditorLink(item.event.id)"
+          :to="tripOf(item.event)"
           class="inline-block flex-none -rotate-[1.4deg] border-[1.5px] border-dashed border-red px-2.5 py-0.5 font-hand text-[17px] font-bold text-red no-underline sm:px-3 sm:py-1 sm:text-[19px]"
         >
           <span class="sm:hidden">+ plakátek</span>
@@ -122,7 +123,7 @@ function namesText(names) {
           </span>
         </span>
         <RouterLink
-          :to="tripLink(item.event.audience === 'all' ? troop : item.event.audience, item.event.id)"
+          :to="tripOf(item.event)"
           class="py-1 text-[14.5px] whitespace-nowrap sm:ml-auto"
         >
           <span class="hidden sm:inline">jmenný </span>seznam a platby →

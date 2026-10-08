@@ -36,7 +36,9 @@ function toggle(item) {
 
 <template>
   <section aria-labelledby="packing-title">
-    <h2 id="packing-title" class="m-0 font-hand text-[24px] font-bold text-ink">Co si vzít s sebou?</h2>
+    <h2 id="packing-title" class="m-0 font-hand text-[24px] font-bold text-ink">
+      Co si vzít s sebou?
+    </h2>
     <p class="m-0 mb-3 text-[15px] text-muted">žádné věci do rukou, pouze batoh</p>
     <ul class="m-0 flex list-none flex-col gap-1 p-0">
       <li v-for="item in items" :key="item">

@@ -5,21 +5,16 @@ import HandDrawnBox from '@/components/HandDrawnBox.vue'
 import AudienceTag from '@/components/parent/AudienceTag.vue'
 import { formatRange, organizerNames, SAVE_ERROR } from '@/components/parent/parentText'
 import EventChips from './EventChips.vue'
-import EventSignUps from './EventSignUps.vue'
-import PosterEditor from './PosterEditor.vue'
-import RegistrationSettings from './RegistrationSettings.vue'
+import { tripLink } from '@/components/leader/leaderText'
 
-// Selected event: actions (edit, cancel / restore, delete), registration,
-// the poster editor and who is signed up. The camp has only the actions.
+// Selected event: actions (edit, cancel / restore, delete); the poster,
+// registration and who goes are on the trips page.
 const props = defineProps({
   event: { type: Object, required: true },
   organizers: { type: Array, required: true },
-  members: { type: Array, required: true },
-  templates: { type: Array, required: true },
   today: { type: String, required: true },
 })
 const emit = defineEmits(['edit'])
-const dirty = defineModel('dirty', { type: Boolean, default: false })
 
 const confirmDelete = ref(false)
 const busy = ref(false)
@@ -124,17 +119,19 @@ const action =
       </p>
       <p v-if="actionError" role="alert" class="m-0 mb-3 text-sm text-red">{{ SAVE_ERROR }}</p>
 
-      <template v-if="event.posterStatus === 'none'">
-        <p class="m-0 text-[15px] text-muted">
-          Akce bez plakátku (tábor) je jen ve výpravníku — přihlášky a informace jdou rodičům
-          e-mailem.
-        </p>
-      </template>
-      <div v-else class="flex flex-col gap-6">
-        <RegistrationSettings :event="event" :today="today" />
-        <PosterEditor v-model:dirty="dirty" :event="event" :templates="templates" :today="today" />
-        <EventSignUps v-if="event.registrationOpen" :event="event" :members="members" />
-      </div>
+      <p v-if="event.posterStatus === 'none'" class="m-0 text-[15px] text-muted">
+        Akce bez plakátku (tábor) je jen ve výpravníku — přihlášky a informace jdou rodičům
+        e-mailem.
+      </p>
+      <p v-else class="m-0 flex flex-wrap items-center gap-x-4 gap-y-2 text-[15px] text-muted">
+        Plakátek, přihlašování a kdo jede jsou ve výpravách.
+        <RouterLink
+          :to="tripLink(event.audience === 'all' ? null : event.audience, event.id)"
+          class="rounded-full bg-green px-5 py-1.5 font-hand text-[20px] font-bold text-cream no-underline hover:bg-green-hover hover:text-cream"
+        >
+          plakátek a přihlášky →
+        </RouterLink>
+      </p>
     </article>
   </HandDrawnBox>
 </template>

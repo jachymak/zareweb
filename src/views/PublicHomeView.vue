@@ -246,7 +246,8 @@ const showIntro = isFirstPage() && !useRoute().hash
             Skauting nemusí být jen o uzlování a rozdělávání ohňů. Snažíme se, aby dával smysl i
             dnes. Na schůzkách hrajeme hry, diskutujeme, tvoříme a učíme se nové věci. Na výpravách
             jdeme dál, i když leje a je kolem tma jako v pytli. Máme spolu srandu, zažíváme
-            dobrodružství, učíme se brát zodpovědnost a mít respekt k ostatním. A víme, že se na sebe můžeme spolehnout.
+            dobrodružství, učíme se brát zodpovědnost a mít respekt k ostatním. A víme, že se na
+            sebe můžeme spolehnout.
           </p>
         </StorySection>
 
@@ -314,8 +315,8 @@ const showIntro = isFirstPage() && !useRoute().hash
           class="max-md:[&>div:last-child]:mt-12"
         >
           <p class="prose-body mb-5 max-w-[40ch]">
-            Klubovnu máme kousek od Kulaťáku. Ve vnitrobloku za ní je hřiště, kam na schůzkách
-            často chodíme.
+            Klubovnu máme kousek od Kulaťáku. Ve vnitrobloku za ní je hřiště, kam na schůzkách často
+            chodíme.
           </p>
           <!-- Icons from the original web: the Prague metro logo and a bus. -->
           <ul class="m-0 mb-5 flex list-none flex-col gap-3 p-0 text-brown">
@@ -327,7 +328,9 @@ const showIntro = isFirstPage() && !useRoute().hash
                   />
                 </svg>
               </span>
-              <span class="text-[17px] text-text">metro A — <strong class="font-semibold text-ink">Dejvická</strong></span>
+              <span class="text-[17px] text-text"
+                >metro A — <strong class="font-semibold text-ink">Dejvická</strong></span
+              >
             </li>
             <li class="flex items-center gap-3">
               <span class="grid w-10 flex-none place-items-center opacity-65">
@@ -340,7 +343,9 @@ const showIntro = isFirstPage() && !useRoute().hash
                   />
                 </svg>
               </span>
-              <span class="text-[17px] text-text">tram/bus — <strong class="font-semibold text-ink">Vítězné náměstí</strong></span>
+              <span class="text-[17px] text-text"
+                >tram/bus — <strong class="font-semibold text-ink">Vítězné náměstí</strong></span
+              >
             </li>
           </ul>
           <!-- Drawn from OpenStreetMap by scripts/clubhouse-map.js; inline so it
@@ -366,17 +371,15 @@ const showIntro = isFirstPage() && !useRoute().hash
         >
           <p class="prose-body mb-3.5 max-w-[48ch]">
             Začátkem července vyrážíme na dva až tři týdny do přírody. Na Kovářovu louku
-            u&nbsp;Soběnova jezdíme už přes 40 let. Dnes tam táboří vlčušky, skauti a&nbsp;skautky mají
-            svůj tábor u&nbsp;Slavče.
+            u&nbsp;Soběnova jezdíme už přes 40 let. Dnes tam táboří vlčušky, skauti a&nbsp;skautky
+            mají svůj tábor u&nbsp;Slavče.
           </p>
           <p class="prose-body mb-3.5 max-w-[48ch]">
-            Spíme v&nbsp;týpí či podsadových stanech, vaříme na kamnech a&nbsp;myjeme se v&nbsp;řece.
-            Celý tábor obvykle provází celotáborová hra.
+            Spíme v&nbsp;týpí či podsadových stanech, vaříme na kamnech a&nbsp;myjeme se
+            v&nbsp;řece. Celý tábor obvykle provází celotáborová hra.
           </p>
           <p class="m-0 font-hand text-[24px] leading-tight max-md:hidden sm:text-[26px]">
-            <RouterLink to="/historie"
-              >historie oddílu od roku 1976</RouterLink
-            >
+            <RouterLink to="/historie">historie oddílu od roku 1976</RouterLink>
           </p>
           <!-- On mobile in the drawing's empty sky, left of the smoke. -->
           <template #sketch-note>

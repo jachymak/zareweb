@@ -100,7 +100,7 @@ export async function sendAttendanceReminders(now = new Date()) {
       if (e.code === 6) continue // ALREADY_EXISTS — sent before
       throw e
     }
-    const odkaz = `${APP_URL}/vedouci/dochazka?oddil=${troop}&schuzka=${today}`
+    const odkaz = `${APP_URL}/vedouci/schuzky?oddil=${troop}&schuzka=${today}`
     const values = { oddil: TROOP_NAMES[troop], den: dayLabel(today), odkaz }
     const emails = (await recipients(personIds)).map(({ to, jmeno }) => ({
       to,

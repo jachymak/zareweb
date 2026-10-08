@@ -87,9 +87,17 @@ export default async function leader({ browser, check }) {
     const role = await page.getByTestId('leader-role').innerText()
     check('greeting: role title and troop', role.startsWith('rádce Bobrů · vlčušky'), role)
     const tools = page.getByRole('navigation', { name: 'Nástroje' })
+    const groups = await tools
+      .getByRole('group')
+      .evaluateAll((els) => els.map((el) => el.getAttribute('aria-label')))
     check(
-      'tools: six links, Klubovna greyed out, no Administrace for a leader',
-      (await tools.getByRole('link').count()) === 6 &&
+      'tools: grouped schůzky / výpravy / pro rodiče / oddíl',
+      groups.join() === 'schůzky,výpravy,pro rodiče,oddíl',
+      groups.join(),
+    )
+    check(
+      'tools: nine links, Klubovna greyed out, no Administrace for a leader',
+      (await tools.getByRole('link').count()) === 9 &&
         (await tools.getByRole('link', { name: 'Klubovna' }).count()) === 0 &&
         (await tools.getByText('Klubovna').count()) === 1 &&
         (await tools.getByRole('link', { name: 'Administrace' }).count()) === 0,
@@ -220,7 +228,10 @@ export default async function leader({ browser, check }) {
       let ok = text === expectedToday('vlc', date)
       if (plan.kind !== 'free' && plan.kind !== 'otherTroop') {
         const href = await card.getByRole('link').getAttribute('href')
-        const want = plan.kind === 'meeting' ? `schuzka=${date}` : `vyprava=${plan.event.id}`
+        const want =
+          plan.kind === 'meeting'
+            ? `/vedouci/schuzky?oddil=vlc&schuzka=${date}`
+            : `/vedouci/na-srazu?oddil=vlc&vyprava=${plan.event.id}`
         ok &&= href.includes('oddil=vlc') && href.includes(want)
       }
       if (plan.kind === 'meeting') {
@@ -284,11 +295,11 @@ export default async function leader({ browser, check }) {
           .count()) === 1,
     )
     const tools = page.getByRole('navigation', { name: 'Nástroje' })
-    await tools.getByRole('link', { name: 'Docházka' }).click()
-    await page.waitForURL(/\/vedouci\/dochazka$/)
+    await tools.getByRole('link', { name: 'Schůzky' }).click()
+    await page.waitForURL(/\/vedouci\/schuzky/)
     check(
-      'nav: Docházka opens its page with the troop switch',
-      (await page.getByRole('heading', { name: 'Docházka' }).isVisible()) &&
+      'nav: Schůzky opens its page with the troop switch',
+      (await page.getByRole('heading', { name: 'Schůzky', level: 1 }).isVisible()) &&
         (await page.getByRole('group', { name: 'Oddíl' }).isVisible()),
     )
     await page.getByRole('link', { name: '← zpět na vedoucovskou stránku' }).click()
@@ -314,7 +325,15 @@ export default async function leader({ browser, check }) {
     const admin = page
       .getByRole('navigation', { name: 'Nástroje' })
       .getByRole('link', { name: 'Administrace' })
-    check('admin: Administrace among the tools', (await admin.count()) === 1)
+    check(
+      'admin: Administrace among the tools, in its own group',
+      (await admin.count()) === 1 &&
+        (await page
+          .getByRole('navigation', { name: 'Nástroje' })
+          .getByRole('group', { name: 'správa' })
+          .getByRole('link', { name: 'Administrace' })
+          .count()) === 1,
+    )
     await admin.click()
     await page.waitForURL(/\/vedouci\/administrace$/)
     check(

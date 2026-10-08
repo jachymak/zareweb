@@ -11,8 +11,8 @@ import { FIND_OTHER_GROUP_URL } from '@/constants/troops'
       <p class="kicker mb-1.5">chcete se přidat?</p>
       <h3 class="section-title mb-3.5">Momentálně máme plno</h3>
       <p class="mb-5 max-w-[54ch] text-base leading-[1.75] text-pretty sm:text-[17.5px]">
-        Své dítě můžete zapsat na čekací listinu, míst je ale málo a přijetí to bohužel
-        nezaručuje. Děti starší 11 let většinou nenabíráme.
+        Své dítě můžete zapsat na čekací listinu, míst je ale málo a přijetí to bohužel nezaručuje.
+        Děti starší 11 let většinou nenabíráme.
       </p>
       <div class="flex flex-wrap items-center gap-x-[18px] gap-y-3">
         <RouterLink

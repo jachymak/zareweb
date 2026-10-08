@@ -1,8 +1,8 @@
-// Events & posters (SPEC §4.3): list with status chips, creating an event and
-// the camp, editing details, the poster from draft to published (and what a
-// parent may read), unsaved-changes guard, registration and leaders' sign-ups
-// (also after the deadline), cancel / restore, soft delete, links, mobile
-// widths. Accounts from `scripts/seed-users.js` (vedouci@ is Ondys 800001),
+// Výpravník and trips (SPEC §4.3): list with status chips, creating an event
+// and the camp, editing details, then on the trips page the poster from draft
+// to published (and what a parent may read), unsaved-changes guard,
+// registration and leaders' sign-ups (also after the deadline); back in the
+// výpravník cancel / restore, soft delete; links, mobile widths. Accounts from `scripts/seed-users.js` (vedouci@ is Ondys 800001),
 // children from `scripts/seed-members.js`, activity and packing templates from
 // `scripts/seed-activity.js`.
 
@@ -36,15 +36,28 @@ async function until(fn, timeout = 10000) {
   }
 }
 
-async function openEvents(browser, query = '', options) {
+async function signIn(browser, options) {
   const opened = await openPage(browser, '/prihlaseni', options)
   const { page } = opened
   await page.getByLabel('E-mail').fill('vedouci@zare.test')
   await page.getByLabel('Heslo', { exact: true }).fill(PASSWORD)
   await page.getByRole('button', { name: 'Přihlásit se →' }).click()
   await page.waitForURL(/\/vedouci$/, { timeout: 10000 })
-  await page.goto(`${APP_URL}/vedouci/akce${query}`, { waitUntil: 'load' })
-  await page.getByRole('button', { name: '+ přidat akci' }).waitFor()
+  return opened
+}
+
+async function openEvents(browser, query = '', options) {
+  const opened = await signIn(browser, options)
+  await opened.page.goto(`${APP_URL}/vedouci/vypravnik${query}`, { waitUntil: 'load' })
+  await opened.page.getByRole('button', { name: '+ přidat akci' }).waitFor()
+  return opened
+}
+
+async function openTrips(browser, query = '', options) {
+  const opened = await signIn(browser, options)
+  await opened.page.goto(`${APP_URL}/vedouci/vypravy${query}`, { waitUntil: 'load' })
+  await opened.page.getByRole('heading', { name: 'Výpravy', level: 1 }).waitFor()
+  await opened.page.getByText('načítám…').first().waitFor({ state: 'detached' })
   return opened
 }
 
@@ -69,6 +82,8 @@ async function pickDate(page, iso) {
 
 const eventButton = (page, title) =>
   page.getByRole('listitem').getByRole('button').filter({ hasText: title })
+const tripButton = (page, title) =>
+  page.getByRole('group', { name: 'Výprava' }).getByRole('button').filter({ hasText: title })
 
 export default async function events({ browser, check }) {
   await clearAuthAccounts()
@@ -164,6 +179,11 @@ export default async function events({ browser, check }) {
         (await eventButton(page, 'Testovací výprava').getByTestId('poster-chip').innerText()) ===
           'plakátek chybí',
     )
+    check(
+      'create: no poster editor in the výpravník',
+      (await page.getByRole('form', { name: 'Plakátek' }).count()) === 0 &&
+        (await page.getByRole('region', { name: 'Přihlašování' }).count()) === 0,
+    )
   }
 
   // ---- edit details ----
@@ -181,8 +201,17 @@ export default async function events({ browser, check }) {
     )
   }
 
-  // ---- poster: draft, then published ----
+  // ---- poster: draft, then published (on the trips page) ----
   {
+    await page.getByRole('link', { name: 'plakátek a přihlášky →' }).click()
+    await page.waitForURL(/\/vedouci\/vypravy/)
+    await page.getByRole('article', { name: 'Testovací výprava na Sněžku' }).waitFor()
+    check(
+      'trips: the výpravník link opens the event on the trips page',
+      new URL(page.url()).searchParams.get('vyprava') === eventId &&
+        (await page.getByRole('article', { name: 'Testovací výprava na Sněžku' }).isVisible()),
+      page.url(),
+    )
     const poster = page.getByRole('form', { name: 'Plakátek' })
     await poster.waitFor()
     await poster.getByLabel('Obecné informace o výpravě').fill('Vylezeme na <b>Sněžku</b>.')
@@ -200,13 +229,13 @@ export default async function events({ browser, check }) {
       (await poster.getByTestId('poster-state').innerText()) === 'neuložené změny',
     )
 
-    // Switching events asks first; dismissing keeps the edits.
+    // Switching trips asks first; dismissing keeps the edits.
     page.once('dialog', (d) => d.dismiss())
-    await eventButton(page, 'Výprava na Blaník').click()
+    await tripButton(page, 'Výprava do Středohoří').click()
     await page.waitForTimeout(300)
     check(
-      'guard: dismissing the question stays on the event',
-      new URL(page.url()).searchParams.get('akce') === eventId &&
+      'guard: dismissing the question stays on the trip',
+      new URL(page.url()).searchParams.get('vyprava') === eventId &&
         (await poster.getByLabel('Kam se jede?').inputValue()) === 'Pec pod Sněžkou',
     )
 
@@ -276,9 +305,14 @@ export default async function events({ browser, check }) {
         )
       }),
     )
-    const signups = page.getByRole('region', { name: 'Kdo je přihlášený' })
+    const signups = page.getByRole('region', { name: 'Přihlášky a platby' })
     await signups.waitFor()
-    await signups.getByRole('button', { name: 'Sojka' }).click()
+    const picker = signups.getByLabel('přihlásit dítě')
+    check(
+      'sign-up: vlc event offers only vlc children',
+      (await picker.locator('option[value="900201"]').count()) === 0,
+    )
+    await picker.selectOption('900102')
     check(
       'sign-up: leader signs a child up',
       await until(async () => {
@@ -287,14 +321,21 @@ export default async function events({ browser, check }) {
       }),
     )
     check(
-      'sign-up: vlc event lists only vlc children',
-      (await signups.getByRole('button', { name: 'Bobr' }).count()) === 0,
+      'sign-up: listed with the summary',
+      (await until(() => signups.getByRole('group', { name: 'Sojka' }).isVisible())) &&
+        (await signups.getByTestId('trip-summary').innerText()).startsWith('přihlášeno 1'),
     )
 
-    // After the deadline leaders still can.
-    await eventButton(page, 'Uzlovací závody').click()
-    const closed = page.getByRole('region', { name: 'Kdo je přihlášený' })
-    await closed.getByRole('button', { name: 'Bobr' }).click()
+    // After the deadline leaders still can — an ss trip, so the troop switches.
+    await page
+      .getByRole('group', { name: 'Oddíl' })
+      .getByRole('button', { name: 'skauti a skautky' })
+      .click()
+    await tripButton(page, 'Uzlovací závody').click()
+    await page
+      .getByRole('region', { name: 'Přihlášky a platby' })
+      .getByLabel('přihlásit dítě')
+      .selectOption('900201')
     check(
       'sign-up: after the deadline too',
       await until(
@@ -304,8 +345,11 @@ export default async function events({ browser, check }) {
     )
   }
 
-  // ---- cancel, restore, delete ----
+  // ---- cancel, restore, delete (back in the výpravník) ----
   {
+    await page.getByRole('link', { name: '← zpět na vedoucovskou stránku' }).click()
+    await page.getByRole('link', { name: 'Výpravník', exact: true }).click()
+    await page.getByRole('button', { name: '+ přidat akci' }).waitFor()
     await eventButton(page, 'Testovací výprava na Sněžku').click()
     const path = `events/${eventId}`
     await page.getByRole('button', { name: 'zrušit akci' }).click()
@@ -356,23 +400,36 @@ export default async function events({ browser, check }) {
         values((await getDoc(`events/${id}`)).organizerIds).length === 0,
     )
     check(
-      'camp: no registration or poster editor',
-      (await page.getByRole('region', { name: 'Přihlašování' }).count()) === 0 &&
-        (await page.getByRole('form', { name: 'Plakátek' }).count()) === 0,
+      'camp: no link to the trips page',
+      (await page.getByRole('link', { name: 'plakátek a přihlášky →' }).count()) === 0,
     )
   }
   check('desktop: no console errors', errors.length === 0, errors.join(' | '))
   await ctx.close()
 
-  // ---- link from the leader home („vyplnit plakátek“) ----
+  // ---- links: from the leader home („vyplnit plakátek“), the old address ----
   {
-    const { ctx, page } = await openEvents(browser, '?akce=seed-kokorin')
+    const { ctx, page } = await openTrips(browser, '?vyprava=seed-kokorin')
     check(
-      'link: ?akce opens the poster editor',
+      'link: ?vyprava opens the poster editor',
       await page
         .getByRole('article', { name: 'Podzimní výprava na Kokořín' })
         .getByRole('form', { name: 'Plakátek' })
         .isVisible(),
+    )
+    await page.goto(`${APP_URL}/vedouci/vypravy?vyprava=seed-blanik`, { waitUntil: 'load' })
+    await page.getByRole('article', { name: 'Výprava na Blaník' }).waitFor()
+    check(
+      'link: a trip of the other troop switches the troop',
+      new URL(page.url()).searchParams.get('oddil') === 'ss',
+      page.url(),
+    )
+    await page.goto(`${APP_URL}/vedouci/akce?akce=seed-kokorin`, { waitUntil: 'load' })
+    await page.getByRole('article', { name: 'Podzimní výprava na Kokořín' }).waitFor()
+    check(
+      'link: the old /vedouci/akce goes to the výpravník',
+      new URL(page.url()).pathname === '/vedouci/vypravnik',
+      page.url(),
     )
     await ctx.close()
   }
@@ -380,12 +437,11 @@ export default async function events({ browser, check }) {
   // ---- mobile ----
   for (const width of [360, 390]) {
     const problems = []
-    for (const query of ['?akce=seed-stredohori', '?nova']) {
-      const { ctx, page, errors } = await openEvents(browser, query, {
-        width,
-        height: 800,
-        mobile: true,
-      })
+    for (const query of ['?akce=seed-stredohori', '?nova', 'vypravy?vyprava=seed-stredohori']) {
+      const options = { width, height: 800, mobile: true }
+      const { ctx, page, errors } = query.startsWith('vypravy')
+        ? await openTrips(browser, query.slice(7), options)
+        : await openEvents(browser, query, options)
       await page.waitForTimeout(500)
       const overflow = await horizontalOverflow(page)
       if (overflow > 0) problems.push(`${query}: overflow ${overflow}`)

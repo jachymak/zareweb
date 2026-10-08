@@ -1,47 +1,31 @@
 <script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
+import { computed, nextTick, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useEventsPage } from '@/composables/useEventsPage'
 import AreaFooter from '@/components/AreaFooter.vue'
 import EventDetail from '@/components/events/EventDetail.vue'
 import EventForm from '@/components/events/EventForm.vue'
 import EventList from '@/components/events/EventList.vue'
-import { UNSAVED_CONFIRM } from '@/components/events/eventsText'
 import LeaderHeader from '@/components/leader/LeaderHeader.vue'
 import { LOAD_ERROR } from '@/components/parent/parentText'
 
-// Events & posters — SPEC §4.3. What is shown on the right lives in the URL:
-// ?akce={id} (detail and poster editor), ?akce={id}&upravit (edit details),
-// ?nova (new event).
+// Výpravník (the event calendar) — SPEC §4.3. What is shown on the right lives
+// in the URL: ?akce={id} (detail), ?akce={id}&upravit (edit details), ?nova
+// (new event). Posters and registration are on the trips page.
 const route = useRoute()
 const router = useRouter()
-const { today, loading, loadError, events, leaders, members, templates, organizersOf, person } =
-  useEventsPage()
+const { today, loading, loadError, events, leaders, organizersOf, person } = useEventsPage()
 
 const selectedId = computed(() => route.query.akce ?? null)
 const creating = computed(() => 'nova' in route.query)
 const editing = computed(() => !!selectedId.value && 'upravit' in route.query)
 const selected = computed(() => events.value.find((e) => e.id === selectedId.value) ?? null)
 
-// Unsaved poster changes: ask before switching away.
-const dirty = ref(false)
-const leaveOk = () => !dirty.value || window.confirm(UNSAVED_CONFIRM)
-onBeforeRouteUpdate((to) => {
-  if (to.query.akce === route.query.akce && !('upravit' in to.query)) return true
-  if (!leaveOk()) return false
-  dirty.value = false
-})
-onBeforeRouteLeave(() => leaveOk())
-const beforeUnload = (e) => dirty.value && e.preventDefault()
-onMounted(() => window.addEventListener('beforeunload', beforeUnload))
-onBeforeUnmount(() => window.removeEventListener('beforeunload', beforeUnload))
-
 const show = (query) => router.push({ query })
 
 // The selected event was deleted (here or by another leader): close it.
 watch(selected, (now, before) => {
   if (before && !now && selectedId.value === before.id) {
-    dirty.value = false
     router.replace({ query: {} })
   }
 })
@@ -69,9 +53,9 @@ const section = 'mx-auto max-w-[1060px] px-4 sm:px-6'
           >← zpět na vedoucovskou stránku</RouterLink
         >
       </p>
-      <p class="kicker m-0 -mb-0.5">co přidat do výpravníku</p>
+      <p class="kicker m-0 -mb-0.5">kalendář akcí pro rodiče</p>
       <h1 class="m-0 mb-5 text-[28px] font-medium tracking-[-0.04em] text-ink sm:text-[38px]">
-        Akce a plakátky
+        Výpravník
       </h1>
     </div>
 
@@ -101,11 +85,8 @@ const section = 'mx-auto max-w-[1060px] px-4 sm:px-6'
         />
         <EventDetail
           v-else-if="selected"
-          v-model:dirty="dirty"
           :event="selected"
           :organizers="organizersOf(selected)"
-          :members="members"
-          :templates="templates"
           :today="today"
           @edit="show({ akce: selectedId, upravit: null })"
         />

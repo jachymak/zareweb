@@ -66,17 +66,41 @@ const router = createRouter({
       meta: { auth: true, roles: LEADERS },
     },
     {
+      path: '/vedouci/schuzky',
+      name: 'leader-meetings',
+      component: () => import('@/views/MeetingsView.vue'),
+      meta: { auth: true, roles: LEADERS },
+    },
+    // Earlier links (reminder e-mails) opened meetings and trips here.
+    {
       path: '/vedouci/dochazka',
       name: 'leader-attendance',
       component: () => import('@/views/AttendanceView.vue'),
       meta: { auth: true, roles: LEADERS },
+      beforeEnter: (to) => {
+        if (to.query.schuzka) return { path: '/vedouci/schuzky', query: to.query }
+        if (to.query.vyprava) return { path: '/vedouci/vypravy', query: to.query }
+      },
     },
     {
-      path: '/vedouci/akce',
+      path: '/vedouci/vypravy',
+      name: 'leader-trips',
+      component: () => import('@/views/TripsView.vue'),
+      meta: { auth: true, roles: LEADERS },
+    },
+    {
+      path: '/vedouci/na-srazu',
+      name: 'leader-gather',
+      component: () => import('@/views/GatherView.vue'),
+      meta: { auth: true, roles: LEADERS },
+    },
+    {
+      path: '/vedouci/vypravnik',
       name: 'leader-events',
       component: () => import('@/views/EventsView.vue'),
       meta: { auth: true, roles: LEADERS },
     },
+    { path: '/vedouci/akce', redirect: (to) => ({ path: '/vedouci/vypravnik', query: to.query }) },
     {
       path: '/vedouci/aktuality',
       name: 'leader-news',

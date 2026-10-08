@@ -446,8 +446,8 @@ export default async function adminExtras({ browser, check: report }) {
     )
     await pub.ctx.close()
 
-    const att = await openAs(browser, 'spravce@zare.test', '/vedouci/dochazka?oddil=vlc')
-    await att.page.getByRole('heading', { name: 'Docházka', level: 1 }).waitFor()
+    const att = await openAs(browser, 'spravce@zare.test', '/vedouci/schuzky?oddil=vlc')
+    await att.page.getByRole('heading', { name: 'Schůzky', level: 1 }).waitFor()
     await att.page.getByText('načítám…').waitFor({ state: 'detached' })
     await att.page
       .getByRole('group', { name: 'Den schůzek' })

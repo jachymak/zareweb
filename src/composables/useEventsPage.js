@@ -1,17 +1,14 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { pragueToday, schoolYearRange } from '@shared/schoolYear'
 import { subscribeEvents } from '@/services/events'
-import { listMembers } from '@/services/members'
-import { listPackingTemplates } from '@/services/packingTemplates'
 import { listLeaders } from '@/services/skautisPeople'
 import { useLeaderTroopStore } from '@/stores/leaderTroop'
 import { nicknameOf } from '@shared/names'
 
 const byNickname = (a, b) => nicknameOf(a).localeCompare(nicknameOf(b), 'cs')
 
-// Data of the events & posters page (SPEC §4.3): the school year's events
-// (followed live, so leaders see each other's changes), leaders to pick as
-// organizers, children for sign-ups and packing list templates.
+// Data of the výpravník page (SPEC §4.3): the school year's events (followed
+// live, so leaders see each other's changes) and leaders to pick as organizers.
 export function useEventsPage() {
   const today = pragueToday()
   const schoolYear = schoolYearRange(today)
@@ -21,8 +18,6 @@ export function useEventsPage() {
   const loadError = ref(false)
   const events = ref([])
   const leaders = ref([]) // skautisPeople, active, by nickname
-  const members = ref([]) // active children, by nickname
-  const templates = ref([])
 
   let unsubscribe = null
   let left = false
@@ -40,11 +35,9 @@ export function useEventsPage() {
 
   onMounted(async () => {
     try {
-      const [, people, memberList, templateList] = await Promise.all([
+      const [, people] = await Promise.all([
         leaderTroop.init(),
         listLeaders(),
-        listMembers(),
-        listPackingTemplates(),
         new Promise((resolve, reject) => {
           unsubscribe = subscribeEvents(
             { fromDate: schoolYear.from },
@@ -57,8 +50,6 @@ export function useEventsPage() {
         }),
       ])
       leaders.value = people.sort(byNickname)
-      members.value = memberList.sort(byNickname)
-      templates.value = templateList.sort((a, b) => a.name.localeCompare(b.name, 'cs'))
       loading.value = false
     } catch (e) {
       failed(e)
@@ -75,8 +66,6 @@ export function useEventsPage() {
     loadError,
     events,
     leaders,
-    members,
-    templates,
     organizersOf,
     person: computed(() => leaderTroop.person),
   }

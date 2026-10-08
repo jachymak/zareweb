@@ -374,10 +374,7 @@ export default async function parent({ browser, check }) {
     await card.getByLabel('Důvod').fill('angína')
     await card.getByRole('button', { name: 'omluvit', exact: true }).click()
     const state = card.getByTestId('excuse-state')
-    check(
-      'excuse: shown as excused once saved',
-      await until(() => state.isVisible()),
-    )
+    check('excuse: shown as excused once saved', await until(() => state.isVisible()))
     const { uid } = await signInRest(EMAIL, PASSWORD)
     const saved = await excuseDoc()
     check(

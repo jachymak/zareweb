@@ -1,12 +1,13 @@
-// Attendance (SPEC §4.2): meetings recorded per child with autosave and the
-// cancelled flag, links from the leader home, live updates from another
-// leader, trips with attendance / payments / amounts and the cash total, the
-// troop switch, mobile widths. Accounts from
+// Attendance (SPEC §4.2) on the meetings, attendance overview, trips and
+// meeting-point pages: meetings recorded per child with autosave and the
+// cancelled flag, links (also the old /vedouci/dochazka ones), live updates
+// from another leader, trips with attendance / payments / amounts and the cash
+// total, the troop switch, mobile widths. Accounts from
 // `scripts/seed-users.js`, children from `scripts/seed-members.js` (vlc: Sojka
 // 900102 thu, Liška 900103 mon, Žabka and Kulíšek without a day), activity from
 // `scripts/seed-activity.js` (the latest meeting date of each day is unrecorded,
-// the 2nd one cancelled, some absences excused). The camp requirement summary at the
-// bottom of the page. Excuses entered by a leader.
+// the 2nd one cancelled, some absences excused). The camp requirement summary on
+// the overview page. Excuses entered by a leader.
 
 import {
   SCREENSHOTS,
@@ -23,7 +24,7 @@ import {
 } from './lib.js'
 import { schoolYearRange } from '../functions/src/shared/schoolYear.js'
 import { meetingDates, meetingSchedule } from '../functions/src/shared/meetingDays.js'
-import { EVENTS } from '../scripts/seed-activity.js'
+import { addDays, EVENTS } from '../scripts/seed-activity.js'
 import {
   DEFAULT_CAMP_REQUIREMENTS,
   meetingDots,
@@ -36,6 +37,8 @@ const today = pragueToday()
 const { from: yearStart } = schoolYearRange(today)
 const thursdays = meetingDates('thu', yearStart, today).reverse() // newest first
 const latestThu = thursdays[0]
+// Recorded by the seed: up to yesterday, without the latest one (newest first).
+const recordedThu = meetingDates('thu', yearStart, addDays(today, -1)).slice(0, -1).reverse()
 const formatDay = (iso) => `${Number(iso.slice(8))}. ${Number(iso.slice(5, 7))}.`
 
 async function until(fn, timeout = 10000) {
@@ -47,7 +50,7 @@ async function until(fn, timeout = 10000) {
   }
 }
 
-async function openAttendance(browser, path = '/vedouci/dochazka', options) {
+async function openAttendance(browser, path = '/vedouci/schuzky', options, heading = 'Schůzky') {
   const opened = await openPage(browser, '/prihlaseni', options)
   const { page } = opened
   await page.getByLabel('E-mail').fill('vedouci@zare.test')
@@ -55,9 +58,16 @@ async function openAttendance(browser, path = '/vedouci/dochazka', options) {
   await page.getByRole('button', { name: 'Přihlásit se →' }).click()
   await page.waitForURL(/\/vedouci$/, { timeout: 10000 })
   await page.goto(opened.page.url().replace(/\/vedouci$/, path), { waitUntil: 'load' })
-  await page.getByRole('heading', { name: 'Docházka', level: 1 }).waitFor()
+  await page.getByRole('heading', { name: heading, level: 1 }).waitFor()
   await page.getByText('načítám…').waitFor({ state: 'detached' })
   return opened
+}
+
+// Opens another leader page in the same tab and waits until it has loaded.
+async function go(page, path, heading) {
+  await page.goto(page.url().split('/vedouci')[0] + path, { waitUntil: 'load' })
+  await page.getByRole('heading', { name: heading, level: 1 }).waitFor()
+  await page.getByText('načítám…').waitFor({ state: 'detached' })
 }
 
 async function getDoc(path) {
@@ -125,14 +135,16 @@ export default async function attendance({ browser, check }) {
     const members = (await docs('members')).filter((m) => m.active)
     const meetings = (await docs('meetings')).filter((m) => m.date >= yearStart)
     const excuses = await docs('excuses')
+    await page.getByRole('link', { name: 'přehled docházky a podmínka na tábor →' }).click()
+    await page.getByRole('heading', { name: 'Přehled docházky', level: 1 }).waitFor()
     const region = page.getByRole('region', { name: 'Podmínka na tábor' })
     const rows = region.getByRole('listitem')
-    check('camp: folded at first', !(await region.getByRole('list').isVisible()))
-    await page.getByRole('link', { name: 'podmínka na tábor ↓' }).click()
+    await rows.first().waitFor()
     check(
-      'camp: the link next to the tabs opens it',
-      (await region.getByRole('list').isVisible()) &&
-        (await page.getByRole('group', { name: 'Část docházky' }).count()) === 1,
+      'camp: the link from the meetings opens the overview of the troop',
+      new URL(page.url()).searchParams.get('oddil') === 'vlc' &&
+        (await region.getByRole('list').isVisible()),
+      page.url(),
     )
     const vlc = members.filter((m) => m.troop === 'vlc')
     check(`camp: ${vlc.length} vlc children`, (await rows.count()) === vlc.length)
@@ -180,7 +192,7 @@ export default async function attendance({ browser, check }) {
       'camp: a child without a meeting day explained',
       await rowOf(noDay).getByText('Nemá den schůzek').isVisible(),
     )
-    await region.getByRole('button', { name: /skrýt/ }).click()
+    await go(page, '/vedouci/schuzky?oddil=vlc', 'Schůzky')
   }
 
   // ---- meetings: autosave round trip ----
@@ -266,8 +278,8 @@ export default async function attendance({ browser, check }) {
   }
 
   // ---- meetings: an older recorded meeting can be changed ----
-  if (thursdays.length > 2) {
-    const older = thursdays[1] // recorded by the seed
+  if (recordedThu.length > 2) {
+    const older = recordedThu[0]
     const olderPath = `meetings/vlc_${older}`
     const before = presentIds(await getDoc(olderPath)).includes('900102')
     await page
@@ -343,14 +355,18 @@ export default async function attendance({ browser, check }) {
   }
   await page.screenshot({ path: `${SCREENSHOTS}attendance-meetings.png`, fullPage: true })
 
-  // ---- link from the leader home to an older meeting ----
+  // ---- link (old address, as in sent reminder e-mails) to an older meeting ----
   {
     const older = thursdays[thursdays.length > 1 ? 1 : 0]
     await page.goto(
       page.url().split('/vedouci')[0] + `/vedouci/dochazka?oddil=vlc&schuzka=${older}`,
     )
     await page.getByRole('heading', { name: `Schůzka čtvrtek ${formatDay(older)}` }).waitFor()
-    check('link: ?schuzka opens that meeting', true)
+    check(
+      'link: the old ?schuzka address opens that meeting on the meetings page',
+      new URL(page.url()).pathname === '/vedouci/schuzky',
+      page.url(),
+    )
   }
 
   // ---- trips: overview (at home) ----
@@ -358,20 +374,25 @@ export default async function attendance({ browser, check }) {
     await page.goto(
       page.url().split('/vedouci')[0] + '/vedouci/dochazka?oddil=vlc&vyprava=seed-sarka',
     )
-    const sheet = page.getByRole('region', { name: 'Hry v Šárce' })
-    await sheet.waitFor()
+    const sheet = page.getByRole('region', { name: 'Přihlášky a platby' })
+    await page.getByRole('article', { name: 'Hry v Šárce' }).waitFor()
+    check(
+      'trips: the old ?vyprava address opens the trips page',
+      new URL(page.url()).pathname === '/vedouci/vypravy',
+      page.url(),
+    )
     const trips = page.getByRole('group', { name: 'Výprava' })
     check(
-      'trips: vlc + all trips only',
+      'trips: vlc + all events with a poster only',
       (await trips.getByText('Hry v Šárce').count()) === 1 &&
         (await trips.getByText('Zahajovací výprava').count()) === 1 &&
+        (await trips.getByText('Oddílová hra po Praze').count()) === 1 &&
         (await trips.getByText('Výprava do Brd').count()) === 0 &&
         (await trips.getByText('Zahajovací odpoledne v klubovně').count()) === 0,
     )
-    const mode = sheet.getByRole('group', { name: 'Režim' })
     check(
-      'trips: a past trip opens in „přehled“',
-      await pressed(mode.getByRole('button', { name: 'přehled' })),
+      'trips: the poster editor below',
+      await page.getByRole('form', { name: 'Plakátek' }).isVisible(),
     )
     check(
       'trips: only children on the list are shown',
@@ -383,7 +404,7 @@ export default async function attendance({ browser, check }) {
       'trips: signed-up Sojka attended per seed',
       await pressed(sojka.getByRole('button', { name: '✓ přijel' })),
     )
-    await sojka.getByRole('button', { name: 'nezaplaceno' }).click()
+    await sojka.getByRole('button', { name: 'zaplaceno', exact: true }).click()
     const path = 'events/seed-sarka/participants/900102'
     check(
       'trips: „zaplaceno“ saved',
@@ -428,20 +449,23 @@ export default async function attendance({ browser, check }) {
     await page.screenshot({ path: `${SCREENSHOTS}attendance-trips.png`, fullPage: true })
 
     // ---- trips: at the meeting point ----
-    await mode.getByRole('button', { name: 'na srazu' }).click()
+    await page.getByRole('link', { name: 'na sraz →' }).click()
+    await page.waitForURL(/\/vedouci\/na-srazu/)
+    const gather = page.getByRole('region', { name: 'Hry v Šárce' })
+    await gather.waitFor()
     check(
-      'gather: only the trip is shown — no switches above it',
-      (await page.getByRole('group', { name: 'Část docházky' }).count()) === 0 &&
-        !(await trips.isVisible()) &&
-        (await sheet.getByRole('group', { name: 'Režim' }).count()) === 0,
+      'gather: only the trip is shown — no title, switches or trip list',
+      (await page.getByRole('heading', { level: 1 }).count()) === 0 &&
+        (await page.getByRole('group', { name: 'Oddíl' }).count()) === 0 &&
+        (await trips.count()) === 0,
     )
-    const count = () => sheet.getByTestId('gather-count').innerText()
+    const count = () => gather.getByTestId('gather-count').innerText()
     check(
       'gather: count and cash',
       (await count()) === 'přijelo 1 z 1' &&
-        (await sheet.getByTestId('gather-cash').innerText()) === '250 Kč',
+        (await gather.getByTestId('gather-cash').innerText()) === '250 Kč',
     )
-    const card = sheet.getByRole('group', { name: 'Sojka' })
+    const card = gather.getByRole('group', { name: 'Sojka' })
     await card.getByRole('button', { name: 'Sojka zaplatil' }).click()
     await card.getByRole('button', { name: 'Sojka přijel' }).click()
     check(
@@ -459,26 +483,28 @@ export default async function attendance({ browser, check }) {
         return fieldValue(f?.paid) === true && fieldValue(f?.attended) === true
       }),
     )
-    await sheet.getByLabel('přišel někdo nepřihlášený').selectOption('900103')
+    await gather.getByLabel('přišel někdo nepřihlášený').selectOption('900103')
     check(
       'gather: a child who was not signed up can be added as came',
       (await until(async () => fieldValue((await getDoc(liskaPath))?.attended) === true)) &&
         (await until(async () => (await count()) === 'přijelo 2 z 2')) &&
-        (await sheet.getByRole('group', { name: 'Liška' }).getByText('nepřihlášen').count()) === 1,
+        (await gather.getByRole('group', { name: 'Liška' }).getByText('nepřihlášen').count()) === 1,
     )
     await page.screenshot({ path: `${SCREENSHOTS}attendance-gather.png`, fullPage: true })
-    await sheet.getByRole('button', { name: '← přehled' }).click()
+    await gather.getByRole('button', { name: '← jiná výprava' }).click()
     check(
-      'gather: „← přehled“ brings the switches back',
-      await page.getByRole('group', { name: 'Část docházky' }).isVisible(),
+      'gather: „← jiná výprava“ offers the trips',
+      (await trips.isVisible()) &&
+        (await page.getByRole('heading', { name: 'Na srazu', level: 1 }).isVisible()),
     )
+    await go(page, '/vedouci/vypravy?oddil=vlc&vyprava=seed-sarka', 'Výpravy')
   }
 
   // ---- a trip for everyone lists the children of both troops ----
   {
     await page.getByRole('group', { name: 'Výprava' }).getByText('Zahajovací výprava').click()
-    const sheet = page.getByRole('region', { name: 'Zahajovací výprava' })
-    await sheet.waitFor()
+    await page.getByRole('article', { name: 'Zahajovací výprava' }).waitFor()
+    const sheet = page.getByRole('region', { name: 'Přihlášky a platby' })
     const bobr = sheet.getByRole('group', { name: 'Bobr' })
     check(
       'all-trip: ss child Bobr listed from the vlc page, with his troop tag',
@@ -488,7 +514,7 @@ export default async function attendance({ browser, check }) {
       'all-trip: Sojka and Bobr signed up',
       (await sheet.getByTestId('trip-summary').innerText()).startsWith('přihlášeno 2'),
     )
-    await bobr.getByRole('button', { name: 'nezaplaceno' }).click()
+    await bobr.getByRole('button', { name: 'zaplaceno', exact: true }).click()
     check(
       "all-trip: payment of the other troop's child saved",
       await until(
@@ -504,16 +530,19 @@ export default async function attendance({ browser, check }) {
       .getByRole('group', { name: 'Oddíl' })
       .getByRole('button', { name: 'skauti a skautky' })
       .click()
-    await page
-      .getByRole('group', { name: 'Část docházky' })
-      .getByRole('button', { name: 'schůzky' })
-      .click()
     check(
-      'switch: ss chosen, kept in the URL',
-      await until(() => new URL(page.url()).searchParams.get('oddil') === 'ss'),
+      'switch: ss chosen, kept in the URL, ss trips listed',
+      (await until(() => new URL(page.url()).searchParams.get('oddil') === 'ss')) &&
+        (await until(() =>
+          page.getByRole('group', { name: 'Výprava' }).getByText('Výprava do Brd').isVisible(),
+        )),
     )
+    await page.getByRole('link', { name: '← zpět na vedoucovskou stránku' }).click()
+    await page.getByRole('link', { name: 'Schůzky', exact: true }).click()
+    await page.getByRole('heading', { name: 'Schůzky', level: 1 }).waitFor()
+    await page.getByText('načítám…').waitFor({ state: 'detached' })
     check(
-      'switch: ss meeting days',
+      'switch: the troop kept across pages — ss meeting days',
       (await page.getByRole('group', { name: 'Den schůzek' }).innerText()).includes('úterý'),
     )
     await page
@@ -525,17 +554,23 @@ export default async function attendance({ browser, check }) {
   await ctx.close()
 
   // ---- mobile ----
+  const PAGES = [
+    ['schuzky', '/vedouci/schuzky?oddil=vlc', 'Schůzky'],
+    ['dochazka', '/vedouci/dochazka?oddil=vlc', 'Přehled docházky'],
+    ['vypravy', '/vedouci/vypravy?oddil=vlc&vyprava=seed-sarka', 'Výpravy'],
+  ]
   for (const width of [360, 390]) {
     const { ctx, page, errors } = await openAttendance(
       browser,
-      '/vedouci/dochazka?oddil=vlc&vyprava=seed-sarka',
+      PAGES[2][1],
       {
         width,
         height: 800,
         mobile: true,
       },
+      'Výpravy',
     )
-    await page.getByRole('region', { name: 'Hry v Šárce' }).waitFor()
+    await page.getByRole('article', { name: 'Hry v Šárce' }).waitFor()
     const chip = await page
       .getByRole('group', { name: 'Výprava' })
       .getByRole('button', { pressed: true })
@@ -549,19 +584,16 @@ export default async function attendance({ browser, check }) {
       `mobile ${width}: no troop switch, the troop named by its tag`,
       !(await page.getByRole('group', { name: 'Oddíl' }).isVisible()) &&
         (await page
-          .getByRole('heading', { name: /Docházka/ })
+          .getByRole('heading', { name: /Výpravy/ })
           .getByTitle('vlčušky')
           .isVisible()),
     )
     const problems = []
-    for (const tab of ['výpravy', 'schůzky']) {
-      await page
-        .getByRole('group', { name: 'Část docházky' })
-        .getByRole('button', { name: tab })
-        .click()
+    for (const [name, path, heading] of PAGES) {
+      await go(page, path, heading)
       await page.waitForTimeout(300)
       const overflow = await horizontalOverflow(page)
-      if (overflow > 0) problems.push(`${tab}: overflow ${overflow}`)
+      if (overflow > 0) problems.push(`${name}: overflow ${overflow}`)
       const small = await page.evaluate(() =>
         [...document.querySelectorAll('a, button, input')]
           .filter((el) => {
@@ -570,20 +602,16 @@ export default async function attendance({ browser, check }) {
           })
           .map((el) => el.textContent.trim() || el.name),
       )
-      if (small.length) problems.push(`${tab}: small ${small.join(', ')}`)
+      if (small.length) problems.push(`${name}: small ${small.join(', ')}`)
       await page.screenshot({
-        path: `${SCREENSHOTS}attendance-${width}-${tab}.png`,
+        path: `${SCREENSHOTS}attendance-${width}-${name}.png`,
         fullPage: true,
       })
     }
-    await page
-      .getByRole('group', { name: 'Část docházky' })
-      .getByRole('button', { name: 'výpravy' })
-      .click()
-    await page
-      .getByRole('group', { name: 'Režim' })
-      .getByRole('button', { name: 'na srazu' })
-      .click()
+    await page.goto(
+      page.url().split('/vedouci')[0] + '/vedouci/na-srazu?oddil=vlc&vyprava=seed-sarka',
+    )
+    await page.getByTestId('gather-count').waitFor()
     await page.waitForTimeout(300)
     const gatherOverflow = await horizontalOverflow(page)
     if (gatherOverflow > 0) problems.push(`na srazu: overflow ${gatherOverflow}`)

@@ -1,5 +1,8 @@
 ## Budouci updates ##
 
+### Veřejná stránka ###
+- tabory + historie dopsat
+
 ### Klubovna ###
 - dodělat otroka
 - rámečky
@@ -30,6 +33,7 @@
 - potravinove intolerance
 - seznamy veci sladit
 - datepicker v terminech, kdy nejsou schuzky, zacit druhy na datu predchozi hodnoty
+- pridej moznost ke kazdemu prihlaseni ditete na akci pridat poznamku, ktera se nasledne zobrazi
 
 ## Mimo ##
 - logo - udelat pro vedouci do design slozky
@@ -38,8 +42,5 @@
 
 
 ## Udelat ted ##
-- tabory dopsat
-- pridej moznost ke kazdemu prihlaseni ditete na akci pridat poznamku, ktera se nasledne zobrazi 
-- rozdel v menu schuzky, vypravy a dochazka - v dochazce schuzky budou schuzky jak jsou +
 
 jaky mail rodicu se pouziva (login nebo is)?

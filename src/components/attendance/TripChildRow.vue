@@ -67,7 +67,7 @@ const off = 'border-[#d6ccb4] bg-transparent text-muted'
         :class="[toggle, participant?.paid ? on : off]"
         @click="emit('update', { paid: !participant?.paid })"
       >
-        {{ participant?.paid ? '✓ zaplaceno' : 'nezaplaceno' }}
+        {{ participant?.paid ? '✓ zaplaceno' : 'zaplaceno' }}
       </button>
       <span class="flex items-center gap-[7px]">
         <input

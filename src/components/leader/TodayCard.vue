@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { weekdayOf } from '@shared/meetingDays'
 import HandDrawnBox from '@/components/HandDrawnBox.vue'
 import AudienceTag from '@/components/parent/AudienceTag.vue'
-import { formatShortDay, meetingLink, tripLink } from './leaderText'
+import { formatShortDay, gatherLink, meetingLink } from './leaderText'
 
 // What the troop has today (SPEC §4.1): a meeting or the first day of a trip
 // (with a link to record attendance), a meeting day without a meeting (holidays
@@ -37,7 +37,7 @@ const record = computed(() => {
       audience: event.audience,
       text: `první den výpravy — ${event.title}`,
       action: 'zapsat účast a platby →',
-      to: tripLink(props.troop, event.id),
+      to: gatherLink(props.troop, event.id),
     }
   }
   return null
@@ -79,7 +79,7 @@ const quietText = computed(() => {
       <div v-else class="flex flex-wrap items-center gap-x-[18px] gap-y-2.5">
         <span class="font-hand text-[25px] leading-none font-bold text-brown">{{ date }}</span>
         <span class="text-[17px] text-muted" data-testid="today-text">{{ quietText }}</span>
-        <RouterLink to="/vedouci/dochazka" class="py-1 text-[15.5px] sm:ml-auto">
+        <RouterLink to="/vedouci/schuzky" class="py-1 text-[15.5px] sm:ml-auto">
           zapsat jiný termín →
         </RouterLink>
       </div>
