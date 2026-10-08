@@ -26,18 +26,20 @@ const sha1 = (text) => createHash('sha1').update(text).digest('hex')
 
 // --- data ------------------------------------------------------------------------
 
-// Phones sync often and ask several times per sync, so the directory is kept
-// in the instance for a while (SPEC §4.10).
+// Phones sync often and ask several times per sync, so the skautIS part of the
+// directory is kept in the instance for a while (SPEC §4.10).
 // Not in the emulator, where scripts and tests change the data.
 const DIRECTORY_TTL = process.env.FUNCTIONS_EMULATOR === 'true' ? 0 : 5 * 60 * 1000
 let directory = null
 
-async function loadDirectory() {
-  if (directory && Date.now() - directory.at < DIRECTORY_TTL) return directory.entries
-  const [members, leaders, others] = await Promise.all([
+// The skautIS part (children, leaders and their contacts) changes only with a
+// sync or an export import, so it is cached; the leaders' own „ostatní“ are
+// few and read fresh, so an edit or a deletion shows at the phone's next sync.
+async function loadSkautisData() {
+  if (directory && Date.now() - directory.at < DIRECTORY_TTL) return directory.data
+  const [members, leaders] = await Promise.all([
     db.collection('members').where('active', '==', true).get(),
     db.collection('skautisPeople').where('active', '==', true).get(),
-    db.collection('sharedContacts').get(),
   ])
   const privateOf = async (docs, id) =>
     docs.length ? db.getAll(...docs.map((d) => d.ref.collection('private').doc(id))) : []
@@ -47,15 +49,22 @@ async function loadDirectory() {
   ])
   const byParent = (snaps) =>
     Object.fromEntries(snaps.filter((s) => s.exists).map((s) => [s.ref.parent.parent.id, s.data()]))
-  const entries = directoryEntries({
+  const data = {
     members: members.docs.map((d) => ({ id: d.id, ...d.data() })),
     leaders: leaders.docs.map((d) => ({ id: d.id, ...d.data() })),
-    others: others.docs.map((d) => ({ id: d.id, ...d.data() })),
     contacts: byParent(contactDocs),
     details: byParent(detailDocs),
-  })
-  directory = { at: Date.now(), entries }
-  return entries
+  }
+  directory = { at: Date.now(), data }
+  return data
+}
+
+async function loadDirectory() {
+  const [data, others] = await Promise.all([
+    loadSkautisData(),
+    db.collection('sharedContacts').get(),
+  ])
+  return directoryEntries({ ...data, others: others.docs.map((d) => ({ id: d.id, ...d.data() })) })
 }
 
 async function cardsFor(uid) {

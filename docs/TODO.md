@@ -33,14 +33,13 @@
 
 ## Mimo ##
 - logo - udelat pro vedouci do design slozky
-- export kontaktu do google contacts?
+
 - README do githubu pro budouci programatory
 
 
 ## Udelat ted ##
 - tabory dopsat
-- vic vyrazne zadani poznamky ke google uctu
-- omluvenky se nezobrazuji v nahledu
-  automaticky mail vedoucim, kteri jsou v administraci prirazeni ke schuzce (resp dochazku v tento den zapisuji)
-  jmeno toho, kdo dochazku zapsal
+- pridej moznost ke kazdemu prihlaseni ditete na akci pridat poznamku, ktera se nasledne zobrazi 
+- rozdel v menu schuzky, vypravy a dochazka - v dochazce schuzky budou schuzky jak jsou +
 
+jaky mail rodicu se pouziva (login nebo is)?

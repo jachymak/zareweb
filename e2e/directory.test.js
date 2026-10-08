@@ -480,7 +480,7 @@ export default async function directorySuite({ browser, check }) {
         (await form.getByText('Vyplň telefon nebo e-mail.').isVisible()),
     )
     await form.getByLabel('Jméno').fill('Marie Kovářová')
-    await form.getByLabel('Kdo to je').fill('správkyně tábořiště')
+    await form.getByLabel('Poznámka').fill('správkyně tábořiště')
     await form.getByLabel('Telefon').fill('777 123 456')
     await form.getByRole('button', { name: 'uložit' }).click()
     await form.waitFor({ state: 'detached' })
@@ -516,7 +516,7 @@ export default async function directorySuite({ browser, check }) {
     await page.getByRole('button', { name: 'upravit výběr' }).click()
     await page
       .getByTestId('phone-groups')
-      .getByLabel('ostatní (starosta u tábora a tak)')
+      .getByLabel('ostatní', { exact: true })
       .check()
     await page.getByTestId('groups-saved').waitFor()
     const book = await dav(

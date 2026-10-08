@@ -5,6 +5,7 @@ import { useLeaderTroopStore } from '@/stores/leaderTroop'
 import { addSharedContact, deleteSharedContact, updateSharedContact } from '@/services/directory'
 import { sharedContactErrors } from '@shared/directory'
 import { nicknameOf } from '@shared/names'
+import { formatPhone } from '@shared/waitlistRules'
 
 // Adding or editing a contact of „ostatní“ (SPEC §4.10) — shared by all
 // leaders, any of them may change or delete it.
@@ -61,6 +62,16 @@ function save() {
 }
 const remove = () => run(() => deleteSharedContact(props.contact.id))
 
+// The phone in threes while typing and after pasting; a pasted „00420…“,
+// „(+420) …“ or „420…“ (12 digits) becomes „+420 …“.
+function onPhone(event) {
+  let text = event.target.value.trim().replace(/^\(?(\+|00)/, '+')
+  if (!text.startsWith('+') && /^420\d{9}$/.test(text.replace(/\D/g, ''))) text = `+${text}`
+  const value = /\d/.test(text) ? formatPhone(text) : text
+  form.value.phone = value
+  event.target.value = value
+}
+
 const label = 'mb-1 block text-[14.5px] font-medium text-ink'
 </script>
 
@@ -86,7 +97,7 @@ const label = 'mb-1 block text-[14.5px] font-medium text-ink'
         <span v-if="errors.name" class="mt-1 block text-[14px] text-red">{{ errors.name }}</span>
       </label>
       <label>
-        <span :class="label">Kdo to je</span>
+        <span :class="label">Poznámka</span>
         <input
           v-model="form.description"
           class="field-input py-[10px]"
@@ -97,8 +108,10 @@ const label = 'mb-1 block text-[14.5px] font-medium text-ink'
       <label>
         <span :class="label">Telefon</span>
         <input
-          v-model="form.phone"
+          :value="form.phone"
           type="tel"
+          placeholder="777 123 456"
+          @input="onPhone"
           class="field-input py-[10px]"
           :aria-invalid="Boolean(errors.reach)"
           autocomplete="off"

@@ -11,7 +11,7 @@ export const PHONE_GROUPS = [
   { key: 'vlcChildren', label: 'vlčušky (jejich vlastní čísla)' },
   { key: 'ssChildren', label: 'skauti a skautky (jejich vlastní čísla)' },
   { key: 'leaders', label: 'vedoucí' },
-  { key: 'others', label: 'ostatní (starosta u tábora a tak)' },
+  { key: 'others', label: 'ostatní' },
 ]
 export const ALL_GROUPS = PHONE_GROUPS.map((g) => g.key)
 
