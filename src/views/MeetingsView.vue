@@ -3,6 +3,7 @@ import { reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { weekdayOf } from '@shared/meetingDays'
 import { useAttendance } from '@/composables/useAttendance'
+import SaveStatus from '@/components/attendance/SaveStatus.vue'
 import AreaFooter from '@/components/AreaFooter.vue'
 import MeetingRecord from '@/components/attendance/MeetingRecord.vue'
 import LeaderHeader from '@/components/leader/LeaderHeader.vue'
@@ -78,5 +79,6 @@ const section = 'mx-auto max-w-[1040px] px-4 sm:px-6'
       </p>
     </div>
   </main>
+  <SaveStatus :state="a.saveState" :saved-at="a.savedAt" floating />
   <AreaFooter />
 </template>

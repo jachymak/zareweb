@@ -155,14 +155,44 @@ export function useAttendance() {
     }
   })
 
+  // Autosave state for the page: a write counts as saved once the server
+  // confirmed it (Firestore resolves then); a write still pending after a few
+  // seconds, or while offline, is shown as waiting for the connection.
+  const pending = ref(0)
+  const savedAt = ref(null) // Date of the last confirmed write
+  const slow = ref(false)
+  const online = ref(navigator.onLine)
+  const setOnline = () => (online.value = navigator.onLine)
+  window.addEventListener('online', setOnline)
+  window.addEventListener('offline', setOnline)
+  onUnmounted(() => {
+    window.removeEventListener('online', setOnline)
+    window.removeEventListener('offline', setOnline)
+  })
+  let slowTimer = null
+  const saveState = computed(() => {
+    if (pending.value) return slow.value || !online.value ? 'waiting' : 'saving'
+    if (saveError.value) return 'error'
+    return savedAt.value ? 'saved' : 'idle'
+  })
+
   // Surfaces a failed autosave; the live listeners bring back the saved state.
   async function save(write) {
     saveError.value = false
+    pending.value++
+    clearTimeout(slowTimer)
+    slowTimer = setTimeout(() => (slow.value = pending.value > 0), 4000)
     try {
       await write()
+      savedAt.value = new Date()
     } catch (e) {
       console.error('Saving attendance failed', e)
       saveError.value = true
+    } finally {
+      if (--pending.value === 0) {
+        clearTimeout(slowTimer)
+        slow.value = false
+      }
     }
   }
 
@@ -337,6 +367,8 @@ export function useAttendance() {
     loading,
     loadError,
     saveError,
+    saveState,
+    savedAt,
     // meetings
     weekdays,
     meetingTime,

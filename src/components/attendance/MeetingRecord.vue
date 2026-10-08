@@ -6,6 +6,7 @@ import AudienceTag from '@/components/parent/AudienceTag.vue'
 import { formatDay, plural } from '@/components/parent/parentText'
 import { WEEKDAY_NAMES } from './attendanceText'
 import MeetingExcuses from './MeetingExcuses.vue'
+import SaveStatus from './SaveStatus.vue'
 import { nicknameOf } from '@shared/names'
 
 // Meetings: pick the weekday and a past date, then tick who came. Every click
@@ -197,7 +198,7 @@ const small =
               >
                 vrátit na nezapsáno
               </button>
-              <span class="font-hand text-[20px] text-brown sm:ml-auto">ukládá se samo</span>
+              <SaveStatus :state="a.saveState" :saved-at="a.savedAt" class="sm:ml-auto" />
             </div>
             <p v-if="state === 'unrecorded'" class="note-warm m-0 mb-3.5" data-testid="unrecorded">
               Tahle schůzka ještě není zapsaná, do docházky se počítá až po zapsání.

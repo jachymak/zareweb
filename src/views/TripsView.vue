@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { isTrip } from '@shared/attendance'
 import { useAttendance } from '@/composables/useAttendance'
+import SaveStatus from '@/components/attendance/SaveStatus.vue'
 import { listPackingTemplates } from '@/services/packingTemplates'
 import AreaFooter from '@/components/AreaFooter.vue'
 import HandDrawnBox from '@/components/HandDrawnBox.vue'
@@ -178,5 +179,6 @@ const section = 'mx-auto max-w-[1040px] px-4 sm:px-6'
       </template>
     </div>
   </main>
+  <SaveStatus :state="a.saveState" :saved-at="a.savedAt" floating />
   <AreaFooter />
 </template>

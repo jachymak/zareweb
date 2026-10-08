@@ -42,5 +42,5 @@
 
 
 ## Udelat ted ##
-
+- google kalendar tam nekam dat navod na pridani s odkazem
 jaky mail rodicu se pouziva (login nebo is)?

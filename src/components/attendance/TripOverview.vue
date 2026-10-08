@@ -5,6 +5,7 @@ import { formatDay } from '@/components/parent/parentText'
 import { formatCzk } from './attendanceText'
 import TripChildPicker from './TripChildPicker.vue'
 import TripChildRow from './TripChildRow.vue'
+import SaveStatus from './SaveStatus.vue'
 
 // Who goes and settling the money, at home (SPEC §4.2 „přihlášky a platby“):
 // a row per child on the list, the others are signed up through a picker.
@@ -28,7 +29,7 @@ const signUp = (memberId, value) => a.setTripSignedUp(props.trip, memberId, valu
       <h3 id="trip-overview-title" class="m-0 text-[19px] font-medium tracking-[-0.02em] text-ink">
         Přihlášky a platby
       </h3>
-      <span class="font-hand text-[20px] text-brown sm:ml-auto">ukládá se samo</span>
+      <SaveStatus :state="a.saveState" :saved-at="a.savedAt" class="sm:ml-auto" />
     </div>
     <p class="m-0 mb-4 font-hand text-[22px] text-green" data-testid="trip-summary">
       přihlášeno {{ summary.signedUp }} · přijelo {{ summary.attended }} · zaplaceno

@@ -3,6 +3,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { isTrip } from '@shared/attendance'
 import { useAttendance } from '@/composables/useAttendance'
+import SaveStatus from '@/components/attendance/SaveStatus.vue'
 import AreaFooter from '@/components/AreaFooter.vue'
 import HandDrawnBox from '@/components/HandDrawnBox.vue'
 import TripGather from '@/components/attendance/TripGather.vue'
@@ -78,6 +79,11 @@ const section = 'mx-auto max-w-[1040px] px-4 sm:px-6'
               {{ trip.title }}
             </h2>
             <AudienceTag :audience="trip.audience" />
+            <SaveStatus
+              :state="a.saveState"
+              :saved-at="a.savedAt"
+              class="hidden sm:ml-auto sm:inline"
+            />
           </div>
           <TripGather :attendance="a" :trip="trip" />
         </section>
@@ -99,5 +105,6 @@ const section = 'mx-auto max-w-[1040px] px-4 sm:px-6'
       </template>
     </div>
   </main>
+  <SaveStatus :state="a.saveState" :saved-at="a.savedAt" floating />
   <AreaFooter />
 </template>

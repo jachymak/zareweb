@@ -202,6 +202,12 @@ export default async function attendance({ browser, check }) {
     const saved = await until(async () => presentIds(await getDoc(meetingPath)).includes('900102'))
     check('meetings: ticking Sojka records the meeting in Firestore', saved)
     check(
+      'meetings: „✓ uloženo“ shown once saved',
+      await until(async () =>
+        (await page.getByTestId('save-status').innerText()).startsWith('✓ uloženo v '),
+      ),
+    )
+    check(
       'meetings: count and unrecorded note update',
       (await page.getByTestId('present-count').innerText()) === 'přišlo 1 z 1' &&
         (await page.getByTestId('unrecorded').count()) === 0,
