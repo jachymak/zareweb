@@ -28,6 +28,7 @@ const PARENT_FIELDS = {
   last: 'příjmení',
   email: 'mail',
   phone: 'telefon',
+  note: 'poznámka',
   type: 'typ',
 }
 export const REQUIRED_COLUMNS = Object.values(COLUMNS).slice(0, 5)
@@ -61,6 +62,14 @@ function isoDate(text) {
 
 const phoneKey = (p) => normalizePhone(p) ?? p.replace(/\s+/g, '')
 const emailKey = (e) => e.toLowerCase()
+const EMAIL = /[^\s@,;:()<>"']+@[^\s@,;:()<>"']+\.[^\s@,;:()<>"'.]{2,}/g
+
+// E-mails written in a parent's note in skautIS: kept as contacts, but the
+// conference and the web's e-mails don't use them (SPEC §4.8 skautIS).
+const noteEmailsOf = (note) => uniqueBy(String(note ?? '').match(EMAIL) ?? [], emailKey)
+
+// All e-mails of a parent: the main one, then the ones from the note.
+export const parentEmails = (p) => [p.email, ...(p.noteEmails ?? [])].filter(Boolean)
 
 function uniqueBy(list, key) {
   const seen = new Set()
@@ -73,7 +82,7 @@ function uniqueBy(list, key) {
  * that are not there (then people is empty).
  * person: { firstName, lastName, nickname, birthDate, category, kind: 'child'
  * | 'leader' | null, phone, email (the main ones), parents: [{ name, email,
- * phone, label }], own: { phones, emails } }
+ * phone, label, noteEmails }], own: { phones, emails, mailedEmails } }
  */
 export function parseExport(rows) {
   const headerAt = rows.findIndex((r) => clean(r[0]) === COLUMNS.firstName)
@@ -93,12 +102,19 @@ export function parseExport(rows) {
         const name = [value(field('first')), value(field('last'))].filter(Boolean).join(' ')
         const email = values(field('email'))[0] ?? null
         const phone = values(field('phone'))[0] ?? null
-        if (!email && !phone) return null
-        return { name, email, phone, label: label ?? (value(field('type')) || 'jiný kontakt') }
+        const noteEmails = noteEmailsOf(field('note')).filter(
+          (e) => !email || emailKey(e) !== emailKey(email),
+        )
+        if (!email && !phone && !noteEmails.length) return null
+        return {
+          name,
+          email,
+          phone,
+          label: label ?? (value(field('type')) || 'jiný kontakt'),
+          noteEmails,
+        }
       }).filter(Boolean)
 
-      const parentPhones = new Set(parents.filter((p) => p.phone).map((p) => phoneKey(p.phone)))
-      const parentEmails = new Set(parents.filter((p) => p.email).map((p) => emailKey(p.email)))
       const phones = uniqueBy(
         [COLUMNS.phoneMain, COLUMNS.mobileOther, COLUMNS.phoneOther].flatMap((c) => values(get(c))),
         phoneKey,
@@ -122,24 +138,76 @@ export function parseExport(rows) {
         phone: values(get(COLUMNS.phoneMain))[0] ?? null,
         email: values(get(COLUMNS.emailMain))[0] ?? null,
         parents,
-        own: {
-          phones: phones.filter((p) => !parentPhones.has(phoneKey(p))),
-          emails: emails.filter((e) => !parentEmails.has(emailKey(e))),
-        },
+        phones,
+        emails,
       }
     })
-  return { people, missingColumns: [] }
+  return { people: mergeRows(people).map(withOwnContacts), missingColumns: [] }
+}
+
+// skautIS gives a person with several „Ostatní“ one row per contact (the
+// rest of the rows repeats) — one person per name and birth date.
+function mergeRows(rows) {
+  const byKey = new Map()
+  for (const row of rows) {
+    const key = foldText(`${row.firstName} ${row.lastName} ${row.birthDate ?? ''}`)
+    const seen = byKey.get(key)
+    if (!seen) {
+      byKey.set(key, row)
+      continue
+    }
+    seen.parents = uniqueBy([...seen.parents, ...row.parents], (p) => JSON.stringify(p))
+    seen.phones = uniqueBy([...seen.phones, ...row.phones], phoneKey)
+    seen.emails = uniqueBy([...seen.emails, ...row.emails], emailKey)
+  }
+  return [...byKey.values()]
+}
+
+// „Ostatní“ of type „dítě“ is no parent: the parents want the troop's e-mails
+// to go to the child too (SPEC §4.8 skautIS) — its e-mail is the child's own
+// one that gets them (`mailedEmails`), its phone the child's own.
+const isChildEntry = (p) => foldText(p.label) === 'dite'
+
+// The child's own contacts: all of its phones and e-mails without its parents'.
+function withOwnContacts({ phones, emails, ...person }) {
+  const entries = person.parents.filter(isChildEntry)
+  const parents = person.parents.filter((p) => !isChildEntry(p))
+  const ofParents = new Set(parents.flatMap(parentEmails).map(emailKey))
+  const parentPhones = new Set(parents.filter((p) => p.phone).map((p) => phoneKey(p.phone)))
+  const mailedEmails = uniqueBy(
+    entries.flatMap((p) => [p.email].filter(Boolean)),
+    emailKey,
+  )
+  return {
+    ...person,
+    parents,
+    own: {
+      phones: uniqueBy(
+        [...phones, ...entries.map((p) => p.phone).filter(Boolean)],
+        phoneKey,
+      ).filter((p) => !parentPhones.has(phoneKey(p))),
+      emails: uniqueBy([...emails, ...mailedEmails], emailKey).filter(
+        (e) => !ofParents.has(emailKey(e)) || mailedEmails.some((m) => emailKey(m) === emailKey(e)),
+      ),
+      mailedEmails,
+    },
+  }
 }
 
 // What is compared and stored of a child's contacts.
 const contactsOf = (c) => ({
-  parents: (c?.parents ?? []).map(({ name, email, phone, label }) => ({
+  parents: (c?.parents ?? []).map(({ name, email, phone, label, noteEmails }) => ({
     name: name ?? '',
     email: email ?? null,
     phone: phone ?? null,
     label: label ?? null,
+    noteEmails: noteEmails ?? [],
   })),
-  own: { phones: c?.own?.phones ?? [], emails: c?.own?.emails ?? [] },
+  own: {
+    phones: c?.own?.phones ?? [],
+    emails: c?.own?.emails ?? [],
+    mailedEmails: c?.own?.mailedEmails ?? [],
+  },
 })
 const sameContacts = (a, b) => JSON.stringify(contactsOf(a)) === JSON.stringify(contactsOf(b))
 const samePhone = (a, b) => !a || !b || phoneKey(a) === phoneKey(b)

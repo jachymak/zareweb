@@ -42,7 +42,10 @@ export const TOOL_GROUPS = [
     title: 'správa',
     tone: 'red',
     adminOnly: true,
-    tools: [{ to: '/vedouci/administrace', label: 'Administrace' }],
+    tools: [
+      { to: '/vedouci/administrace', label: 'Administrace' },
+      { to: '/vedouci/navody', label: 'Návody' },
+    ],
   },
 ]
 

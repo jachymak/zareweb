@@ -10,6 +10,7 @@ const docs = {
   'settings/public': { lastWaitlistReset: '2026-08-24', waitlistWarnAge: 12, waitlistMaxAge: 15 },
   'settings/app': {
     campRequirements: { vlc: { trips: 4, meetingPct: 60 }, ss: { trips: 4, meetingPct: 60 } },
+    webAdmin: { name: 'Hobit', email: 'spravce@zare.test' },
   },
 }
 const removed = ['settings/meetings', 'settings/emails', 'settings/recorders']

@@ -138,6 +138,13 @@ const router = createRouter({
       component: () => import('@/views/ContactsView.vue'),
       meta: { auth: true, roles: LEADERS },
     },
+    // Only for admins until the guides are ready for all leaders.
+    {
+      path: '/vedouci/navody',
+      name: 'leader-guides',
+      component: () => import('@/views/GuidesView.vue'),
+      meta: { auth: true, roles: ['admin'] },
+    },
     {
       path: '/vedouci/nahled',
       name: 'leader-preview',

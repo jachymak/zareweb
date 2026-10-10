@@ -1,6 +1,7 @@
 // Accounts & pairing (SPEC §4.8): labels, filters and pairing suggestions.
 import { troopByCode } from '@/constants/troops'
 import { nicknameOf } from '@shared/names'
+import { parentEmails } from '@shared/skautisExport'
 
 export const ROLE_LABELS = {
   pending: 'čeká na schválení',
@@ -49,7 +50,10 @@ export function suggestChildren(account, members, parentContacts) {
     if (!m.active || m.parentUids?.includes(account.id)) continue
     const reasons = []
     const parents = parentContacts[m.id] ?? []
-    if (email && parents.some((p) => p.email?.trim().toLowerCase() === email)) {
+    if (
+      email &&
+      parents.some((p) => parentEmails(p).some((e) => e.trim().toLowerCase() === email))
+    ) {
       reasons.push('e-mail rodiče ve skautISu')
     }
     const named =

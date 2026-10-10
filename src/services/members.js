@@ -76,6 +76,21 @@ export async function getParentContacts(memberId) {
   return snap.exists() ? snap.data().parents : []
 }
 
+// The child's contacts from skautIS ({ parents, own }) — leaders, and the
+// child's parents (SPEC §3.1).
+export async function getChildContacts(memberId) {
+  const snap = await getDoc(doc(members, memberId, 'private', 'contacts'))
+  const data = snap.exists() ? snap.data() : {}
+  return {
+    parents: data.parents ?? [],
+    own: {
+      phones: data.own?.phones ?? [],
+      emails: data.own?.emails ?? [],
+      mailedEmails: data.own?.mailedEmails ?? [],
+    },
+  }
+}
+
 // { memberId: parents[] } for the given members.
 export async function getParentContactsOf(memberIds) {
   const entries = await Promise.all(memberIds.map(async (id) => [id, await getParentContacts(id)]))

@@ -39,6 +39,7 @@ const MEMBERS = {
     ]),
     child('900102', 'Klára', 'Krejčí', 'Sojka', '2016-11-02', 'svetluska', [
       ['Rodič', 'Testovací', 'rodic@zare.test', '+420 602 333 999'],
+      ['Marie', 'Krejčí', null, '+420 603 111 222'], // her e-mail only in the note
     ]),
     child('900104', 'Antonín', 'Registrovaný', 'Kulíšek', '2017-09-30', 'vlce', [
       ['Jana', 'Registrovaná', 'jana.jina@example.cz', null],

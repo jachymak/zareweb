@@ -1,6 +1,7 @@
 // Texts and helpers of the leaders' directory (SPEC §4.10).
 import { entryCard } from '@shared/directory'
 import { pragueToday } from '@shared/schoolYear'
+import { parentEmails } from '@shared/skautisExport'
 
 export const FILTERS = [
   { value: 'all', label: 'všichni' },
@@ -22,7 +23,7 @@ export const matchesFilter = (entry, filter) =>
 export const hasContacts = (e) =>
   e.kind !== 'child'
     ? Boolean(e.phone || e.email)
-    : e.parents.some((p) => p.phone || p.email) ||
+    : e.parents.some((p) => p.phone || parentEmails(p).length) ||
       e.own.phones.length > 0 ||
       e.own.emails.length > 0
 

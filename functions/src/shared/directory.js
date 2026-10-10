@@ -2,7 +2,7 @@
 // for the phone (CardDAV and „uložit do telefonu“). Dependency-free.
 
 import { CARD_MARK, buildVCard } from './vcard.js'
-import { foldText } from './skautisExport.js'
+import { foldText, parentEmails } from './skautisExport.js'
 
 // Groups a leader can have in the phone (`phoneContacts.groups`).
 export const PHONE_GROUPS = [
@@ -142,7 +142,7 @@ export function entryCard(entry, groups = ALL_GROUPS, { savedOn = null, rev = nu
     ...own.phones.map((value) => ({ value, label: 'dítě' })),
   ]
   const emails = [
-    ...parents.filter((p) => p.email).map((p) => ({ value: p.email, label: p.label })),
+    ...parents.flatMap((p) => parentEmails(p).map((value) => ({ value, label: p.label }))),
     ...own.emails.map((value) => ({ value, label: 'dítě' })),
   ]
   if (!phones.length && !emails.length) return null

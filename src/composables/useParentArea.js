@@ -33,6 +33,7 @@ export function useParentArea(loadChildren) {
   const loadError = ref(false)
   const children = ref([])
   const settings = ref(campRequirements(null)) // camp requirement per troop
+  const webAdmin = ref(null) // { name, email } — whom parents write about their contacts
   const events = ref([])
   const news = ref([])
   const albums = ref([]) // published, newest first
@@ -71,6 +72,7 @@ export function useParentArea(loadChildren) {
           ),
         ])
       settings.value = campRequirements(appSettings)
+      webAdmin.value = appSettings?.webAdmin ?? null
       events.value = eventList
       news.value = newsList
       albums.value = albumList
@@ -224,6 +226,7 @@ export function useParentArea(loadChildren) {
     children,
     troops,
     settings,
+    webAdmin,
     events,
     relevantNews,
     relevantAlbums,

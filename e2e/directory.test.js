@@ -95,9 +95,10 @@ function xlsx(rows) {
 const HEADER = [
   'Jméno', 'Příjmení', 'Přezdívka', 'Datum narození', 'Kategorie', 'E-mail (další)',
   'E-mail (hlavní)', 'Mobil (další)', 'Mobil / telefon (hlavní)', 'Telefon (další)',
-  'Otec: jméno', 'Otec: příjmení', 'Otec: mail', 'Otec: telefon',
-  'Matka: jméno', 'Matka: příjmení', 'Matka: mail', 'Matka: telefon',
-  'Ostatní: jméno', 'Ostatní: příjmení', 'Ostatní: mail', 'Ostatní: telefon', 'Ostatní: typ',
+  'Otec: jméno', 'Otec: příjmení', 'Otec: mail', 'Otec: telefon', 'Otec: poznámka',
+  'Matka: jméno', 'Matka: příjmení', 'Matka: mail', 'Matka: telefon', 'Matka: poznámka',
+  'Ostatní: jméno', 'Ostatní: příjmení', 'Ostatní: mail', 'Ostatní: telefon', 'Ostatní: poznámka',
+  'Ostatní: typ',
 ] // prettier-ignore
 const person = (fields) => HEADER.map((h) => fields[h] ?? '')
 const EXPORT = xlsx([
@@ -109,15 +110,19 @@ const EXPORT = xlsx([
   ['116.22.222 - Záře', '', 'Ne'],
   ['Osoby'],
   HEADER,
-  // Sojka: father and mother, her main e-mail is her mother's
+  // Sojka: father and mother, her main e-mail is her mother's; the mother
+  // doesn't want mass e-mails, her e-mail is only in the note
   person({
     Jméno: 'Klára', Příjmení: 'Krejčí', Přezdívka: 'Sojka', 'Datum narození': '02.11.2016',
     Kategorie: 'Světluška', 'E-mail (hlavní)': 'matka.krejci@example.cz',
     'Otec: jméno': 'Rodič', 'Otec: příjmení': 'Testovací', 'Otec: mail': 'rodic@zare.test',
-    'Otec: telefon': '602333444', 'Matka: jméno': 'Marie', 'Matka: příjmení': 'Krejčí',
-    'Matka: mail': 'matka.krejci@example.cz', 'Matka: telefon': '603111222',
+    'Otec: telefon': '602333444',
+    'Otec: poznámka': 'Automaticky převedeno z původních kontaktů rodičů.',
+    'Matka: jméno': 'Marie', 'Matka: příjmení': 'Krejčí', 'Matka: telefon': '603111222',
+    'Matka: poznámka': 'Nechce hromadné maily: matka.krejci@example.cz',
   }),
-  // Vydra: own phones (two in one cell), grandmother as „ostatní“, placeholders for the mother
+  // Vydra: own phones (two in one cell), grandmother as „ostatní“, placeholders for the mother;
+  // a second „ostatní“ „dítě“ (his e-mail, so that he gets the e-mails too) repeats the row
   person({
     Jméno: 'Matěj', Příjmení: 'Pokorný', Přezdívka: 'Vydruška', 'Datum narození': '12.12.2012',
     Kategorie: 'Skaut', 'Mobil / telefon (hlavní)': '605101202, 605999888',
@@ -125,6 +130,14 @@ const EXPORT = xlsx([
     'Otec: telefon': '608777888', 'Matka: jméno': '(jméno matky)', 'Matka: příjmení': '(příjmení matky)',
     'Ostatní: jméno': 'Věra', 'Ostatní: příjmení': 'Pokorná', 'Ostatní: telefon': '601222333',
     'Ostatní: typ': 'babička',
+  }),
+  person({
+    Jméno: 'Matěj', Příjmení: 'Pokorný', Přezdívka: 'Vydruška', 'Datum narození': '12.12.2012',
+    Kategorie: 'Skaut', 'Mobil / telefon (hlavní)': '605101202, 605999888',
+    'Otec: jméno': 'Jiří', 'Otec: příjmení': 'Pokorný', 'Otec: mail': 'pokorny.j@example.cz',
+    'Otec: telefon': '608777888', 'Matka: jméno': '(jméno matky)', 'Matka: příjmení': '(příjmení matky)',
+    'Ostatní: jméno': 'Matěj', 'Ostatní: příjmení': 'Pokorný', 'Ostatní: mail': 'matej.p@example.cz',
+    'Ostatní: typ': 'dítě',
   }),
   person({ Jméno: 'Nikdo', Příjmení: 'Neznámý', 'Datum narození': '01.01.2015', Kategorie: 'Vlče' }),
   // Ondys: birthday; his phone differs from the sync
@@ -240,9 +253,14 @@ export default async function directorySuite({ browser, check }) {
     check(
       'import: stored parents with labels, own contacts',
       sojka?.parents?.map((p) => p.label).join() === 'otec,matka' &&
+        sojka.parents[0].noteEmails.length === 0 &&
+        sojka.parents[1].email === null &&
+        sojka.parents[1].noteEmails.join() === 'matka.krejci@example.cz' &&
         sojka.own.emails.length === 0 &&
         vydra?.parents?.map((p) => `${p.label}:${p.name}`).join() ===
           'otec:Jiří Pokorný,babička:Věra Pokorná' &&
+        vydra.own.emails.join() === 'matej.p@example.cz' &&
+        vydra.own.mailedEmails.join() === 'matej.p@example.cz' &&
         vydra.own.phones.join() === '605101202,605999888' &&
         Boolean(sojka.importedAt),
       JSON.stringify([sojka, vydra]),
@@ -298,6 +316,12 @@ export default async function directorySuite({ browser, check }) {
         vydra.includes('narozeniny 12. 12. 2012'),
       vydra,
     )
+    const sojka = await rowOf(page, 'Sojka').innerText()
+    check(
+      'list: a parent e-mail from the note shown with the parent',
+      /matka · Marie Krejčí[\s\S]*matka\.krejci@example\.cz/i.test(sojka),
+      sojka,
+    )
     check(
       'list: phone and e-mail links',
       (await rowOf(page, 'Vydra')
@@ -346,6 +370,7 @@ export default async function directorySuite({ browser, check }) {
         !one.includes('uloženo') &&
         one.includes('ORG:Záře · vlčušky') &&
         one.includes('X-ABLabel:matka') &&
+        one.includes('matka.krejci@example.cz') &&
         one.includes('BDAY:2016-11-02') &&
         /NOTE:otec: Rodič Testovací\\, matka: Marie Krejčí\\nstaženo z webu Záře /.test(one),
       one,
@@ -449,6 +474,7 @@ export default async function directorySuite({ browser, check }) {
       'carddav: an ss child has only its own contacts (no parents group chosen)',
       multiget.text.includes('FN:⚜️ Vydra (Pokorný Matěj)') &&
         multiget.text.includes('X-ABLabel:dítě') &&
+        multiget.text.includes('matej.p@example.cz') &&
         !multiget.text.includes('X-ABLabel:otec'),
       multiget.text,
     )

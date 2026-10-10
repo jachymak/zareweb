@@ -126,7 +126,7 @@ export default async function skautisSuite({ browser, check }) {
     'changed children: Sojka parents, Vydra → Vydrák, Ježek back',
     /změnění \(3\)/.test(membersChanged) &&
       membersChanged.includes(
-        'kontakty rodičů: Rodič Testovací, rodic@zare.test, +420 602 333 444 → Rodič Testovací, rodic@zare.test, +420 602 333 999',
+        'kontakty rodičů: Rodič Testovací, rodic@zare.test, +420 602 333 444; Marie Krejčí, +420 603 111 222 → Rodič Testovací, rodic@zare.test, +420 602 333 999; Marie Krejčí, +420 603 111 222',
       ) &&
       membersChanged.includes('přezdívka: Vydra → Vydrák') &&
       /Ježek[\s\S]*znovu v oddíle/.test(membersChanged),

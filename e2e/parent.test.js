@@ -129,6 +129,55 @@ export default async function parent({ browser, check }) {
     )
   }
 
+  // ---- the family's contacts under the cards: where e-mails go, all on „kontakty +“ ----
+  {
+    const block = page.getByTestId('family-contacts')
+    await block.waitFor()
+    const line = await block.getByTestId('mailed-to').innerText()
+    check(
+      'contacts: one line with the main e-mails of all the parents and a child’s mailed one',
+      line === 'e-maily od nás chodí na rodic@zare.test, sojka@example.cz, dub.tomas@example.cz',
+      line,
+    )
+    const toggle = block.getByRole('button', { name: 'kontakty' })
+    const region = block.getByRole('region', { name: 'Kontakty na vás' })
+    check(
+      'contacts: details folded by default',
+      (await toggle.getAttribute('aria-expanded')) === 'false' && !(await region.isVisible()),
+    )
+    await toggle.click()
+    const text = await region.innerText()
+    const mailed = await region
+      .getByTestId('mailed')
+      .evaluateAll((els) => els.map((e) => e.parentElement.firstElementChild.textContent.trim()))
+    check(
+      'contacts: per child (different parents), only main e-mails marked, note e-mail unmarked',
+      /Sojka[\s\S]*otec · Rodič Testovací[\s\S]*matka · Marie Krejčí[\s\S]*matka\.krejci@example\.cz[\s\S]*Bobr[\s\S]*otec · Tomáš Dub/.test(
+        text,
+      ) &&
+        text.includes('602 333 444') &&
+        text.includes('dítě · Sojka') &&
+        mailed.join() === 'rodic@zare.test,sojka@example.cz,dub.tomas@example.cz,rodic@zare.test',
+      `${mailed} | ${text}`,
+    )
+    check(
+      'contacts: the web admin to write to, from settings/app',
+      text.includes('Napište správci webu (Hobit, spravce@zare.test)') &&
+        (await region.getByRole('link', { name: 'spravce@zare.test' }).getAttribute('href')) ===
+          `mailto:spravce@zare.test?subject=${encodeURIComponent('Kontakty na web Záře')}`,
+      text,
+    )
+    const { idToken } = await signInRest(EMAIL, PASSWORD)
+    const read = (id) =>
+      fetch(`${FIRESTORE}/members/${id}/private/contacts`, {
+        headers: { Authorization: `Bearer ${idToken}` },
+      }).then((r) => r.status)
+    check('contacts: rules — own child readable', (await read('900102')) === 200)
+    check('contacts: rules — other child denied', (await read('900103')) === 403)
+    await page.screenshot({ path: `${SCREENSHOTS}parent-contacts.png` })
+    await toggle.click()
+  }
+
   // ---- news ----
   {
     const featured = await page.getByTestId('news-featured').innerText()

@@ -26,6 +26,7 @@ const {
   children,
   troops,
   settings,
+  webAdmin,
   events,
   relevantNews,
   relevantAlbums,
@@ -73,6 +74,7 @@ const section = 'mx-auto max-w-[960px] px-4 sm:px-6'
           v-if="children.length"
           :stats="childStats"
           :settings="settings"
+          :web-admin="webAdmin"
           :excusing="excusing"
           :excuse-errors="excuseErrors"
           :preview="!!previewOf"

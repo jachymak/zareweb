@@ -3,17 +3,19 @@ import { computed } from 'vue'
 import { troopByCode } from '@/constants/troops'
 import HandDrawnBox from '@/components/HandDrawnBox.vue'
 import AudienceTag from './AudienceTag.vue'
+import FamilyContacts from './FamilyContacts.vue'
 import ExcuseToday from './ExcuseToday.vue'
 import { MEETING_DAYS, campRequirementText } from './parentText'
 import { nicknameOf } from '@shared/names'
 
-// One card per child: meeting day, attendance and trips this school year and the
+// One card per child: meeting day, attendance and trips this school year, the
 // excuse from today's meeting — active on the child's meeting day, else greyed
 // out with when it can be used. The leaders' preview shows it active on other
-// days too, as a sample.
+// days too, as a sample. Below the camp requirement and the family's contacts.
 const props = defineProps({
   stats: { type: Array, required: true }, // [{ member, percent, trips, excuse, dayToday }]
   settings: { type: Object, required: true }, // camp requirement per troop
+  webAdmin: { type: Object, default: null }, // { name, email } — for the family's contacts
   excusing: { type: Set, default: () => new Set() }, // memberIds being saved
   excuseErrors: { type: Object, default: () => ({}) },
   preview: { type: Boolean, default: false },
@@ -103,5 +105,6 @@ const tintOf = (troop) => TINTS[troop] ?? { stroke: '#b9a97f', fill: 'var(--colo
     >
       {{ line }}
     </p>
+    <FamilyContacts :members="stats.map((s) => s.member)" :web-admin="webAdmin" />
   </div>
 </template>

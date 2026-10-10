@@ -89,10 +89,24 @@ function contactsText(c) {
   if (!c) return 'žádné'
   const parts = [
     ...c.parents.map((p) =>
-      [p.label, p.name, p.phone && displayPhone(p.phone), p.email].filter(Boolean).join(' '),
+      [
+        p.label,
+        p.name,
+        p.phone && displayPhone(p.phone),
+        p.email,
+        ...(p.noteEmails ?? []).map((e) => `${e} (z poznámky, bez hromadných e-mailů)`),
+      ]
+        .filter(Boolean)
+        .join(' '),
     ),
     c.own.phones.length || c.own.emails.length
-      ? ['dítě', ...c.own.phones.map(displayPhone), ...c.own.emails].join(' ')
+      ? [
+          'dítě',
+          ...c.own.phones.map(displayPhone),
+          ...c.own.emails.map((e) =>
+            (c.own.mailedEmails ?? []).includes(e) ? `${e} (chodí sem e-maily)` : e,
+          ),
+        ].join(' ')
       : null,
   ].filter(Boolean)
   return parts.join('; ') || 'žádné'
@@ -121,7 +135,15 @@ const row = 'rounded-[3px] border-[1.5px] border-[#e2d9c2] bg-cream px-3.5 py-2 
         <li>
           sloupce Jméno, Příjmení, Přezdívka, Datum narození, Kategorie; z kontaktů E-mail (hlavní),
           E-mail (další), Mobil / telefon (hlavní), Mobil (další), Telefon (další); u rodičů (otec,
-          matka, ostatní) jméno, příjmení, e-mail, telefon a u ostatních i typ,
+          matka, ostatní) jméno, příjmení, e-mail, telefon, poznámka a u ostatních i typ,
+        </li>
+        <li>
+          e-mail rodiče, který nechce hromadné maily, patří jen do poznámky — web ho ukáže vedoucím,
+          ale e-maily o akcích na něj neposílá (stejně jako konference).
+        </li>
+        <li>
+          „Ostatní“ s typem „dítě“ web vezme jako kontakt dítěte, na který chodí e-maily (jako do
+          konference) — rodičem ho nedělá.
         </li>
         <li>soubor nahraj tak, jak ho skautIS dá (XLSX), nic v něm neupravuj.</li>
       </ul>

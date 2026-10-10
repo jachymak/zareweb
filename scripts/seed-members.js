@@ -42,7 +42,17 @@ export const MEMBERS = [
         phone: '+420 602 333 444',
         label: 'otec',
       },
+      // Doesn't want mass e-mails: her e-mail is only in the note in skautIS.
+      {
+        name: 'Marie Krejčí',
+        email: null,
+        phone: '+420 603 111 222',
+        label: 'matka',
+        noteEmails: ['matka.krejci@example.cz'],
+      },
     ],
+    // Her own e-mail, which the parents want to get the e-mails too („Ostatní“ „dítě“).
+    own: { phones: [], emails: ['sojka@example.cz'], mailedEmails: ['sojka@example.cz'] },
     pairedWith: ['rodic@zare.test'],
   },
   {

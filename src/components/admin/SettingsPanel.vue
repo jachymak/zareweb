@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
 import { campRequirements } from '@shared/attendance'
+import { EMAIL_RE } from '@shared/waitlistRules'
 import { TROOPS } from '@/constants/troops'
 import { useSaveState } from '@/composables/useSaveState'
 import { getAppSettings, updateAppSettings } from '@/services/settings'
@@ -8,8 +9,9 @@ import { campRequirementText } from '@/components/parent/parentText'
 import CollapsibleSection from './CollapsibleSection.vue'
 import SaveBar from './SaveBar.vue'
 
-// „Nastavení“ — SPEC §4.8 Settings: the camp requirement of each troop
-// (settings/app.campRequirements). Each part can be switched off (null).
+// „Nastavení“ — SPEC §4.8 Settings: the web admin shown to parents
+// (settings/app.webAdmin) and the camp requirement of each troop
+// (settings/app.campRequirements; each part can be switched off, null).
 defineEmits(['open-tab'])
 
 const PARTS = {
@@ -23,7 +25,20 @@ const loadError = ref('')
 const form = reactive({})
 const saved = ref(null)
 const errors = ref({})
-const opened = reactive({ vlc: false, ss: false }) // collapsed sections
+const opened = reactive({ webAdmin: false, vlc: false, ss: false }) // collapsed sections
+// Whom parents write about their contacts (SPEC §3.1): { name, email } or null.
+const webAdmin = reactive({ name: '', email: '' })
+const savedWebAdmin = ref(null)
+const currentWebAdmin = computed(() => {
+  const name = webAdmin.name.trim()
+  const email = webAdmin.email.trim()
+  return name || email ? { name, email } : null
+})
+const webAdminText = computed(() =>
+  currentWebAdmin.value
+    ? [currentWebAdmin.value.name, currentWebAdmin.value.email].filter(Boolean).join(', ')
+    : 'nikdo — rodičům se napíše, ať se ozvou vedoucím',
+)
 const campText = (code) => campRequirementText(current.value[code]) || 'bez podmínky na tábor'
 
 function fill(requirements) {
@@ -39,9 +54,13 @@ function fill(requirements) {
 
 onMounted(async () => {
   try {
-    const requirements = campRequirements(await getAppSettings())
+    const appSettings = await getAppSettings()
+    const requirements = campRequirements(appSettings)
     fill(requirements)
     saved.value = requirements
+    webAdmin.name = appSettings?.webAdmin?.name ?? ''
+    webAdmin.email = appSettings?.webAdmin?.email ?? ''
+    savedWebAdmin.value = currentWebAdmin.value
   } catch (e) {
     console.error('Loading settings failed', e)
     loadError.value = 'Nastavení se nepodařilo načíst. Zkus stránku obnovit.'
@@ -64,7 +83,11 @@ const current = computed(() =>
     ]),
   ),
 )
-const dirty = computed(() => JSON.stringify(current.value) !== JSON.stringify(saved.value))
+const dirty = computed(
+  () =>
+    JSON.stringify(current.value) !== JSON.stringify(saved.value) ||
+    JSON.stringify(currentWebAdmin.value) !== JSON.stringify(savedWebAdmin.value),
+)
 
 function validate() {
   const e = {}
@@ -76,7 +99,12 @@ function validate() {
       }
     }
   }
+  const admin = currentWebAdmin.value
+  if (admin && !EMAIL_RE.test(admin.email))
+    e.webAdminEmail = 'Zadej e-mail, na který rodiče napíšou.'
+  if (admin && !admin.name) e.webAdminName = 'Zadej jméno.'
   errors.value = e
+  if (e.webAdminEmail || e.webAdminName) opened.webAdmin = true
   for (const { code } of TROOPS) {
     if (Object.keys(e).some((k) => k.startsWith(`${code}.`))) opened[code] = true
   }
@@ -88,8 +116,14 @@ const saveState = useSaveState()
 async function submit() {
   if (!validate()) return
   const requirements = current.value
-  if (await saveState.save(() => updateAppSettings({ campRequirements: requirements }))) {
+  const admin = currentWebAdmin.value
+  if (
+    await saveState.save(() =>
+      updateAppSettings({ campRequirements: requirements, webAdmin: admin }),
+    )
+  ) {
     saved.value = requirements
+    savedWebAdmin.value = admin
   }
 }
 </script>
@@ -103,6 +137,48 @@ async function submit() {
 
     <form v-else novalidate class="flex flex-col gap-3.5" @submit.prevent="submit">
       <div>
+        <h3 class="m-0 mb-1 text-[19px] font-semibold text-ink">Správce webu</h3>
+        <p class="m-0 max-w-[70ch] text-[15px] leading-normal text-muted">
+          Rodiče u svých dětí vidí, jaké kontakty na ně máme a kam chodí e-maily. Když chtějí něco
+          změnit, mají napsat tomuhle člověku — změny se dělají ve skautISu.
+        </p>
+      </div>
+      <CollapsibleSection
+        v-model:open="opened.webAdmin"
+        title="Komu rodiče píšou"
+        :summary="webAdminText"
+        data-testid="web-admin"
+      >
+        <div class="grid gap-3 sm:grid-cols-2">
+          <label class="flex flex-col gap-[7px]">
+            <span class="text-[15px] font-medium text-ink">Jméno</span>
+            <input
+              v-model="webAdmin.name"
+              class="field-input py-2.5"
+              autocomplete="off"
+              :aria-invalid="!!errors.webAdminName"
+            />
+            <span v-if="errors.webAdminName" class="text-sm text-red">
+              {{ errors.webAdminName }}
+            </span>
+          </label>
+          <label class="flex flex-col gap-[7px]">
+            <span class="text-[15px] font-medium text-ink">E-mail</span>
+            <input
+              v-model="webAdmin.email"
+              type="email"
+              class="field-input py-2.5"
+              autocomplete="off"
+              :aria-invalid="!!errors.webAdminEmail"
+            />
+            <span v-if="errors.webAdminEmail" class="text-sm text-red">
+              {{ errors.webAdminEmail }}
+            </span>
+          </label>
+        </div>
+      </CollapsibleSection>
+
+      <div class="mt-3">
         <h3 class="m-0 mb-1 text-[19px] font-semibold text-ink">Podmínky na tábor</h3>
         <p class="m-0 max-w-[70ch] text-[15px] leading-normal text-muted">
           Kolik toho dítě musí za školní rok stihnout, aby mohlo na tábor. Kdo na to nemá, svítí v

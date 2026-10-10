@@ -779,9 +779,31 @@ export default async function adminExtras({ browser, check: report }) {
       'camp: the text follows (meetings not required for vlc)',
       (await vlc.getByTestId('camp-text').innerText()) === 'na tábor je potřeba 3 výpravy',
     )
+    // The web admin shown to parents (seeded: Hobit, spravce@zare.test)
+    const webAdmin = page.getByTestId('web-admin')
+    check(
+      'web admin: summary from settings/app',
+      (await webAdmin.innerText()).includes('Hobit, spravce@zare.test'),
+    )
+    await expand(webAdmin)
+    await webAdmin.getByLabel('E-mail').fill('spatne')
+    await page.getByRole('button', { name: 'uložit' }).click()
+    check(
+      'web admin: a wrong e-mail is refused',
+      await webAdmin.getByText('Zadej e-mail, na který rodiče napíšou.').isVisible(),
+    )
+    await webAdmin.getByLabel('Jméno').fill('Správce Záře')
+    await webAdmin.getByLabel('E-mail').fill('web@zare.test')
     await page.getByRole('button', { name: 'uložit' }).click()
     await page.getByText('uloženo ✓').waitFor()
-    const camp = (await getDoc('settings/app')).data?.campRequirements
+    const settingsApp = (await getDoc('settings/app')).data
+    check(
+      'web admin: saved to settings/app',
+      settingsApp?.webAdmin?.name === 'Správce Záře' &&
+        settingsApp.webAdmin.email === 'web@zare.test',
+      JSON.stringify(settingsApp?.webAdmin),
+    )
+    const camp = settingsApp?.campRequirements
     check(
       'camp: saved to settings/app per troop (null = not required)',
       camp?.vlc.trips === 3 &&

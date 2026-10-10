@@ -78,8 +78,9 @@ service cloud.firestore {
       allow read: if isLeader() || (hasRole(['parent']) && request.auth.uid in resource.data.parentUids);
       allow write: if isAdmin();
 
+      // Parents see what contacts we have on them (SPEC §3.1 children cards).
       match /private/{docId} {
-        allow read: if isLeader();
+        allow read: if isLeader() || (docId == 'contacts' && isParentOf(memberId));
         allow write: if isAdmin();
       }
     }

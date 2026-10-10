@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { troopTag } from '@/components/admin/accounts'
 import { formatDate } from '@/components/waitlist/waitlistText'
 import { displayPhone } from '@shared/contacts'
+import { parentEmails } from '@shared/skautisExport'
 import { hasContacts, telHref } from './directoryText'
 
 // One child (with its parents), leader or shared contact („ostatní“, with
@@ -42,7 +43,7 @@ const lines = computed(() => {
             label: p.label ?? 'rodič',
             name: p.name,
             phones: [p.phone].filter(Boolean),
-            emails: [p.email].filter(Boolean),
+            emails: parentEmails(p),
           })),
           { label: 'dítě', name: null, phones: e.own.phones, emails: e.own.emails },
         ]
