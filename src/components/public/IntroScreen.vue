@@ -1,6 +1,7 @@
 <script setup>
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import ZareLogo from '@/components/ZareLogo.vue'
+import { pragueToday } from '@shared/schoolYear'
 import leto1280 from '@/assets/public/intro-leto-1280.webp'
 import leto1920 from '@/assets/public/intro-leto-1920.webp'
 import leto2560 from '@/assets/public/intro-leto-2560.webp'
@@ -32,16 +33,14 @@ const paintings = {
     shade: 'bg-[radial-gradient(ellipse_at_0%_100%,rgba(18,26,20,.84),rgba(18,26,20,0)_72%)]',
   },
 }
-// Months 0–11 → season: Dec–Feb winter, Mar–May spring, Jun–Aug summer, Sep–Nov autumn.
+// Months 1–12 → season: Dec–Feb winter, Mar–May spring, Jun–Aug summer, Sep–Nov autumn.
 const SEASONS = ['zima', 'jaro', 'leto', 'podzim']
-// Temporarily the summer painting all year; null = by the month again.
-const FIXED_SEASON = 'leto'
 function season() {
   // In development `?obdobi=podzim` previews another season's painting.
   const forced = import.meta.env.DEV && new URLSearchParams(location.search).get('obdobi')
   if (forced) return forced
-  if (FIXED_SEASON) return FIXED_SEASON
-  return SEASONS[Math.floor(((new Date().getMonth() + 1) % 12) / 3)]
+  const month = Number(pragueToday().slice(5, 7))
+  return SEASONS[Math.floor((month % 12) / 3)]
 }
 const painting = paintings[season()] ?? paintings.leto
 // The image covers the screen, so on a tall screen it is wider than the viewport.

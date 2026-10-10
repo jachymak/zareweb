@@ -64,3 +64,5 @@ e2e/screenshots/
 
 # One-off import of the old waiting list (personal data, service account key)
 /import/
+
+/old/

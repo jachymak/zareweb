@@ -37,10 +37,8 @@
 
 ## Mimo ##
 - logo - udelat pro vedouci do design slozky
-
+- google kalendar tam nekam dat navod na pridani s odkazem
 - README do githubu pro budouci programatory
 
 
 ## Udelat ted ##
-- google kalendar tam nekam dat navod na pridani s odkazem
-jaky mail rodicu se pouziva (login nebo is)?
