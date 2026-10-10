@@ -322,6 +322,10 @@ export default async function parent({ browser, check }) {
         'Hobit',
       ),
     )
+    check(
+      'leaders: the group’s contact person highlighted',
+      (await page.getByTestId('primary-contact').innerText()).includes('Hobit'),
+    )
   }
 
   // ---- poster link ----

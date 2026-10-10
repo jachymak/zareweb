@@ -63,6 +63,8 @@ export const LEADERS = [
     name: 'Theodor Mikolajek',
     roleTitle: 'vedoucí oddílu',
     group: 'ss',
+    primary: true, // the contact person of the group
+
     phone: '+420 776 772 777',
     email: 'hobit@example.cz',
   },
@@ -458,7 +460,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   await clear('events', ['participants', 'poster'])
 
   const now = new Date()
-  for (const [order, { id, group, birthDate, ...person }] of LEADERS.entries()) {
+  for (const [order, { id, group, birthDate, primary, ...person }] of LEADERS.entries()) {
     await put(`skautisPeople/${id}`, {
       ...person,
       troop: group === 'other' ? null : group,
@@ -470,6 +472,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       personId: id,
       group,
       roleTitle: null,
+      primary: !!primary,
       photoUrl: null,
       photoPath: null,
       order,

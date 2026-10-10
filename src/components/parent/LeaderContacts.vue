@@ -1,14 +1,15 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { CONTACT_GROUP_NAMES } from '@/constants/troops'
+import LeaderCard from './LeaderCard.vue'
 import PillSwitch from './PillSwitch.vue'
 import SectionHeading from './SectionHeading.vue'
-import { nicknameOf } from '@shared/names'
 
-// „Vedoucí“ — contact cards by group (contactCard in @shared/contacts). A
-// missing phone or e-mail is simply not shown.
+// „Vedoucí“ — contact cards by group (contactCard in @shared/contacts). The
+// group's contact person comes first, highlighted (same card), so parents know whom to
+// write to; a missing phone or e-mail is simply not shown.
 const props = defineProps({
-  contacts: { type: Array, required: true }, // [{ id, group, photoUrl, nickname, name, roleTitle, phone, email }]
+  contacts: { type: Array, required: true }, // [{ id, group, primary, photoUrl, nickname, name, roleTitle, phone, email }]
   initialGroup: { type: String, default: 'vlc' },
 })
 
@@ -17,12 +18,11 @@ const TILTS = [-1.6, 1.4, -1, 1.8, -1.3, 1.1]
 
 const group = ref(props.initialGroup)
 const visible = computed(() => props.contacts.filter((c) => c.group === group.value))
-
-// „Theodor Mikolajek · vedoucí oddílu“ (the name only when the heading is the nickname)
-const subtitle = (c) =>
-  [nicknameOf(c) !== c.name && c.name, c.roleTitle].filter(Boolean).join(' · ')
-
-const telHref = (phone) => `tel:${phone.replace(/\s+/g, '')}`
+// the contact person first
+const ordered = computed(() => [
+  ...visible.value.filter((c) => c.primary),
+  ...visible.value.filter((c) => !c.primary),
+])
 </script>
 
 <template>
@@ -32,34 +32,24 @@ const telHref = (phone) => `tel:${phone.replace(/\s+/g, '')}`
     </SectionHeading>
     <p v-if="!visible.length" class="m-0 text-[16px] text-muted">Tady zatím nikdo není.</p>
     <ul
-      class="m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(min(100%,290px),1fr))] gap-[18px] p-0"
+      class="m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(min(100%,290px),1fr))] gap-[18px] p-0 pt-4"
     >
-      <li v-for="(contact, i) in visible" :key="contact.id" class="flex items-start gap-[13px]">
-        <div
-          class="flex-none bg-paper px-1.5 pt-1.5 pb-[5px] shadow-[0_6px_14px_rgba(34,48,31,.1)]"
-          :style="{ rotate: `${TILTS[i % TILTS.length]}deg` }"
+      <li
+        v-for="(contact, i) in ordered"
+        :key="contact.id"
+        :class="
+          contact.primary &&
+          'relative rounded-2xl border-[1.5px] border-[#cfe0cf] bg-green-light p-2.5'
+        "
+        :data-testid="contact.primary ? 'primary-contact' : null"
+      >
+        <p
+          v-if="contact.primary"
+          class="absolute -top-[15px] right-3 m-0 rounded-full border-[1.5px] border-[#cfe0cf] bg-green-light px-2.5 text-[13.5px] leading-[24px] whitespace-nowrap text-muted"
         >
-          <img
-            v-if="contact.photoUrl"
-            :src="contact.photoUrl"
-            alt=""
-            loading="lazy"
-            class="block aspect-[3/4] w-[68px] object-cover"
-          />
-          <div v-else class="aspect-[3/4] w-[68px] bg-sand" aria-hidden="true" />
-        </div>
-        <div class="min-w-0">
-          <h3 class="m-0 font-hand text-[23px] leading-[1.15] font-bold text-ink">
-            {{ nicknameOf(contact) }}
-          </h3>
-          <p class="m-0 mb-[5px] text-[14.5px] text-muted">{{ subtitle(contact) }}</p>
-          <p v-if="contact.phone" class="m-0 text-[15px]">
-            <a :href="telHref(contact.phone)" class="text-ink">{{ contact.phone }}</a>
-          </p>
-          <p v-if="contact.email" class="m-0 text-[15px] break-words">
-            <a :href="`mailto:${contact.email}`">{{ contact.email }}</a>
-          </p>
-        </div>
+          <span class="font-hand text-[19px] font-bold text-green">kontaktní osoba</span>
+        </p>
+        <LeaderCard :contact="contact" :tilt="TILTS[i % TILTS.length]" />
       </li>
     </ul>
   </section>

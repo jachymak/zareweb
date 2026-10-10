@@ -18,9 +18,15 @@ export const displayPhone = (phone) =>
 
 // What parents see of a contact: its own fields for a manual contact, the
 // leader's details from skautIS otherwise (null when the leader has left).
-// The role title from skautIS can be overridden per contact.
+// The role title from skautIS can be overridden per contact; `primary` marks
+// the group's contact person, whom parents should reach first.
 export function contactCard(contact, person) {
-  const base = { id: contact.id, group: contact.group, photoUrl: contact.photoUrl ?? null }
+  const base = {
+    id: contact.id,
+    group: contact.group,
+    photoUrl: contact.photoUrl ?? null,
+    primary: !!contact.primary,
+  }
   if (!contact.personId) {
     return {
       ...base,

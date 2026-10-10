@@ -2,10 +2,11 @@
 // with skautIS details and warnings, role title override, photos resized in
 // the browser and stored in Storage `contacts/` (replaced and removed photos
 // deleted), order, moving between groups, adding a skautIS leader and a manual
-// contact (validation), removing; what parents then see in „Vedoucí“; security
-// rules; mobile widths. Accounts from `scripts/seed-users.js`, leaders and
-// contacts from `scripts/seed-activity.js` (vlc: Ondys, Nina, Oskar without a
-// phone; ss: Hobit, Jasmína, Kuba; other: Elina, Quido, manual Kormorán).
+// contact (validation), removing, the contact person of a group; what parents
+// then see in „Vedoucí“; security rules; mobile widths. Accounts from
+// `scripts/seed-users.js`, leaders and contacts from `scripts/seed-activity.js`
+// (vlc: Ondys, Nina, Oskar without a phone; ss: Hobit — contact person, Jasmína,
+// Kuba; other: Elina, Quido, manual Kormorán).
 
 import { createRequire } from 'node:module'
 import { pathToFileURL } from 'node:url'
@@ -149,6 +150,17 @@ export default async function contactsSuite({ browser, check }) {
       .selectOption({ label: 'Hobit (Theodor Mikolajek)' })
     await page.getByRole('button', { name: 'přidat', exact: true }).click()
     check('add: skautIS leader added', await row(page, 'Hobit').isVisible())
+    check(
+      'primary: a leader in a second group is not its contact person',
+      !(await row(page, 'Hobit').getByLabel('kontaktní osoba skupiny').isChecked()),
+    )
+    await row(page, 'Nina').getByLabel('kontaktní osoba skupiny').check()
+    await row(page, 'Hobit').getByLabel('kontaktní osoba skupiny').check()
+    check(
+      'primary: one per group',
+      !(await row(page, 'Nina').getByLabel('kontaktní osoba skupiny').isChecked()),
+    )
+    await row(page, 'Nina').getByLabel('kontaktní osoba skupiny').check()
 
     await group(page, 'ostatní').click()
     await page.getByRole('button', { name: 'Odebrat kontakt Elina' }).click()
@@ -206,6 +218,14 @@ export default async function contactsSuite({ browser, check }) {
       JSON.stringify(sova),
     )
     check('saved: unchanged role stays from skautIS', all['seed-800002'].roleTitle === null)
+    check(
+      'saved: contact person per group',
+      all['seed-800002'].primary === true &&
+        all['seed-800011'].primary === true &&
+        hobit.find((c) => c.group === 'vlc')?.primary === false &&
+        !all['seed-800001'].primary,
+      JSON.stringify(hobit),
+    )
     const file = await fetch(`${STORAGE}/${encodeURIComponent(firstPhoto)}?alt=media`, {
       headers: owner,
     })
@@ -281,6 +301,15 @@ export default async function contactsSuite({ browser, check }) {
       ondys.locator('img').evaluate((img) => img.complete && img.naturalWidth === 480),
     )
     check('parents: photo loads from Storage', photoLoaded)
+    const primary = section.getByTestId('primary-contact')
+    check(
+      'parents: contact person highlighted first',
+      (await primary.count()) === 1 &&
+        (await primary.innerText()).includes('Nina') &&
+        (await primary.innerText()).includes('kontaktní osoba') &&
+        (await section.locator('li').first().getAttribute('data-testid')) === 'primary-contact',
+      await section.innerText(),
+    )
     await p.page.getByRole('button', { name: 'ostatní' }).click()
     const other = await section.innerText()
     check(

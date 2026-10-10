@@ -35,6 +35,7 @@ const toDraft = (c) => ({
   photoUrl: null,
   photoPath: null,
   roleTitle: null,
+  primary: false,
   ...c,
   photoBlob: null,
   ...(c.personId ? {} : Object.fromEntries(MANUAL_FIELDS.map((f) => [f, c[f] ?? '']))),
@@ -59,7 +60,13 @@ onMounted(load)
 // The documents the draft would be saved as (without new photos).
 function toDoc(c, order) {
   const roleTitle = c.roleTitle?.trim() || null
-  const fields = { personId: c.personId ?? null, group: c.group, roleTitle, order }
+  const fields = {
+    personId: c.personId ?? null,
+    group: c.group,
+    roleTitle,
+    primary: !!c.primary,
+    order,
+  }
   if (!c.personId) for (const f of MANUAL_FIELDS) fields[f] = c[f].trim() || null
   return { id: c.id, ...fields, photoUrl: c.photoUrl ?? null, photoPath: c.photoPath ?? null }
 }
@@ -90,10 +97,17 @@ function move(contact, step) {
   ;[all[a], all[b]] = [all[b], all[a]]
   draft.value = all
 }
+// One contact person per group.
+function setPrimary(contact, value) {
+  for (const c of inGroup.value) c.primary = value && c === contact
+}
 const remove = (contact) => (draft.value = draft.value.filter((c) => c !== contact))
 
-// A contact moved to another group goes to its end.
+// A contact moved to another group goes to its end (and stops being the
+// contact person when that group has one).
 function setGroup(contact, value) {
+  if (draft.value.some((c) => c !== contact && c.group === value && c.primary))
+    contact.primary = false
   contact.group = value
   draft.value = [...draft.value.filter((c) => c !== contact), contact]
 }
@@ -174,7 +188,8 @@ async function submit() {
     <p class="m-0 mb-4 max-w-[70ch] text-[15.5px] leading-normal text-muted">
       Tyto kontakty se rodičům zobrazují v sekci Vedoucí. Skupina určuje, pod kterým přepínačem je
       najdou. Jméno, telefon a e-mail se berou ze skautISu — tady se nastavuje skupina, role, fotka
-      a pořadí. Do „ostatních“ jde přidat i někoho, kdo ve skautISu oddílu není.
+      a pořadí. Kontaktní osoba skupiny se rodičům ukáže zvýrazněná nahoře, aby věděli, komu psát
+      nejdřív. Do „ostatních“ jde přidat i někoho, kdo ve skautISu oddílu není.
     </p>
 
     <p v-if="loadError" role="alert" class="text-red">{{ loadError }}</p>
@@ -193,6 +208,7 @@ async function submit() {
           :first="i === 0"
           :last="i === inGroup.length - 1"
           @group="(value) => setGroup(c, value)"
+          @primary="(value) => setPrimary(c, value)"
           @up="move(c, -1)"
           @down="move(c, 1)"
           @remove="remove(c)"

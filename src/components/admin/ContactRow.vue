@@ -18,7 +18,7 @@ const props = defineProps({
   first: { type: Boolean, default: false },
   last: { type: Boolean, default: false },
 })
-defineEmits(['up', 'down', 'remove', 'group'])
+defineEmits(['up', 'down', 'remove', 'group', 'primary'])
 
 const id = useId()
 const manual = computed(() => !props.contact.personId)
@@ -222,6 +222,21 @@ function removePhoto() {
           </select>
         </label>
       </div>
+
+      <label class="flex cursor-pointer items-start gap-2 text-[15px] text-ink">
+        <input
+          type="checkbox"
+          :checked="contact.primary"
+          class="mt-[3px] size-[18px] flex-none accent-green"
+          @change="$emit('primary', $event.target.checked)"
+        />
+        <span>
+          kontaktní osoba skupiny
+          <span class="text-[13.5px] text-muted-2"
+            >— rodiče ji uvidí nahoře a budou psát nejdřív jí</span
+          >
+        </span>
+      </label>
 
       <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
         <button
