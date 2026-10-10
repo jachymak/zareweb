@@ -128,7 +128,8 @@ export function useParentArea(loadChildren) {
     relevantEvents.value.find((e) => !e.cancelled && e.startDate >= today),
   )
 
-  // `excuse`: undefined = no meeting today, null = not excused, else the excuse.
+  // `excuse`: undefined = no meeting today, null = not excused, else the excuse;
+  // `dayToday`: today is the child's meeting weekday (with or without a meeting).
   const childStats = computed(() => {
     const pastEvents = events.value.filter((e) => e.startDate <= today)
     return children.value.map((member) => ({
@@ -136,6 +137,7 @@ export function useParentArea(loadChildren) {
       percent: meetingStats(member, meetings.value).percent,
       trips: tripCount(member, pastEvents, participantOf),
       excuse: excuses.value[member.id],
+      dayToday: !!member.meetingDay && member.meetingDay === weekdayOf(today),
     }))
   })
 

@@ -3,6 +3,7 @@ import { useLeaderHome } from '@/composables/useLeaderHome'
 import AreaFooter from '@/components/AreaFooter.vue'
 import LeaderGreeting from '@/components/leader/LeaderGreeting.vue'
 import LeaderHeader from '@/components/leader/LeaderHeader.vue'
+import LeaderTools from '@/components/leader/LeaderTools.vue'
 import TroopSwitch from '@/components/leader/TroopSwitch.vue'
 import TodayCard from '@/components/leader/TodayCard.vue'
 import UpcomingEvents from '@/components/leader/UpcomingEvents.vue'
@@ -48,13 +49,19 @@ const section = 'mx-auto max-w-[1000px] px-4 sm:px-6'
       </div>
 
       <div :class="section" class="pt-[22px]">
+        <!-- The drawn outline sits inside the box; pull it out to the column edges. -->
         <TodayCard
+          class="-mx-[5px] sm:-mx-2.5"
           :plan="todayPlan"
           :troop="troop"
           :today="today"
           :meeting-time="meetingTime"
           :excuses="todayExcuses"
         />
+      </div>
+
+      <div :class="section" class="pt-[22px]">
+        <LeaderTools />
       </div>
 
       <div :class="section" class="pt-8">

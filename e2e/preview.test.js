@@ -155,7 +155,7 @@ export default async function preview({ browser, check }) {
     )
     check(
       'excuse: no sample note on the meeting day',
-      !(await card.getByTestId('excuse-sample').isVisible()),
+      !(await card.getByTestId('excuse-hint').getAttribute('title')).startsWith('ukázka'),
     )
 
     // Another day: still shown, as a sample with the note.
@@ -164,7 +164,7 @@ export default async function preview({ browser, check }) {
     await card.getByRole('button', { name: 'omluvit z dnešní schůzky' }).click()
     check(
       'excuse: sample on another day, click explains',
-      (await card.getByTestId('excuse-sample').isVisible()) &&
+      (await card.getByTestId('excuse-hint').getAttribute('title')).startsWith('ukázka') &&
         (await card.getByText('Tohle je jen náhled').isVisible()),
     )
     await deleteDoc('settings/meetings')

@@ -362,12 +362,13 @@ export default async function parent({ browser, check }) {
     const button = card.getByRole('button', { name: 'omluvit z dnešní schůzky' })
     check('excuse: button on the child card on the meeting day', await button.isVisible())
     if (!['tue', 'wed'].includes(weekday)) {
+      const other = page.getByRole('article', { name: 'Bobr', exact: true })
       check(
-        'excuse: no button for a child without a meeting today',
-        (await page
-          .getByRole('article', { name: 'Bobr', exact: true })
-          .getByTestId('excuse')
-          .count()) === 0,
+        'excuse: greyed out with its day for a child without a meeting today',
+        (await other.getByRole('button', { name: 'omluvit z dnešní schůzky' }).isDisabled()) &&
+          (await other.getByTestId('excuse-hint').getAttribute('title')).startsWith(
+            'omluvit jde v den schůzky (',
+          ),
       )
     }
     await button.click()
