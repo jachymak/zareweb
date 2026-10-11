@@ -31,9 +31,14 @@ export function eventEmailState(event, today, { notified, enabled }) {
   return enabled ? 'send' : 'off'
 }
 
-// Listed under „Nejbližší akce“: registration started, not cancelled, not started yet.
+// Listed under „Nejbližší akce“: registration started, not cancelled, not over yet
+// (an ongoing event stays until the end of its last day, e.g. for the return time).
 export function isOpenForSignUp(event, today) {
-  return registrationState(event, today) !== 'none' && !event.cancelled && event.startDate > today
+  return (
+    registrationState(event, today) !== 'none' &&
+    !event.cancelled &&
+    (event.endDate ?? event.startDate) >= today
+  )
 }
 
 // `2027-03-12` → „12. 3.“
