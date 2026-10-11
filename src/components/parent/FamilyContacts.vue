@@ -130,21 +130,21 @@ const mailto = computed(
                 class="rounded-full bg-cream px-2 py-px text-[13px] whitespace-nowrap text-green ring-1 ring-[#9cc0a8] ring-inset"
                 data-testid="mailed"
               >
-                ✉ chodí sem e-maily
+                sem posíláme e-maily
               </span>
             </span>
           </li>
         </ul>
-        <p v-else class="m-0">Kontakty na vás ve skautISu zatím nemáme.</p>
+        <p v-else class="m-0">Kontakty na vás zatím nemáme.</p>
       </div>
       <p class="m-0">
-        E-maily z webu i z oddílové konference chodí na adresy označené ✉. Chcete něco změnit?
+        Oddílové e-maily posíláme na označené adresy. Chcete něco změnit?
         <template v-if="webAdmin?.email">
           Napište správci webu ({{ webAdmin.name }},
           <a :href="mailto" class="break-words">{{ webAdmin.email }}</a
-          >), upraví to ve skautISu.
+          >), opraví to.
         </template>
-        <template v-else>Napište nám, upravíme to ve skautISu.</template>
+        <template v-else>Napište nám, opravíme to.</template>
       </p>
     </div>
   </div>

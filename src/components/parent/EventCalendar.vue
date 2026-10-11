@@ -39,7 +39,7 @@ const coversBothTroops = computed(() => props.troops.length > 1)
 const filterText = computed(() => {
   if (allTroops.value || coversBothTroops.value) return 'Vidíte akce obou oddílů.'
   const troop = props.troops[0] === 'vlc' ? 'vlčušky' : 'skauty a skautky'
-  return `Vidíte akce pro ${troop} a akce pro všechny.`
+  return `Vidíte akce pro ${troop} a společné akce.`
 })
 
 const months = computed(() => {

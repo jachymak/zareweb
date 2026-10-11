@@ -46,7 +46,7 @@ const years = computed(() => bySchoolYear(shown.value))
 const filterText = computed(() => {
   if (!oneTroop.value || allTroops.value) return 'Vidíte alba obou oddílů.'
   const troop = troops.value[0] === 'vlc' ? 'vlčušek' : 'skautů a skautek'
-  return `Vidíte alba ${troop} a z akcí pro všechny.`
+  return `Vidíte alba ${troop} a ze společných akcí.`
 })
 
 const TILTS = [-1.6, 1.2, -0.8, 1.5, -1.2, 0.9]

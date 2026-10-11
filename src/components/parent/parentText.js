@@ -115,11 +115,14 @@ export function daysLeftText(deadline, today) {
 
 // „na tábor je potřeba 4 výpravy a 60 % schůzek“ — only the required parts;
 // '' when the troop requires nothing. `req` = campRequirements(…)[troop].
+// Trips alone agree with the verb: „jsou potřeba 3 výpravy“.
 export function campRequirementText({ trips, meetingPct }) {
   const parts = []
   if (trips !== null) parts.push(`${trips} ${plural(trips, 'výprava', 'výpravy', 'výprav')}`)
   if (meetingPct !== null) parts.push(`${meetingPct} % schůzek`)
-  return parts.length ? `na tábor je potřeba ${parts.join(' a ')}` : ''
+  if (!parts.length) return ''
+  const verb = meetingPct === null && trips >= 2 && trips <= 4 ? 'jsou' : 'je'
+  return `na tábor ${verb} potřeba ${parts.join(' a ')}`
 }
 
 // Nickname of a leader, or of each organizer joined by commas.

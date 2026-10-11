@@ -777,7 +777,7 @@ export default async function adminExtras({ browser, check: report }) {
     await vlc.getByLabel('Výprav aspoň — Vlčušky').fill('3')
     check(
       'camp: the text follows (meetings not required for vlc)',
-      (await vlc.getByTestId('camp-text').innerText()) === 'na tábor je potřeba 3 výpravy',
+      (await vlc.getByTestId('camp-text').innerText()) === 'na tábor jsou potřeba 3 výpravy',
     )
     // The web admin shown to parents (seeded: Hobit, spravce@zare.test)
     const webAdmin = page.getByTestId('web-admin')
@@ -814,7 +814,7 @@ export default async function adminExtras({ browser, check: report }) {
     )
 
     const parent = await openAs(browser, 'rodic@zare.test')
-    await parent.page.getByText('Vlčušky: na tábor je potřeba 3 výpravy').waitFor()
+    await parent.page.getByText('Vlčušky: na tábor jsou potřeba 3 výpravy').waitFor()
     check(
       'camp: the parent of children in both troops sees each troop’s requirement',
       await parent.page
