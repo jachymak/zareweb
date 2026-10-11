@@ -2,7 +2,7 @@
 // How a new account gets access (SPEC §2.4, §4.8).
 const steps = [
   'Založíš si účet a napíšeš, koho u nás máš.',
-  'Správce ověří, že k nám patříš (třeba podle e-mailu rodiče ve skautISu), a propojí účet s tvými dětmi.',
+  'Správce ověří, že k nám patříš, a propojí účet s tvými dětmi.',
   'Přijde ti e-mail — pak uvidíš docházku, akce i fotky.',
 ]
 </script>
