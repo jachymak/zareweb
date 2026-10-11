@@ -43,4 +43,3 @@
 
 ## Udelat ted ##
 seznam veci na stranku pro novacky, kde bude stale videt
-sticky menu

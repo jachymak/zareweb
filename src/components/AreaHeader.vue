@@ -19,7 +19,7 @@ async function signOut() {
 </script>
 
 <template>
-  <header>
+  <header class="top-0 z-30 sm:sticky">
     <HeaderBand stripe="bg-red">
       <div
         class="mx-auto flex max-w-[1120px] flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 sm:px-6"
