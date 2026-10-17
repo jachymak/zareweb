@@ -10,7 +10,7 @@ import {
   writeBatch,
 } from 'firebase/firestore'
 import { httpsCallable } from 'firebase/functions'
-import { db, functions, getDoc, getDocs } from './firebase'
+import { db, functions, getDoc, getDocs, onDocSnapshot } from './firebase'
 import { fromDoc, fromQuery } from './utils'
 
 const users = collection(db, 'users')
@@ -20,7 +20,7 @@ export async function getUser(uid) {
 }
 
 export function subscribeUser(uid, callback, onError) {
-  return onSnapshot(doc(users, uid), (snap) => callback(fromDoc(snap)), onError)
+  return onDocSnapshot(doc(users, uid), (snap) => callback(fromDoc(snap)), onError)
 }
 
 // New accounts always start as pending (enforced by firestore.rules).

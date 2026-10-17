@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { redirectFor } from '@/router'
 import { pragueToday } from '@shared/schoolYear'
+import NavigationProgress from '@/components/NavigationProgress.vue'
 
 // Dev server only (left out of the build): the day pretended by `?dnes=`
 // (src/devToday.js), shown in a badge.
@@ -28,6 +29,7 @@ watch(
 </script>
 
 <template>
+  <NavigationProgress />
   <RouterView />
   <DevTodayBadge v-if="devToday" :day="devToday" />
 </template>

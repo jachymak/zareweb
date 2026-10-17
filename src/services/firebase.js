@@ -1,5 +1,11 @@
 import { initializeApp } from 'firebase/app'
-import { connectAuthEmulator, getAuth } from 'firebase/auth'
+import {
+  browserLocalPersistence,
+  browserSessionPersistence,
+  connectAuthEmulator,
+  indexedDBLocalPersistence,
+  initializeAuth,
+} from 'firebase/auth'
 import {
   connectFirestoreEmulator,
   disableNetwork,
@@ -9,6 +15,7 @@ import {
   getDocs as firestoreGetDocs,
   getDocsFromServer,
   getFirestore,
+  onSnapshot,
 } from 'firebase/firestore'
 import { connectFunctionsEmulator, getFunctions } from 'firebase/functions'
 import { connectStorageEmulator, getStorage } from 'firebase/storage'
@@ -24,7 +31,13 @@ export const app = initializeApp({
   appId: env.VITE_FIREBASE_APP_ID,
 })
 
-export const auth = getAuth(app)
+// Like getAuth() but without the popup / redirect resolver: on phones and in
+// Safari getAuth() loads the Google sign-in iframe before it reports who is
+// signed in, which delayed every page by seconds. Google sign-in passes the
+// resolver itself (services/auth.js).
+export const auth = initializeAuth(app, {
+  persistence: [indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence],
+})
 export const db = getFirestore(app)
 export const functions = getFunctions(app, 'europe-west3')
 export const storage = getStorage(app)
@@ -101,6 +114,32 @@ async function resilientRead(read, readFromServer, ref) {
 
 export const getDoc = (ref) => resilientRead(firestoreGetDoc, getDocFromServer, ref)
 export const getDocs = (query) => resilientRead(firestoreGetDocs, getDocsFromServer, query)
+
+// onSnapshot of one document, past a stalled connection like the reads above:
+// without an answer from the server within READ_STALL_MS the connection
+// restarts. Until the server has answered, a document missing from the cache
+// (offline, or during the restart) is not reported as missing.
+export function onDocSnapshot(ref, callback, onError) {
+  const startedAt = Date.now()
+  let confirmed = false
+  const timer = setTimeout(() => reconnect(startedAt, 'listener stalled'), READ_STALL_MS)
+  const unsubscribe = onSnapshot(
+    ref,
+    { includeMetadataChanges: true },
+    (snap) => {
+      if (!snap.metadata.fromCache && !confirmed) {
+        confirmed = true
+        clearTimeout(timer)
+      }
+      if (confirmed || snap.exists()) callback(snap)
+    },
+    onError,
+  )
+  return () => {
+    clearTimeout(timer)
+    unsubscribe()
+  }
+}
 
 // App Check (SPEC §2.2) guards the public functions (waiting list, renewal), so it is
 // started only before calling them, not on every page. Fraud Defense (reCAPTCHA

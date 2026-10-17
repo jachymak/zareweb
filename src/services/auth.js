@@ -1,5 +1,6 @@
 import {
   GoogleAuthProvider,
+  browserPopupRedirectResolver,
   createUserWithEmailAndPassword,
   onAuthStateChanged,
   sendPasswordResetEmail,
@@ -17,7 +18,11 @@ export function onAuthChange(callback) {
 
 // Creates the pending profile (without a note) on the first Google login.
 export async function signInWithGoogle() {
-  const { user } = await signInWithPopup(auth, new GoogleAuthProvider())
+  const { user } = await signInWithPopup(
+    auth,
+    new GoogleAuthProvider(),
+    browserPopupRedirectResolver,
+  )
   if (!(await getUser(user.uid))) {
     await createUserProfile(user.uid, { email: user.email, displayName: user.displayName ?? '' })
   }
