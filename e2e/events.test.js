@@ -412,10 +412,27 @@ export default async function events({ browser, check }) {
     const { ctx, page } = await openTrips(browser, '?vyprava=seed-kokorin')
     check(
       'link: ?vyprava opens the poster editor',
-      await page
-        .getByRole('article', { name: 'Podzimní výprava na Kokořín' })
-        .getByRole('form', { name: 'Plakátek' })
-        .isVisible(),
+      (await page.getByRole('article', { name: 'Podzimní výprava na Kokořín' }).isVisible()) &&
+        (await page.getByRole('form', { name: 'Plakátek' }).isVisible()),
+    )
+    await page.getByRole('button', { name: /plakátek ↓$/ }).click()
+    await page.waitForTimeout(800)
+    const top = await page
+      .getByRole('heading', { name: 'Plakátek' })
+      .evaluate((el) => el.getBoundingClientRect().top)
+    check('link: the header button scrolls to the poster box', top >= 0 && top < 300, `top ${top}`)
+    await page.goto(`${APP_URL}/vedouci/vypravy?vyprava=seed-kokorin#plakatek`, {
+      waitUntil: 'load',
+    })
+    await page.getByRole('form', { name: 'Plakátek' }).waitFor()
+    await page.waitForTimeout(1200)
+    const landed = await page
+      .getByRole('heading', { name: 'Plakátek' })
+      .evaluate((el) => el.getBoundingClientRect().top)
+    check(
+      'link: „vyplnit plakátek“ (#plakatek) lands on the poster box',
+      landed >= 0 && landed < 300 && (await page.evaluate(() => window.scrollY)) > 200,
+      `top ${landed}`,
     )
     await page.goto(`${APP_URL}/vedouci/vypravy?vyprava=seed-blanik`, { waitUntil: 'load' })
     await page.getByRole('article', { name: 'Výprava na Blaník' }).waitFor()

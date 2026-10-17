@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { eventEmailState } from '@shared/events'
 import { getPoster, savePoster } from '@/services/events'
 import { useEmailEnabled } from '@/composables/useEmailEnabled'
@@ -9,13 +9,15 @@ import PackingList from './PackingList.vue'
 import { noEmailNote } from './eventsText'
 
 // Poster editor (SPEC §4.3): saved with „uložit“ together with the price and
-// whether parents see it. Reports unsaved changes through `dirty`.
+// whether parents see it. Reports unsaved changes through `dirty` and emits
+// `loaded` once the form is shown.
 const props = defineProps({
   event: { type: Object, required: true },
   templates: { type: Array, required: true },
   today: { type: String, required: true },
 })
 const dirty = defineModel('dirty', { type: Boolean, default: false })
+const emit = defineEmits(['loaded'])
 
 const EMPTY = {
   intro: '',
@@ -56,6 +58,8 @@ async function load() {
   } finally {
     loading.value = false
   }
+  await nextTick()
+  emit('loaded')
 }
 watch(() => props.event.id, load, { immediate: true })
 
@@ -126,7 +130,7 @@ const heading = 'm-0 mb-2 text-[16px] font-semibold text-ink'
 
 <template>
   <section aria-labelledby="poster-title">
-    <h3 id="poster-title" class="m-0 mb-3 text-[19px] font-medium tracking-[-0.02em] text-ink">
+    <h3 id="poster-title" class="m-0 mb-4 text-[22px] font-medium tracking-[-0.02em] text-ink">
       Plakátek
     </h3>
     <p v-if="loading" class="m-0 font-hand text-xl text-muted">načítám…</p>

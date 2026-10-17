@@ -70,10 +70,13 @@ export const meetingLink = (troop, date) => ({
   path: '/vedouci/schuzky',
   query: { oddil: troop, schuzka: date },
 })
-export const tripLink = (troop, eventId) => ({
+// `toPoster` scrolls down to the poster editor.
+export const tripLink = (troop, eventId, toPoster = false) => ({
   path: '/vedouci/vypravy',
   query: { ...(troop && { oddil: troop }), vyprava: eventId },
+  ...(toPoster && { hash: POSTER_HASH }),
 })
+export const POSTER_HASH = '#plakatek'
 export const gatherLink = (troop, eventId) => ({
   path: '/vedouci/na-srazu',
   query: { oddil: troop, vyprava: eventId },

@@ -16,9 +16,10 @@ import RegistrationSettings from '@/components/events/RegistrationSettings.vue'
 import { UNSAVED_CONFIRM } from '@/components/events/eventsText'
 import LeaderHeader from '@/components/leader/LeaderHeader.vue'
 import LeaderPageTitle from '@/components/leader/LeaderPageTitle.vue'
-import { gatherLink, plannerLink } from '@/components/leader/leaderText'
+import { gatherLink, plannerLink, POSTER_HASH } from '@/components/leader/leaderText'
 import AudienceTag from '@/components/parent/AudienceTag.vue'
 import { formatRange, LOAD_ERROR, SAVE_ERROR } from '@/components/parent/parentText'
+import { sectionScrollTop } from '@/router/sectionScroll'
 
 // Trips — SPEC §4.3: every event with a poster of the troop; the chosen one
 // with who goes and the money, its registration and its poster. The selection
@@ -92,9 +93,29 @@ watch(trip, (now, before) => {
   }
 })
 
+// The poster has its own box below; the header links down to it.
+const POSTER_LINK = {
+  missing: 'napsat plakátek',
+  draft: 'dopsat plakátek',
+  published: 'upravit plakátek',
+}
+const toPoster = () => window.scrollTo({ top: sectionScrollTop(POSTER_HASH), behavior: 'smooth' })
+
+// A link to the poster (#plakatek) scrolls down to it once the poster has
+// loaded (before that the page is too short); the hash stays until then.
+const scrollToPoster = ref(route.hash === POSTER_HASH)
+function posterLoaded() {
+  if (!scrollToPoster.value) return
+  scrollToPoster.value = false
+  toPoster()
+}
+
 watch([tripId, () => a.troop], () => {
   if (a.loading) return
-  router.replace({ query: { oddil: a.troop, ...(tripId.value && { vyprava: tripId.value }) } })
+  router.replace({
+    query: { oddil: a.troop, ...(tripId.value && { vyprava: tripId.value }) },
+    hash: scrollToPoster.value ? POSTER_HASH : '',
+  })
 })
 
 const section = 'mx-auto max-w-[1040px] px-4 sm:px-6'
@@ -149,6 +170,13 @@ const section = 'mx-auto max-w-[1040px] px-4 sm:px-6'
                 <RouterLink :to="plannerLink(trip.id)" class="py-1 text-[15px]">
                   upravit údaje ve výpravníku
                 </RouterLink>
+                <button
+                  type="button"
+                  class="cursor-pointer rounded-full border-[1.5px] border-ink bg-transparent px-4 py-1.5 text-[15px] text-ink"
+                  @click="toPoster"
+                >
+                  {{ POSTER_LINK[trip.posterStatus] }} ↓
+                </button>
                 <RouterLink
                   v-if="isTrip(trip)"
                   :to="gatherLink(a.troop, trip.id)"
@@ -165,16 +193,25 @@ const section = 'mx-auto max-w-[1040px] px-4 sm:px-6'
             <div class="flex flex-col gap-6">
               <TripOverview v-if="isTrip(trip)" :attendance="a" :trip="trip" />
               <RegistrationSettings :event="trip" :today="a.today" />
-              <p v-if="templatesError" role="alert" class="m-0 text-red">{{ LOAD_ERROR }}</p>
-              <PosterEditor
-                v-else
-                v-model:dirty="dirty"
-                :event="trip"
-                :templates="templates"
-                :today="a.today"
-              />
             </div>
           </article>
+        </HandDrawnBox>
+
+        <HandDrawnBox
+          v-if="trip"
+          id="plakatek"
+          shape="tall"
+          class="mt-6 px-5 pt-6 pb-6 sm:px-8 sm:pt-7 sm:pb-7"
+        >
+          <p v-if="templatesError" role="alert" class="m-0 text-red">{{ LOAD_ERROR }}</p>
+          <PosterEditor
+            v-else
+            v-model:dirty="dirty"
+            :event="trip"
+            :templates="templates"
+            :today="a.today"
+            @loaded="posterLoaded"
+          />
         </HandDrawnBox>
       </template>
     </div>

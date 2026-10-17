@@ -31,8 +31,8 @@ function namesText(names) {
   return rest > 0 ? `${shown} + ${rest} ${plural(rest, 'další', 'další', 'dalších')}` : shown
 }
 // The trip page in the event's troop (for trips of both troops the shown one).
-const tripOf = (event) =>
-  tripLink(event.audience === 'all' ? props.troop : event.audience, event.id)
+const tripOf = (event, toPoster) =>
+  tripLink(event.audience === 'all' ? props.troop : event.audience, event.id, toPoster)
 </script>
 
 <template>
@@ -82,7 +82,7 @@ const tripOf = (event) =>
         </RouterLink>
         <RouterLink
           v-else
-          :to="tripOf(item.event)"
+          :to="tripOf(item.event, true)"
           class="inline-block flex-none -rotate-[1.4deg] border-[1.5px] border-dashed border-red px-2.5 py-0.5 font-hand text-[17px] font-bold text-red no-underline sm:px-3 sm:py-1 sm:text-[19px]"
         >
           <span class="sm:hidden">+ plakátek</span>
